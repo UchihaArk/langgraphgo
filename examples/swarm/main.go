@@ -225,16 +225,19 @@ func main() {
 	messages := mState["messages"].([]llms.MessageContent)
 	for _, msg := range messages {
 		role := msg.Role
-		var content string
-		if len(msg.Parts) > 0 {
-			if textPart, ok := msg.Parts[0].(llms.TextContent); ok {
-				content = textPart.Text
-			} else if _, ok := msg.Parts[0].(llms.ToolCall); ok {
-				content = "[Tool Call]"
-			} else if _, ok := msg.Parts[0].(llms.ToolCallResponse); ok {
-				content = "[Tool Response]"
+		fmt.Printf("%s: ", role)
+		for _, part := range msg.Parts {
+			switch p := part.(type) {
+			case llms.TextContent:
+				fmt.Print(p.Text)
+			case llms.ToolCall:
+				fmt.Printf("[Tool Call: %s]", p.FunctionCall.Name)
+			case llms.ToolCallResponse:
+				fmt.Printf("[Tool Response: %s]", p.Content)
+			default:
+				fmt.Printf("[%T]", p)
 			}
 		}
-		fmt.Printf("%s: %s\n", role, content)
+		fmt.Println()
 	}
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"time"
@@ -128,7 +129,15 @@ func main() {
 		if err != nil {
 			fmt.Printf("Error resuming: %v\n", err)
 		} else {
-			resumed := resumedState.(ProcessState)
+			// Since data is loaded from JSON, it comes back as map[string]interface{}
+			// We need to convert it back to ProcessState
+			var resumed ProcessState
+
+			// Helper to convert map to struct via JSON
+			// In a real app, you might use mapstructure or similar
+			importJSON, _ := json.Marshal(resumedState)
+			json.Unmarshal(importJSON, &resumed)
+
 			fmt.Printf("Resumed at Step: %d\n", resumed.Step)
 			fmt.Printf("Resumed Data: %s\n", resumed.Data)
 			fmt.Printf("Resumed History: %v\n", resumed.History)

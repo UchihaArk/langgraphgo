@@ -303,6 +303,10 @@ func (ml *MetricsListener) PrintSummary(writer io.Writer) {
 	ml.mutex.RLock()
 	defer ml.mutex.RUnlock()
 
+	if writer == nil {
+		writer = os.Stdout
+	}
+
 	fmt.Fprintln(writer, "\n=== Node Execution Metrics ===")
 	fmt.Fprintf(writer, "Total Executions: %d\n", ml.totalExecutions)
 	fmt.Fprintln(writer)

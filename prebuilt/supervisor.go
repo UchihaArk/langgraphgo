@@ -60,7 +60,7 @@ func CreateSupervisor(model llms.Model, members map[string]*graph.StateRunnable)
 
 		// System prompt
 		systemPrompt := fmt.Sprintf(
-			"You are a supervisor tasked with managing a conversation between the following workers: %s. Given the following user request, respond with the worker to act next. Each worker will perform a task and respond with their results and status. When finished, respond with FINISH.",
+			"You are a supervisor tasked with managing a conversation between the following workers: %s. Given the following user request, respond with the worker to act next. Each worker will perform a task and respond with their results and status. When finished, respond with FINISH. You MUST use the 'route' tool to select the next worker or to finish. Do not provide any other text response.",
 			strings.Join(memberNames, ", "),
 		)
 
@@ -73,7 +73,7 @@ func CreateSupervisor(model llms.Model, members map[string]*graph.StateRunnable)
 		// Call model
 		resp, err := model.GenerateContent(ctx, inputMessages,
 			llms.WithTools([]llms.Tool{routeTool}),
-			llms.WithToolChoice("route"), // Force routing
+			llms.WithToolChoice("auto"), // Let model decide, but prompt strongly encourages it
 		)
 		if err != nil {
 			return nil, err
@@ -83,6 +83,7 @@ func CreateSupervisor(model llms.Model, members map[string]*graph.StateRunnable)
 		if len(choice.ToolCalls) == 0 {
 			// If no tool call, assume FINISH or error?
 			// With ToolChoice("route"), it should call it.
+			fmt.Printf("DEBUG: Supervisor response content: %s\n", choice.Content)
 			return nil, fmt.Errorf("supervisor did not select a next step")
 		}
 

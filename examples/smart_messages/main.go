@@ -68,7 +68,9 @@ func main() {
 	}
 
 	ctx := context.Background()
-	res, err := runnable.Invoke(ctx, map[string]interface{}{"messages": []llms.MessageContent{}})
+	// Use []interface{} for messages to allow mixed types (structs and maps)
+	// This is necessary because we are mixing llms.MessageContent and map[string]interface{} (for IDs)
+	res, err := runnable.Invoke(ctx, map[string]interface{}{"messages": []interface{}{}})
 	if err != nil {
 		log.Fatal(err)
 	}

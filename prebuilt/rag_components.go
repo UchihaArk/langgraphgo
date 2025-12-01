@@ -74,7 +74,15 @@ func (s *SimpleTextSplitter) splitText(text string) []string {
 		}
 
 		chunks = append(chunks, strings.TrimSpace(text[start:end]))
-		start = end - s.ChunkOverlap
+
+		nextStart := end - s.ChunkOverlap
+		if nextStart <= start {
+			// If overlap would cause us to get stuck or move backwards (because the chunk was small),
+			// just move forward to the end of the current chunk.
+			nextStart = end
+		}
+
+		start = nextStart
 		if start < 0 {
 			start = 0
 		}

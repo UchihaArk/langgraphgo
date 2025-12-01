@@ -14,11 +14,13 @@ import (
 func main() {
 	ctx := context.Background()
 
+	fmt.Println("Initializing LLM...")
 	// Initialize LLM
 	llm, err := openai.New()
 	if err != nil {
 		log.Fatalf("Failed to create LLM: %v", err)
 	}
+	fmt.Println("LLM Initialized.")
 
 	// Create a larger document corpus
 	documents := []prebuilt.Document{
