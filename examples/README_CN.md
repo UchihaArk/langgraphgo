@@ -22,6 +22,7 @@
 - **[PostgreSQL](checkpointing/postgres/)**: 使用 PostgreSQL 的持久化状态。
 - **[SQLite](checkpointing/sqlite/)**: 使用 SQLite 的持久化状态。
 - **[Redis](checkpointing/redis/)**: 使用 Redis 的持久化状态。
+- **[持久化执行 (Durable Execution)](durable_execution/)**: 崩溃恢复和从检查点恢复执行。
 
 ## 人机交互 (Human-in-the-loop)
 - **[人工审批 (Human Approval)](human_in_the_loop/)**: 包含中断和人工审批步骤的工作流。

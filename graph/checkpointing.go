@@ -229,6 +229,11 @@ func NewCheckpointableRunnable(runnable *ListenableRunnable, config CheckpointCo
 
 // Invoke executes the graph with checkpointing
 func (cr *CheckpointableRunnable) Invoke(ctx context.Context, initialState interface{}) (interface{}, error) {
+	return cr.InvokeWithConfig(ctx, initialState, nil)
+}
+
+// InvokeWithConfig executes the graph with checkpointing and config
+func (cr *CheckpointableRunnable) InvokeWithConfig(ctx context.Context, initialState interface{}, config *Config) (interface{}, error) {
 	// Create checkpointing listener
 	checkpointListener := &CheckpointListener{
 		store:       cr.config.Store,
@@ -248,7 +253,7 @@ func (cr *CheckpointableRunnable) Invoke(ctx context.Context, initialState inter
 		}
 	}()
 
-	return cr.runnable.Invoke(ctx, initialState)
+	return cr.runnable.InvokeWithConfig(ctx, initialState, config)
 }
 
 // SaveCheckpoint manually saves a checkpoint

@@ -22,6 +22,7 @@ This directory contains various examples demonstrating the features of LangGraph
 - **[PostgreSQL](checkpointing/postgres/)**: Persistent state using PostgreSQL.
 - **[SQLite](checkpointing/sqlite/)**: Persistent state using SQLite.
 - **[Redis](checkpointing/redis/)**: Persistent state using Redis.
+- **[Durable Execution](durable_execution/)**: Crash recovery and resuming execution from checkpoints.
 
 ## Human-in-the-loop
 - **[Human Approval](human_in_the_loop/)**: Workflow with interrupts and human approval steps.

@@ -101,6 +101,7 @@ func main() {
 - **[State Schema](./examples/state_schema/)** - Complex state management with Reducers
 - **[Time Travel](./examples/time_travel/)** - Inspect and modify state history
 - **[Dynamic Interrupt](./examples/dynamic_interrupt/)** - Pause execution from within a node
+- **[Durable Execution](./examples/durable_execution/)** - Crash recovery and resuming execution
 
 ## 🔧 Key Concepts
 
