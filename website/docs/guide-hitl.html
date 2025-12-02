@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>人工介入指南 - LangGraphGo 文档</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.cn/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.cn/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+        }
+
+        .doc-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 120px 2rem 4rem;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 3rem;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 120px;
+            height: fit-content;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+        }
+
+        .sidebar-nav li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-nav a {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            display: block;
+            padding: 0.5rem;
+            border-radius: 6px;
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background: #eff6ff;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .content h2 {
+            font-size: 1.8rem;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .content h3 {
+            font-size: 1.4rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .content p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .content :not(pre)>code {
+            background: #f3f4f6;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-family: 'Menlo', monospace;
+            color: #c7254e;
+        }
+
+        .content pre code {
+            background-color: transparent;
+            padding: 0;
+            border-radius: 0;
+            color: inherit;
+        }
+
+        .content pre {
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="nav-container">
+            <a href="../index.html" class="logo">LangGraphGo</a>
+            <ul class="nav-links">
+                <li><a href="../showcases.html">案例</a></li>
+                <li><a href="../docs.html" style="color: var(--primary-color);">文档</a></li>
+                <li><a href="../examples.html">示例</a></li>
+            </ul>
+            <a href="https://github.com/smallnest/langgraphgo" target="_blank" class="btn-github">
+                <i class="fab fa-github"></i> GitHub
+            </a>
+        </div>
+    </header>
+
+    <div class="doc-container">
+        <aside class="sidebar">
+            <ul class="sidebar-nav">
+                <li><a href="getting-started.html">快速开始</a></li>
+                <li><a href="core-concepts.html">核心概念</a></li>
+                <li><a href="guides.html" class="active">指南</a></li>
+                <li><a href="api.html">API 参考</a></li>
+                <li
+                    style="margin-top: 1.5rem; font-size: 0.85rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">
+                    专题指南</li>
+                <li><a href="guide-basics.html" style="padding-left: 1rem;">基础构建块</a></li>
+                <li><a href="guide-prebuilt-agents.html" style="padding-left: 1rem;">预构建 Agent</a></li>
+                <li><a href="guide-streaming.html" style="padding-left: 1rem;">流式传输</a></li>
+                <li><a href="guide-memory-timetravel.html" style="padding-left: 1rem;">记忆与时间旅行</a></li>
+                <li><a href="guide-advanced-features.html" style="padding-left: 1rem;">高级特性</a></li>
+                <li><a href="guide-rag.html" style="padding-left: 1rem;">RAG 管道</a></li>
+                <li><a href="guide-hitl.html" class="active" style="padding-left: 1rem;">人工介入 (HITL)</a></li>
+                <li><a href="guide-multi-agent.html" style="padding-left: 1rem;">多 Agent 系统</a></li>
+                <li><a href="guide-state-management.html" style="padding-left: 1rem;">状态管理</a></li>
+                <li><a href="guide-monitoring.html" style="padding-left: 1rem;">监控与调试</a></li>
+            </ul>
+        </aside>
+        <main class="content">
+            <h1>人工介入 (Human-in-the-loop)</h1>
+            <p>在许多实际的 Agent 应用中，完全自动化并不总是理想的，甚至可能是危险的。你可能需要人工介入来批准关键操作（如转账）、提供 Agent 缺失的信息，或者修正 Agent 的错误推理。LangGraphGo
+                将"人"视为图中的一等公民。</p>
+
+            <h2>1. 静态中断 (InterruptBefore)</h2>
+
+            <h3>背景与功能</h3>
+            <p>这是最常见的人工介入模式：在执行某个特定节点之前，总是暂停下来等待批准。这类似于 CI/CD 流水线中的人工审批环节。</p>
+
+            <h3>实现原理</h3>
+            <p>在编译或运行图时，我们配置 <code>InterruptBefore</code>
+                列表。当运行时准备执行列表中的节点时，它会检查是否收到了恢复指令。如果没有，它会保存当前状态（Checkpoint）并挂起执行，返回一个特殊的错误。</p>
+
+            <h3>代码展示</h3>
+            <pre><code class="language-go">// 1. 设置中断配置
+config := &graph.Config{
+    InterruptBefore: []string{"human_approval_node"},
+}
+
+// 2. 运行图
+// 当执行到 "human_approval_node" 时，Invoke 调用将返回 GraphInterrupt 错误
+res, err := runnable.InvokeWithConfig(ctx, initialState, config)
+
+// 3. 检查中断
+var interrupt *graph.GraphInterrupt
+if errors.As(err, &interrupt) {
+    fmt.Println("图已暂停，等待人工审批...")
+    // 此时可以将 ThreadID 返回给前端，让用户进行操作
+}</code></pre>
+
+            <h2>2. 动态中断 (Dynamic Interrupt)</h2>
+
+            <h3>背景与功能</h3>
+            <p>有时我们无法预知何时需要中断。例如，只有当 Agent 的置信度低于某个阈值，或者检测到潜在的敏感内容时，才需要人工介入。动态中断允许节点在运行时自主决定是否暂停。</p>
+
+            <h3>实现原理</h3>
+            <p>节点函数可以返回一个 <code>graph.Interrupt</code> 类型的错误。运行时捕获到这个错误后，会立即停止后续执行，并保存当前状态。</p>
+
+            <h3>代码展示</h3>
+            <pre><code class="language-go">func sensitiveActionNode(ctx context.Context, state interface{}) (interface{}, error) {
+    data := state.(MyState)
+    
+    // 动态检查：如果金额超过 1000，触发中断
+    if data.Amount > 1000 {
+        return nil, graph.Interrupt("Amount too high, requesting human review")
+    }
+    
+    // 否则直接执行
+    return executeTransfer(data), nil
+}</code></pre>
+
+            <h2>3. 恢复执行 (Resume)</h2>
+
+            <h3>背景与功能</h3>
+            <p>暂停只是为了更好地继续。在人工完成审批或提供输入后，我们需要恢复图的执行。LangGraphGo 允许你带着新的输入或修改后的状态恢复执行。</p>
+
+            <h3>实现原理</h3>
+            <p>使用 <code>ResumeFrom</code> 配置或直接调用 <code>Invoke</code> 并传入相同的 ThreadID。框架会加载最新的 Checkpoint。如果在这个
+                Checkpoint 上有挂起的中断，框架会清除中断标志，并使用可选的新输入继续执行被暂停的节点。</p>
+
+            <h3>代码展示</h3>
+            <pre><code class="language-go">// 用户批准了操作
+// 我们更新状态（例如设置 Approved = true）
+runnable.UpdateState(ctx, config, map[string]interface{}{"approved": true})
+
+// 恢复执行
+// 注意：这里不需要再次指定 InterruptBefore，除非你想再次中断
+resumeConfig := &graph.Config{
+    ThreadID: "conversation-123",
+}
+
+// 再次调用 Invoke，图会从上次暂停的地方继续
+runnable.Invoke(ctx, nil, resumeConfig)</code></pre>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+    <script src="../script.js"></script>
+</body>
+
+</html>

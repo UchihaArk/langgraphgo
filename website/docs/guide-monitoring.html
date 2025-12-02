@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>监控与调试指南 - LangGraphGo 文档</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.cn/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.cn/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+        }
+
+        .doc-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 120px 2rem 4rem;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 3rem;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 120px;
+            height: fit-content;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+        }
+
+        .sidebar-nav li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-nav a {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            display: block;
+            padding: 0.5rem;
+            border-radius: 6px;
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background: #eff6ff;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .content h2 {
+            font-size: 1.8rem;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .content h3 {
+            font-size: 1.4rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .content p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .content :not(pre)>code {
+            background: #f3f4f6;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-family: 'Menlo', monospace;
+            color: #c7254e;
+        }
+
+        .content pre code {
+            background-color: transparent;
+            padding: 0;
+            border-radius: 0;
+            color: inherit;
+        }
+
+        .content pre {
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="nav-container">
+            <a href="../index.html" class="logo">LangGraphGo</a>
+            <ul class="nav-links">
+                <li><a href="../showcases.html">案例</a></li>
+                <li><a href="../docs.html" style="color: var(--primary-color);">文档</a></li>
+                <li><a href="../examples.html">示例</a></li>
+            </ul>
+            <a href="https://github.com/smallnest/langgraphgo" target="_blank" class="btn-github">
+                <i class="fab fa-github"></i> GitHub
+            </a>
+        </div>
+    </header>
+
+    <div class="doc-container">
+        <aside class="sidebar">
+            <ul class="sidebar-nav">
+                <li><a href="getting-started.html">快速开始</a></li>
+                <li><a href="core-concepts.html">核心概念</a></li>
+                <li><a href="guides.html" class="active">指南</a></li>
+                <li><a href="api.html">API 参考</a></li>
+                <li
+                    style="margin-top: 1.5rem; font-size: 0.85rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">
+                    专题指南</li>
+                <li><a href="guide-basics.html" style="padding-left: 1rem;">基础构建块</a></li>
+                <li><a href="guide-prebuilt-agents.html" style="padding-left: 1rem;">预构建 Agent</a></li>
+                <li><a href="guide-streaming.html" style="padding-left: 1rem;">流式传输</a></li>
+                <li><a href="guide-memory-timetravel.html" style="padding-left: 1rem;">记忆与时间旅行</a></li>
+                <li><a href="guide-advanced-features.html" style="padding-left: 1rem;">高级特性</a></li>
+                <li><a href="guide-rag.html" style="padding-left: 1rem;">RAG 管道</a></li>
+                <li><a href="guide-hitl.html" style="padding-left: 1rem;">人工介入 (HITL)</a></li>
+                <li><a href="guide-multi-agent.html" style="padding-left: 1rem;">多 Agent 系统</a></li>
+                <li><a href="guide-state-management.html" style="padding-left: 1rem;">状态管理</a></li>
+                <li><a href="guide-monitoring.html" class="active" style="padding-left: 1rem;">监控与调试</a></li>
+            </ul>
+        </aside>
+        <main class="content">
+            <h1>监控与调试 (Monitoring & Debugging)</h1>
+            <p>在生产环境中运行 Agent 系统时，"黑盒"是最大的敌人。你需要知道 Agent 正在做什么，为什么这么做，以及在出错时如何恢复。LangGraphGo 提供了多层次的监控和调试工具。</p>
+
+            <h2>1. 监听器 (Listeners)</h2>
+
+            <h3>背景与功能</h3>
+            <p>监听器允许你以非侵入式的方式订阅图的生命周期事件。你可以监控节点何时开始、何时结束、输入是什么、输出是什么，以及是否发生了错误。</p>
+            <p>这对于集成日志系统（如 Zap, Logrus）、分布式追踪（如 OpenTelemetry）或实时监控仪表盘非常有用。</p>
+
+            <h3>实现原理</h3>
+            <p>运行时在关键的执行点（节点启动前、节点结束后、发生错误时）会触发事件。注册的监听器函数会被同步或异步调用。</p>
+
+            <h3>代码展示</h3>
+            <pre><code class="language-go">// 定义监听器函数
+listener := func(event graph.Event) {
+    switch event.Type {
+    case graph.NodeStart:
+        log.Printf("[START] Node: %s, Input: %v", event.Node, event.Input)
+    case graph.NodeEnd:
+        log.Printf("[END] Node: %s, Output: %v", event.Node, event.Output)
+    case graph.Error:
+        log.Printf("[ERROR] Node: %s, Err: %v", event.Node, event.Error)
+    }
+}
+
+// 注册监听器
+runnable.AddListener(listener)</code></pre>
+
+            <h2>2. 持久化执行 (Durable Execution)</h2>
+
+            <h3>背景与功能</h3>
+            <p>Agent 任务可能运行很长时间（数分钟甚至数小时）。如果进程崩溃或服务器重启，我们不希望从头开始。持久化执行允许任务从上次成功的 Checkpoint 自动恢复。</p>
+
+            <h3>实现原理</h3>
+            <p>这依赖于 Checkpointing 机制。每次状态更新都会被持久化。当系统重启并使用相同的 ThreadID 恢复时，它会首先加载最新的 Checkpoint，然后从那里继续执行。</p>
+
+            <h3>代码展示</h3>
+            <pre><code class="language-go">// 1. 获取最新状态
+latestCheckpoint, err := store.GetLatest(threadID)
+
+if latestCheckpoint != nil {
+    // 2. 如果有历史，则恢复
+    log.Println("Resuming from checkpoint...")
+    runnable.ResumeFromCheckpoint(ctx, latestCheckpoint.ID)
+} else {
+    // 3. 否则重新开始
+    log.Println("Starting new execution...")
+    runnable.Invoke(ctx, input)
+}</code></pre>
+
+            <h2>3. 调试工具</h2>
+            <p>除了上述机制，LangGraphGo 还建议结合标准的 Go 调试工具（如 Delve）和性能分析工具（pprof）来深入分析 Agent 的行为。</p>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+    <script src="../script.js"></script>
+</body>
+
+</html>

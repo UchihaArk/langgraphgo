@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>状态管理指南 - LangGraphGo 文档</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.cn/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.cn/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+        }
+
+        .doc-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 120px 2rem 4rem;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 3rem;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 120px;
+            height: fit-content;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+        }
+
+        .sidebar-nav li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-nav a {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            display: block;
+            padding: 0.5rem;
+            border-radius: 6px;
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background: #eff6ff;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .content h2 {
+            font-size: 1.8rem;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .content h3 {
+            font-size: 1.4rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .content p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .content :not(pre)>code {
+            background: #f3f4f6;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-family: 'Menlo', monospace;
+            color: #c7254e;
+        }
+
+        .content pre code {
+            background-color: transparent;
+            padding: 0;
+            border-radius: 0;
+            color: inherit;
+        }
+
+        .content pre {
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="nav-container">
+            <a href="../index.html" class="logo">LangGraphGo</a>
+            <ul class="nav-links">
+                <li><a href="../showcases.html">案例</a></li>
+                <li><a href="../docs.html" style="color: var(--primary-color);">文档</a></li>
+                <li><a href="../examples.html">示例</a></li>
+            </ul>
+            <a href="https://github.com/smallnest/langgraphgo" target="_blank" class="btn-github">
+                <i class="fab fa-github"></i> GitHub
+            </a>
+        </div>
+    </header>
+
+    <div class="doc-container">
+        <aside class="sidebar">
+            <ul class="sidebar-nav">
+                <li><a href="getting-started.html">快速开始</a></li>
+                <li><a href="core-concepts.html">核心概念</a></li>
+                <li><a href="guides.html" class="active">指南</a></li>
+                <li><a href="api.html">API 参考</a></li>
+                <li
+                    style="margin-top: 1.5rem; font-size: 0.85rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">
+                    专题指南</li>
+                <li><a href="guide-basics.html" style="padding-left: 1rem;">基础构建块</a></li>
+                <li><a href="guide-prebuilt-agents.html" style="padding-left: 1rem;">预构建 Agent</a></li>
+                <li><a href="guide-streaming.html" style="padding-left: 1rem;">流式传输</a></li>
+                <li><a href="guide-memory-timetravel.html" style="padding-left: 1rem;">记忆与时间旅行</a></li>
+                <li><a href="guide-advanced-features.html" style="padding-left: 1rem;">高级特性</a></li>
+                <li><a href="guide-rag.html" style="padding-left: 1rem;">RAG 管道</a></li>
+                <li><a href="guide-hitl.html" style="padding-left: 1rem;">人工介入 (HITL)</a></li>
+                <li><a href="guide-multi-agent.html" style="padding-left: 1rem;">多 Agent 系统</a></li>
+                <li><a href="guide-state-management.html" class="active" style="padding-left: 1rem;">状态管理</a></li>
+                <li><a href="guide-monitoring.html" style="padding-left: 1rem;">监控与调试</a></li>
+            </ul>
+        </aside>
+        <main class="content">
+            <h1>状态管理 (State Management)</h1>
+            <p>状态是 LangGraphGo 的核心。与许多无状态的编排框架不同，LangGraphGo 显式地定义和管理状态。理解状态 Schema 和 Reducer 是构建复杂图的关键。</p>
+
+            <h2>1. State Schema 与 Reducers</h2>
+
+            <h3>背景与功能</h3>
+            <p>在图中，多个节点可能会并行运行并尝试更新状态。如果只是简单地覆盖状态，会导致数据竞争和丢失。Reducer 定义了如何安全地合并来自不同节点的更新。</p>
+            <p>例如，对于聊天记录，我们通常希望追加新消息（Append），而不是覆盖旧消息（Overwrite）。</p>
+
+            <h3>实现原理</h3>
+            <p>State Schema 是一个 Map，定义了状态中每个字段的名称和对应的合并函数（Reducer）。当运行时收到节点的输出时，它会查找对应的 Reducer 来处理更新。</p>
+
+            <h3>代码展示</h3>
+            <pre><code class="language-go">// 定义 Schema
+schema := &graph.StateSchema{
+    "messages": graph.AppendReducer, // 消息列表：追加模式
+    "summary":  graph.OverwriteReducer, // 摘要：覆盖模式
+    "count": func(old, new interface{}) interface{} { // 自定义：累加模式
+        return old.(int) + new.(int)
+    },
+}
+
+// 应用 Schema 到图
+g.SetSchema(schema)</code></pre>
+
+            <h2>2. 临时通道 (Ephemeral Channels)</h2>
+
+            <h3>背景与功能</h3>
+            <p>并非所有状态都需要持久化。有时你需要传递一个临时的信号或错误消息，只在当前步骤有效，下一步就应该消失。这类似于编程语言中的局部变量。</p>
+
+            <h3>实现原理</h3>
+            <p>LangGraphGo 提供了 <code>EphemeralReducer</code>。使用此 Reducer 的字段，在每个 Superstep 结束时会被自动清空。</p>
+
+            <h3>代码展示</h3>
+            <pre><code class="language-go">// 注册临时字段
+schema.RegisterReducer("error_signal", graph.EphemeralReducer)
+
+// 节点 A 发送错误
+return map[string]interface{}{"error_signal": "something went wrong"}, nil
+
+// 节点 B (在同一步或紧接的下一步) 可以读取到 error_signal
+// 但在之后的步骤中，error_signal 将变为空</code></pre>
+
+            <h2>3. 智能消息 (Smart Messages)</h2>
+
+            <h3>背景与功能</h3>
+            <p>在处理聊天记录时，简单的追加并不总是够用。例如，当 Agent 重新生成回复时，我们希望替换掉上一条旧的回复，而不是追加一条新的。或者，我们想更新某条历史消息的内容。</p>
+
+            <h3>实现原理</h3>
+            <p><code>MessagesStateGraph</code> 预置了智能的 <code>AddMessages</code> Reducer。它基于消息的 ID 进行合并：如果新消息的 ID
+                已存在，则更新旧消息（Upsert）；如果不存在，则追加。</p>
+
+            <h3>代码展示</h3>
+            <pre><code class="language-go">// 使用预置的 MessagesStateGraph
+g := graph.NewMessagesStateGraph()
+
+// 第一次生成
+g.AddNode("ai", func(...) {
+    return []llms.MessageContent{{ID: "msg_1", Content: "Thinking..."}}, nil
+})
+
+// 第二次生成 (更新)
+g.AddNode("ai_update", func(...) {
+    // ID 相同，内容将被替换
+    return []llms.MessageContent{{ID: "msg_1", Content: "The answer is 42."}}, nil
+})</code></pre>
+
+            <h2>4. Command API</h2>
+
+            <h3>背景与功能</h3>
+            <p>通常，控制流是由图的边定义的。但在某些复杂场景下，节点内部可能需要更细粒度的控制，例如"更新状态并立即跳转到节点 X"，或者"更新状态并结束图"。</p>
+
+            <h3>实现原理</h3>
+            <p>节点可以返回一个特殊的 <code>graph.Command</code> 对象。运行时会优先处理这个对象中的指令（如 <code>Goto</code>,
+                <code>Update</code>），覆盖默认的路由逻辑。
+            </p>
+
+            <h3>代码展示</h3>
+            <pre><code class="language-go">func myNode(ctx context.Context, state interface{}) (interface{}, error) {
+    // ... 逻辑判断 ...
+    
+    // 动态跳转
+    return graph.Command{
+        Goto: "node_c", // 强制跳转到 node_c
+        Update: map[string]interface{}{"key": "value"}, // 同时更新状态
+    }, nil
+}</code></pre>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+    <script src="../script.js"></script>
+</body>
+
+</html>

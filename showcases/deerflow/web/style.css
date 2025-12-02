@@ -528,7 +528,7 @@ textarea {
 }
 
 .report-content p {
-    margin-bottom: 28px;
+    margin-bottom: 5px;
     color: var(--text-primary);
     /* Darker text for better readability with larger font */
     font-weight: 400;

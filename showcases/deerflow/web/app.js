@@ -125,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Start SSE connection
             const eventSource = new EventSource(`/api/run?query=${encodeURIComponent(query)}`);
 
-            eventSource.onmessage = (event) => {
+            eventSource.onmessage = async (event) => {
                 const data = JSON.parse(event.data);
 
                 if (data.type === 'update') {
@@ -150,6 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     reportContent.innerHTML = report;
                     renderMath();
                     highlightCode();
+                    await renderMermaid();
                     setStatus('已完成', false);
                     switchTab('report'); // Switch back to Report tab
                     eventSource.close();
@@ -203,7 +204,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderMath() {
         if (!window.katex) return;
-        const mathBlocks = reportContent.querySelectorAll('code.language-math');
+
+        // 1. Handle explicit code blocks (math, latex, tex)
+        const mathBlocks = reportContent.querySelectorAll('code.language-math, code.language-latex, code.language-tex');
         mathBlocks.forEach(block => {
             const latex = block.textContent;
             const span = document.createElement('div');
@@ -222,6 +225,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error('KaTeX error:', e);
             }
         });
+
+        // 2. Auto-render inline and block math in the rest of the text
+        if (window.renderMathInElement) {
+            renderMathInElement(reportContent, {
+                delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '\\[', right: '\\]', display: true },
+                    { left: '$', right: '$', display: false },
+                    { left: '\\(', right: '\\)', display: false }
+                ],
+                throwOnError: false
+            });
+        }
     }
 
     function highlightCode() {
@@ -229,5 +245,38 @@ document.addEventListener('DOMContentLoaded', () => {
         reportContent.querySelectorAll('pre code').forEach((block) => {
             hljs.highlightElement(block);
         });
+    }
+
+    async function renderMermaid() {
+        if (!window.mermaid) return;
+        mermaid.initialize({ startOnLoad: false, theme: 'default' });
+
+        const mermaidBlocks = reportContent.querySelectorAll('code.language-mermaid');
+        if (mermaidBlocks.length === 0) return;
+
+        const nodesToRender = [];
+        mermaidBlocks.forEach((block) => {
+            const code = block.textContent;
+            const div = document.createElement('div');
+            div.className = 'mermaid';
+            div.textContent = code;
+            // Center the diagram
+            div.style.textAlign = 'center';
+
+            if (block.parentElement && block.parentElement.tagName === 'PRE') {
+                block.parentElement.replaceWith(div);
+            } else {
+                block.replaceWith(div);
+            }
+            nodesToRender.push(div);
+        });
+
+        try {
+            await mermaid.run({
+                nodes: nodesToRender
+            });
+        } catch (e) {
+            console.error('Mermaid error:', e);
+        }
     }
 });

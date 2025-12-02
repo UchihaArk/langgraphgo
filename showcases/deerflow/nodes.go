@@ -107,7 +107,7 @@ func ReporterNode(ctx context.Context, state interface{}) (interface{}, error) {
 	}
 
 	researchData := strings.Join(s.ResearchResults, "\n\n")
-	prompt := fmt.Sprintf("你是一名记者。请根据以下研究结果撰写一份全面的最终报告。使用 Markdown 格式，包含清晰的标题、要点，并在适当的地方使用代码块。数学公式请使用 ```math 代码块包裹。必须使用中文撰写报告：\n\n%s\n\n原始查询是：%s", researchData, s.Request.Query)
+	prompt := fmt.Sprintf("你是一名资深报告撰写员。请根据以下研究结果撰写一份全面的最终报告。使用 Markdown 格式，包含清晰的标题、要点，并在适当的地方使用代码块。数学公式请使用 ```math 代码块包裹，或者使用 $$...$$ (块级) 和 $...$ (行内) 包裹。如果内容适合用流程图、时序图等图表展示，请使用 ```mermaid 代码块生成 Mermaid 图表。必须使用中文撰写报告：\n\n%s\n\n原始查询是：%s", researchData, s.Request.Query)
 
 	completion, err := llm.Call(ctx, prompt)
 	if err != nil {
