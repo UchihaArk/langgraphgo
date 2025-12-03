@@ -15,11 +15,18 @@ import (
 
 // Helper to get LLM
 func GetLLM(ctx context.Context) (llms.Model, error) {
-	// Ensure OPENAI_API_KEY and OPENAI_API_BASE are set
+	// Ensure OPENAI_API_KEY is set
 	if os.Getenv("OPENAI_API_KEY") == "" {
 		return nil, fmt.Errorf("OPENAI_API_KEY not set")
 	}
-	return openai.New()
+	opts := []openai.Option{}
+	if base := os.Getenv("OPENAI_API_BASE"); base != "" {
+		opts = append(opts, openai.WithBaseURL(base))
+	}
+	if model := os.Getenv("OPENAI_MODEL"); model != "" {
+		opts = append(opts, openai.WithModel(model))
+	}
+	return openai.New(opts...)
 }
 
 // Helper to generate JSON from LLM

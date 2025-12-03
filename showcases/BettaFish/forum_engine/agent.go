@@ -16,7 +16,14 @@ func getLLM() (llms.Model, error) {
 	if os.Getenv("OPENAI_API_KEY") == "" {
 		return nil, fmt.Errorf("OPENAI_API_KEY not set")
 	}
-	return openai.New()
+	opts := []openai.Option{}
+	if base := os.Getenv("OPENAI_API_BASE"); base != "" {
+		opts = append(opts, openai.WithBaseURL(base))
+	}
+	if model := os.Getenv("OPENAI_MODEL"); model != "" {
+		opts = append(opts, openai.WithModel(model))
+	}
+	return openai.New(opts...)
 }
 
 const (

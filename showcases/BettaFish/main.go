@@ -27,6 +27,13 @@ func main() {
 	if os.Getenv("TAVILY_API_KEY") == "" {
 		log.Fatal("错误: 未设置 TAVILY_API_KEY 环境变量。")
 	}
+	// Optional: Check for API Base if using alternative providers (e.g., DeepSeek)
+	if os.Getenv("OPENAI_API_BASE") != "" {
+		fmt.Printf("使用自定义 API Base: %s\n", os.Getenv("OPENAI_API_BASE"))
+	}
+	if os.Getenv("OPENAI_MODEL") != "" {
+		fmt.Printf("使用自定义模型: %s\n", os.Getenv("OPENAI_MODEL"))
+	}
 
 	query := os.Args[1]
 
