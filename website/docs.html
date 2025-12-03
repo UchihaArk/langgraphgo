@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文档 - LangGraphGo</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.cn/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.cn/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+        }
+
+        .card {
+            cursor: pointer;
+        }
+
+        .card:hover h3 {
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="nav-container">
+            <a href="index.html" class="logo">LangGraphGo</a>
+            <ul class="nav-links">
+                <li><a href="showcases.html">案例</a></li>
+                <li><a href="docs.html" style="color: var(--primary-color);">文档</a></li>
+                <li><a href="examples.html">示例</a></li>
+                <li><a href="en/docs.html">English</a></li>
+            </ul>
+            <a href="https://github.com/smallnest/langgraphgo" target="_blank" class="btn-github">
+                <i class="fab fa-github"></i> GitHub
+            </a>
+        </div>
+    </header>
+
+    <main style="padding-top: 120px; min-height: 80vh;">
+        <section class="features">
+            <div class="section-title">
+                <h2>文档</h2>
+                <p style="color: var(--text-secondary);">学习如何使用 LangGraphGo 进行构建。</p>
+            </div>
+            <div class="grid">
+                <a href="docs/getting-started.html" class="card">
+                    <div class="card-icon"><i class="fas fa-rocket"></i></div>
+                    <h3>快速开始</h3>
+                    <p>安装指南和基本概念，助您快速上手。</p>
+                </a>
+                <a href="docs/core-concepts.html" class="card">
+                    <div class="card-icon"><i class="fas fa-brain"></i></div>
+                    <h3>核心概念</h3>
+                    <p>深入了解图（Graph）、节点（Node）、边（Edge）和状态（State）管理。</p>
+                </a>
+                <a href="docs/api.html" class="card">
+                    <div class="card-icon"><i class="fas fa-code"></i></div>
+                    <h3>API 参考</h3>
+                    <p>所有包和函数的详细文档。</p>
+                </a>
+                <a href="docs/guides.html" class="card">
+                    <div class="card-icon"><i class="fas fa-book-open"></i></div>
+                    <h3>指南</h3>
+                    <p>常见模式和用例的分步教程。</p>
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <div class="logo" style="font-size: 1.2rem;">LangGraphGo</div>
+        </div>
+        <div style="text-align: center; margin-top: 2rem; color: var(--text-secondary); font-size: 0.8rem;">
+            &copy; 2025 LangGraphGo. Open Source.
+        </div>
+    </footer>
+    <script src="script.js"></script>
+</body>
+
+</html>

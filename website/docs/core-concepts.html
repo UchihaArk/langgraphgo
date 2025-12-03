@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>核心概念 - LangGraphGo 文档</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.cn/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.cn/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+        }
+
+        .doc-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 120px 2rem 4rem;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 3rem;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 120px;
+            height: fit-content;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+        }
+
+        .sidebar-nav li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-nav a {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            display: block;
+            padding: 0.5rem;
+            border-radius: 6px;
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background: #eff6ff;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .content h2 {
+            font-size: 1.8rem;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .content h3 {
+            font-size: 1.4rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .content p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .content :not(pre)>code {
+            background: #f3f4f6;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-family: 'Menlo', monospace;
+            color: #c7254e;
+        }
+
+        .content pre code {
+            background-color: transparent;
+            padding: 0;
+            border-radius: 0;
+            color: inherit;
+        }
+
+        .content pre {
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="nav-container">
+            <a href="../index.html" class="logo">LangGraphGo</a>
+            <ul class="nav-links">
+                <li><a href="../showcases.html">案例</a></li>
+                <li><a href="../docs.html" style="color: var(--primary-color);">文档</a></li>
+                <li><a href="../examples.html">示例</a></li>
+                <li><a href="../en/docs/core-concepts.html">English</a></li>
+            </ul>
+            <a href="https://github.com/smallnest/langgraphgo" target="_blank" class="btn-github">
+                <i class="fab fa-github"></i> GitHub
+            </a>
+        </div>
+    </header>
+
+    <div class="doc-container">
+        <aside class="sidebar">
+            <ul class="sidebar-nav">
+                <li><a href="getting-started.html">快速开始</a></li>
+                <li><a href="core-concepts.html" class="active">核心概念</a></li>
+                <li><a href="guides.html">指南</a></li>
+                <li><a href="api.html">API 参考</a></li>
+                <li
+                    style="margin-top: 1.5rem; font-size: 0.85rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">
+                    专题指南</li>
+                <li><a href="guide-basics.html" style="padding-left: 1rem;">基础构建块</a></li>
+                <li><a href="guide-stategraph-vs-messagegraph.html" style="padding-left: 1rem;">StateGraph vs MessageGraph</a></li>
+                <li><a href="guide-createagent-vs-createreactagent.html" style="padding-left: 1rem;">CreateAgent vs CreateReactAgent</a></li>
+                <li><a href="guide-prebuilt-agents.html" style="padding-left: 1rem;">预构建 Agent</a></li>
+                <li><a href="guide-streaming.html" style="padding-left: 1rem;">流式传输</a></li>
+                <li><a href="guide-memory-timetravel.html" style="padding-left: 1rem;">记忆与时间旅行</a></li>
+                <li><a href="guide-advanced-features.html" style="padding-left: 1rem;">高级特性</a></li>
+                <li><a href="guide-rag.html" style="padding-left: 1rem;">RAG 管道</a></li>
+                <li><a href="guide-hitl.html" style="padding-left: 1rem;">人工介入 (HITL)</a></li>
+                <li><a href="guide-multi-agent.html" style="padding-left: 1rem;">多 Agent 系统</a></li>
+                <li><a href="guide-state-management.html" style="padding-left: 1rem;">状态管理</a></li>
+                <li><a href="guide-monitoring.html" style="padding-left: 1rem;">监控与调试</a></li>
+            </ul>
+        </aside>
+        <main class="content">
+            <h1>核心概念</h1>
+
+            <h2>图 (Graph)</h2>
+            <p>LangGraphGo 的核心是图。图定义了应用程序的工作流。它由节点（Nodes）和边（Edges）组成。</p>
+            <p><code>StateGraph</code> 是最常用的图类型，它允许你定义一个状态 Schema，并在节点之间传递状态。</p>
+
+            <h2>状态 (State)</h2>
+            <p>状态是图在执行过程中维护的数据。每个节点接收当前状态作为输入，并返回状态更新作为输出。</p>
+            <p>LangGraphGo 支持自定义状态 Schema，允许你定义如何合并来自不同节点的更新（例如，覆盖、追加等）。</p>
+
+            <h2>节点 (Nodes)</h2>
+            <p>节点是执行具体逻辑的函数。它们可以是调用 LLM、执行工具、或者只是简单的代码逻辑。</p>
+            <pre><code class="language-go">func MyNode(ctx context.Context, state MyState) (MyState, error) {
+    // 执行逻辑
+    return newState, nil
+}</code></pre>
+
+            <h2>边 (Edges)</h2>
+            <p>边定义了节点之间的控制流。</p>
+            <ul>
+                <li><strong>普通边</strong>: <code>g.AddEdge("nodeA", "nodeB")</code> - A 执行完后执行 B。</li>
+                <li><strong>条件边</strong>: <code>g.AddConditionalEdges("nodeA", routingFunction)</code> - 根据 A
+                    的输出动态决定下一个节点。</li>
+            </ul>
+
+            <h2>并行执行</h2>
+            <p>当多个节点共享同一个起始节点时，LangGraphGo 会自动并行执行它们。结果将使用图的状态合并器或 Schema 进行合并。</p>
+            <pre><code class="language-go">g.AddEdge("start", "branch_a")
+g.AddEdge("start", "branch_b")
+// branch_a 和 branch_b 将并发运行</code></pre>
+
+            <h2>人工介入 (HITL)</h2>
+            <p>LangGraphGo 支持在图执行过程中暂停，允许人工干预。这对于需要人工批准或输入的场景非常有用。</p>
+            <pre><code class="language-go">config := &graph.Config{
+    InterruptBefore: []string{"human_review"},
+}
+// 执行在 "human_review" 节点前停止</code></pre>
+
+            <h2>Checkpointers</h2>
+            <p>Checkpointers 用于持久化图的状态。这使得你可以保存执行进度，并在稍后恢复（例如，用于长运行的对话或故障恢复）。</p>
+            <p>支持的后端包括 Redis, Postgres, SQLite 等。</p>
+            <pre><code class="language-go">import (
+    "github.com/smallnest/langgraphgo/checkpoint/sqlite"
+    "github.com/smallnest/langgraphgo/graph"
+)
+
+// 1. 初始化 SQLite Checkpoint Store
+store, err := sqlite.NewSqliteCheckpointStore(sqlite.SqliteOptions{
+    Path:      "./checkpoints.db",
+    TableName: "checkpoints",
+})
+if err != nil {
+    panic(err)
+}
+defer store.Close()
+
+// 2. 配置 Checkpoint 选项
+config := graph.CheckpointConfig{
+    Store:          store,
+    AutoSave:       true,
+    SaveInterval:   2 * time.Second,
+    MaxCheckpoints: 5,
+}
+
+// 3. 将配置应用到图
+g := graph.NewCheckpointableMessageGraph()
+g.SetCheckpointConfig(config)</code></pre>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+    <script src="../script.js"></script>
+</body>
+
+</html>

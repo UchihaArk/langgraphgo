@@ -82,8 +82,7 @@ func CreateSupervisor(model llms.Model, members map[string]*graph.StateRunnable)
 		choice := resp.Choices[0]
 		if len(choice.ToolCalls) == 0 {
 			// If no tool call, assume FINISH or error?
-			// With ToolChoice("route"), it should call it.
-			fmt.Printf("DEBUG: Supervisor response content: %s\n", choice.Content)
+			// With ToolChoice("route"), it should call it.\
 			return nil, fmt.Errorf("supervisor did not select a next step")
 		}
 

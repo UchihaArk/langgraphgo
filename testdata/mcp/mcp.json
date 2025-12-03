@@ -1,0 +1,41 @@
+{
+    "mcpServers": {
+        "sequential-thinking": {
+            "type": "stdio",
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-sequential-thinking"
+            ],
+            "env": {}
+        },
+        "filesystem": {
+            "type": "stdio",
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-filesystem",
+                "."
+            ],
+            "env": {}
+        },
+        "puppeteer": {
+            "type": "stdio",
+            "command": "npx",
+            "args": [
+                "-y",
+                "@modelcontextprotocol/server-puppeteer"
+            ],
+            "env": {}
+        },
+        "fetch": {
+            "type": "stdio",
+            "command": "npx",
+            "args": [
+                "-y",
+                "@kazuph/mcp-fetch"
+            ],
+            "env": {}
+        }
+    }
+}

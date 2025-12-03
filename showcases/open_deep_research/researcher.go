@@ -42,7 +42,7 @@ func CreateResearcherGraph(config *Configuration, model llms.Model) (*graph.Mess
 			log.Printf("[Researcher] Reached max tool call iterations (%d), ending research", config.MaxToolCallIterations)
 			return map[string]interface{}{
 				"messages": []llms.MessageContent{
-					llms.TextParts(llms.ChatMessageTypeAI, "Research complete - reached iteration limit."),
+					llms.TextParts(llms.ChatMessageTypeAI, "研究完成 - 达到迭代限制。"),
 				},
 			}, nil
 		}
@@ -62,13 +62,13 @@ func CreateResearcherGraph(config *Configuration, model llms.Model) (*graph.Mess
 				Type: "function",
 				Function: &llms.FunctionDefinition{
 					Name:        "tavily_search",
-					Description: "Search the web for information. Input should be a search query string.",
+					Description: "在网络上搜索信息。输入应该是搜索查询字符串。",
 					Parameters: map[string]interface{}{
 						"type": "object",
 						"properties": map[string]interface{}{
 							"query": map[string]interface{}{
 								"type":        "string",
-								"description": "The search query",
+								"description": "搜索查询",
 							},
 						},
 						"required": []string{"query"},
@@ -79,13 +79,13 @@ func CreateResearcherGraph(config *Configuration, model llms.Model) (*graph.Mess
 				Type: "function",
 				Function: &llms.FunctionDefinition{
 					Name:        "think_tool",
-					Description: "Use this to reflect on your progress and plan next steps.",
+					Description: "使用此工具反思你的进度并规划下一步。",
 					Parameters: map[string]interface{}{
 						"type": "object",
 						"properties": map[string]interface{}{
 							"reflection": map[string]interface{}{
 								"type":        "string",
-								"description": "Your reflection on the current state and next steps",
+								"description": "你对当前状态和下一步的反思",
 							},
 						},
 						"required": []string{"reflection"},
@@ -178,7 +178,7 @@ func CreateResearcherGraph(config *Configuration, model llms.Model) (*graph.Mess
 
 		if len(rawNotes) == 0 {
 			return map[string]interface{}{
-				"compressed_research": "No research findings to compress.",
+				"compressed_research": "没有研究结果可压缩。",
 			}, nil
 		}
 

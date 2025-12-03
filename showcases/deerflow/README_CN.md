@@ -38,7 +38,23 @@ go build -o deerflow ./showcases/deerflow
 ./deerflow
 ```
 
-打开浏览器并访问 `http://localhost:8080`。
+默认情况下，服务器将在 `http://localhost:8085` 启动。
+
+### Nginx 配置
+
+项目包含了一个示例 `nginx.conf` 文件，用于配置反向代理。这对于生产部署或需要使用标准端口（如 80）的情况很有用。
+
+主要配置点：
+- 代理到 `http://localhost:8085`
+- 关闭缓冲以支持 SSE (Server-Sent Events) 流式输出
+
+你可以使用以下命令启动 Nginx（假设你已安装 Nginx）：
+
+```bash
+nginx -c $(pwd)/showcases/deerflow/nginx.conf
+```
+
+或者将配置内容复制到你的 Nginx 配置文件中。
 
 ### 命令行接口 (CLI)
 

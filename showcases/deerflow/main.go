@@ -2,12 +2,29 @@ package main
 
 import (
 	"context"
+	"embed"
 	"encoding/json"
 	"fmt"
+	"io/fs"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+	"regexp"
+	"sort"
+	"strings"
+	"time"
 )
+
+//go:embed web
+var webFS embed.FS
+
+type RunMetadata struct {
+	Query     string    `json:"query"`
+	Timestamp time.Time `json:"timestamp"`
+	DirName   string    `json:"dir_name"` // To know which folder to load if needed, though query is enough if unique
+}
 
 func main() {
 	// Check for API key
@@ -30,7 +47,7 @@ func main() {
 }
 
 func runCLI(query string) {
-	fmt.Printf("Starting Deer-Flow Research Agent with query: %s\n", query)
+	fmt.Printf("正在启动 Deer-Flow 研究代理，查询内容：%s\n", query)
 
 	graph, err := NewGraph()
 	if err != nil {
@@ -54,13 +71,17 @@ func runCLI(query string) {
 }
 
 func runServer() {
-	fs := http.FileServer(http.Dir("showcases/deerflow/web"))
-	http.Handle("/", fs)
+	subFS, err := fs.Sub(webFS, "web")
+	if err != nil {
+		log.Fatal(err)
+	}
+	http.Handle("/", http.FileServer(http.FS(subFS)))
 
 	http.HandleFunc("/api/run", handleRun)
+	http.HandleFunc("/api/history", handleHistory)
 
-	fmt.Println("🚀 DeerFlow Web Server running at http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	fmt.Println("🚀 DeerFlow Web Server running at http://localhost:8085")
+	log.Fatal(http.ListenAndServe(":8085", nil))
 }
 
 // Refactored handleRun to support concurrent logging and result retrieval
@@ -71,7 +92,7 @@ func handleRun(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Content-Type", "text/event-stream; charset=utf-8")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 
@@ -81,7 +102,17 @@ func handleRun(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sendSSE(w, flusher, "update", map[string]string{"step": "Initializing..."})
+	// Check if we have a saved run for this query
+	sanitizedQuery := sanitizeFilename(query)
+	dataDir := filepath.Join("showcases", "deerflow", "data", sanitizedQuery)
+	if _, err := os.Stat(dataDir); err == nil {
+		// Data exists, replay it
+		replayRun(w, flusher, dataDir)
+		return
+	}
+
+	// Send initial status
+	sendSSE(w, flusher, "update", map[string]string{"step": "正在初始化..."})
 
 	g, err := NewGraph()
 	if err != nil {
@@ -114,6 +145,8 @@ func handleRun(w http.ResponseWriter, r *http.Request) {
 		resultChan <- res.(*State)
 	}()
 
+	var capturedLogs []string
+
 	// Loop to handle logs and result
 	for {
 		select {
@@ -121,13 +154,19 @@ func handleRun(w http.ResponseWriter, r *http.Request) {
 			if !ok {
 				logChan = nil // Channel closed
 			} else {
+				capturedLogs = append(capturedLogs, msg)
 				sendSSE(w, flusher, "log", map[string]string{"message": msg})
 			}
 		case res, ok := <-resultChan:
 			if !ok {
 				resultChan = nil
 			} else {
-				sendSSE(w, flusher, "result", map[string]string{"report": res.FinalReport})
+				// Save run data
+				saveRun(dataDir, query, capturedLogs, res.FinalReport, res.PodcastScript)
+				sendSSE(w, flusher, "result", map[string]string{
+					"report":         res.FinalReport,
+					"podcast_script": res.PodcastScript,
+				})
 				return // Done
 			}
 		case err, ok := <-errChan:
@@ -143,6 +182,130 @@ func handleRun(w http.ResponseWriter, r *http.Request) {
 			break
 		}
 	}
+}
+
+func sanitizeFilename(name string) string {
+	// Replace invalid characters with underscore
+	reg := regexp.MustCompile(`[^a-zA-Z0-9\p{Han}]+`)
+	safe := reg.ReplaceAllString(name, "_")
+	// Trim underscores
+	safe = strings.Trim(safe, "_")
+	// Limit length
+	if len(safe) > 100 {
+		safe = safe[:100]
+	}
+	return safe
+}
+
+func saveRun(dir string, query string, logs []string, report string, podcastScript string) {
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		log.Printf("Failed to create data dir: %v", err)
+		return
+	}
+
+	// Save metadata
+	meta := RunMetadata{
+		Query:     query,
+		Timestamp: time.Now(),
+		DirName:   filepath.Base(dir),
+	}
+	metaData, _ := json.Marshal(meta)
+	if err := ioutil.WriteFile(filepath.Join(dir, "metadata.json"), metaData, 0644); err != nil {
+		log.Printf("Failed to save metadata: %v", err)
+	}
+
+	// Save logs
+	logsData, _ := json.Marshal(logs)
+	if err := ioutil.WriteFile(filepath.Join(dir, "logs.json"), logsData, 0644); err != nil {
+		log.Printf("Failed to save logs: %v", err)
+	}
+
+	// Save report
+	if err := ioutil.WriteFile(filepath.Join(dir, "report.html"), []byte(report), 0644); err != nil {
+		log.Printf("Failed to save report: %v", err)
+	}
+
+	// Save podcast script if exists
+	if podcastScript != "" {
+		if err := ioutil.WriteFile(filepath.Join(dir, "podcast.txt"), []byte(podcastScript), 0644); err != nil {
+			log.Printf("Failed to save podcast script: %v", err)
+		}
+	}
+}
+
+func replayRun(w http.ResponseWriter, flusher http.Flusher, dir string) {
+	// Read logs
+	logsData, err := ioutil.ReadFile(filepath.Join(dir, "logs.json"))
+	if err != nil {
+		sendSSE(w, flusher, "error", map[string]string{"message": "Failed to load saved logs"})
+		return
+	}
+	var logs []string
+	json.Unmarshal(logsData, &logs)
+
+	// Read report
+	reportData, err := ioutil.ReadFile(filepath.Join(dir, "report.html"))
+	if err != nil {
+		sendSSE(w, flusher, "error", map[string]string{"message": "Failed to load saved report"})
+		return
+	}
+
+	// Read podcast script (optional)
+	podcastScript := ""
+	podcastData, err := ioutil.ReadFile(filepath.Join(dir, "podcast.txt"))
+	if err == nil {
+		podcastScript = string(podcastData)
+	}
+
+	sendSSE(w, flusher, "update", map[string]string{"step": "正在从缓存回放..."})
+
+	// Replay logs with simulated delay
+	for _, msg := range logs {
+		sendSSE(w, flusher, "log", map[string]string{"message": msg})
+		// Simulate delay (faster than real-time but noticeable)
+		time.Sleep(200 * time.Millisecond)
+	}
+
+	// Send result
+	sendSSE(w, flusher, "result", map[string]string{
+		"report":         string(reportData),
+		"podcast_script": podcastScript,
+	})
+}
+
+func handleHistory(w http.ResponseWriter, r *http.Request) {
+	dataRoot := filepath.Join("showcases", "deerflow", "data")
+	entries, err := ioutil.ReadDir(dataRoot)
+	if err != nil {
+		http.Error(w, "Failed to read history", http.StatusInternalServerError)
+		return
+	}
+
+	var history []RunMetadata
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+
+		metaPath := filepath.Join(dataRoot, entry.Name(), "metadata.json")
+		data, err := ioutil.ReadFile(metaPath)
+		if err != nil {
+			continue // Skip if no metadata
+		}
+
+		var meta RunMetadata
+		if err := json.Unmarshal(data, &meta); err == nil {
+			history = append(history, meta)
+		}
+	}
+
+	// Sort by timestamp desc
+	sort.Slice(history, func(i, j int) bool {
+		return history[i].Timestamp.After(history[j].Timestamp)
+	})
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(history)
 }
 
 func sendSSE(w http.ResponseWriter, flusher http.Flusher, eventType string, data interface{}) {

@@ -4,7 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 
+	"github.com/gomarkdown/markdown"
+	"github.com/gomarkdown/markdown/html"
+	"github.com/gomarkdown/markdown/parser"
 	"github.com/smallnest/langgraphgo/graph"
 	"github.com/tmc/langchaingo/llms"
 	"github.com/tmc/langchaingo/llms/openai"
@@ -65,7 +69,7 @@ func CreateDeepResearcherGraph(config *Configuration) (*graph.StateRunnable, err
 		}
 
 		// Create research brief (simplified - in production, could use LLM to refine)
-		researchBrief := fmt.Sprintf("Research the following topic: %s", userQuery)
+		researchBrief := fmt.Sprintf("研究以下主题：%s", userQuery)
 
 		log.Printf("[Init Research] Research brief created: %s", researchBrief)
 
@@ -123,9 +127,9 @@ func CreateDeepResearcherGraph(config *Configuration) (*graph.StateRunnable, err
 
 		if len(notes) == 0 {
 			return map[string]interface{}{
-				"final_report": "No research findings available to generate report.",
+				"final_report": "没有可用的研究结果来生成报告。",
 				"messages": []llms.MessageContent{
-					llms.TextParts(llms.ChatMessageTypeAI, "No research findings available to generate report."),
+					llms.TextParts(llms.ChatMessageTypeAI, "没有可用的研究结果来生成报告。"),
 				},
 			}, nil
 		}
@@ -155,10 +159,26 @@ func CreateDeepResearcherGraph(config *Configuration) (*graph.StateRunnable, err
 
 		finalReport := resp.Choices[0].Content
 
-		log.Printf("[Final Report] Report generated successfully (%d characters)", len(finalReport))
+		// Clean up markdown code blocks if present
+		finalReport = strings.TrimPrefix(finalReport, "```markdown")
+		finalReport = strings.TrimPrefix(finalReport, "```")
+		finalReport = strings.TrimSuffix(finalReport, "```")
+
+		// Convert Markdown to HTML
+		extensions := parser.CommonExtensions | parser.AutoHeadingIDs | parser.NoEmptyLineBeforeBlock
+		p := parser.NewWithExtensions(extensions)
+		doc := p.Parse([]byte(finalReport))
+
+		htmlFlags := html.CommonFlags | html.HrefTargetBlank
+		opts := html.RendererOptions{Flags: htmlFlags}
+		renderer := html.NewRenderer(opts)
+		htmlContent := markdown.Render(doc, renderer)
+		finalReportHTML := string(htmlContent)
+
+		log.Printf("[Final Report] Report generated successfully (%d characters)", len(finalReportHTML))
 
 		return map[string]interface{}{
-			"final_report": finalReport,
+			"final_report": finalReportHTML,
 			"messages": []llms.MessageContent{
 				llms.TextParts(llms.ChatMessageTypeAI, finalReport),
 			},

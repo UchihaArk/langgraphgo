@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CreateAgent vs CreateReactAgent - LangGraphGo 文档</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.cn/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.cn/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+        }
+
+        .doc-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 120px 2rem 4rem;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 3rem;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 120px;
+            height: fit-content;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+        }
+
+        .sidebar-nav li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-nav a {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            display: block;
+            padding: 0.5rem;
+            border-radius: 6px;
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background: #eff6ff;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .content h2 {
+            font-size: 1.8rem;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .content h3 {
+            font-size: 1.4rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .content p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .content :not(pre)>code {
+            background: #f3f4f6;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-family: 'Menlo', monospace;
+            color: #c7254e;
+        }
+
+        .content pre code {
+            background-color: transparent;
+            padding: 0;
+            border-radius: 0;
+            color: inherit;
+        }
+
+        .content pre {
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5rem;
+        }
+
+        th,
+        td {
+            border: 1px solid var(--border-color);
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: var(--bg-surface);
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="nav-container">
+            <a href="../index.html" class="logo">LangGraphGo</a>
+            <ul class="nav-links">
+                <li><a href="../showcases.html">案例</a></li>
+                <li><a href="../docs.html" style="color: var(--primary-color);">文档</a></li>
+                <li><a href="../examples.html">示例</a></li>
+                <li><a href="../en/docs/guide-createagent-vs-createreactagent.html">English</a></li>
+            </ul>
+            <a href="https://github.com/smallnest/langgraphgo" target="_blank" class="btn-github">
+                <i class="fab fa-github"></i> GitHub
+            </a>
+        </div>
+    </header>
+
+    <div class="doc-container">
+        <aside class="sidebar">
+            <ul class="sidebar-nav">
+                <li><a href="getting-started.html">快速开始</a></li>
+                <li><a href="core-concepts.html">核心概念</a></li>
+                <li><a href="guides.html" class="active">指南</a></li>
+                <li><a href="api.html">API 参考</a></li>
+                <li
+                    style="margin-top: 1.5rem; font-size: 0.85rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">
+                    专题指南</li>
+                <li><a href="guide-basics.html" style="padding-left: 1rem;">基础构建块</a></li>
+                <li><a href="guide-stategraph-vs-messagegraph.html" style="padding-left: 1rem;">StateGraph vs
+                        MessageGraph</a></li>
+                <li><a href="guide-createagent-vs-createreactagent.html" class="active"
+                        style="padding-left: 1rem;">CreateAgent vs CreateReactAgent</a></li>
+                <li><a href="guide-prebuilt-agents.html" style="padding-left: 1rem;">预构建 Agent</a></li>
+                <li><a href="guide-streaming.html" style="padding-left: 1rem;">流式传输</a></li>
+                <li><a href="guide-memory-timetravel.html" style="padding-left: 1rem;">记忆与时间旅行</a></li>
+                <li><a href="guide-advanced-features.html" style="padding-left: 1rem;">高级特性</a></li>
+                <li><a href="guide-rag.html" style="padding-left: 1rem;">RAG 管道</a></li>
+                <li><a href="guide-hitl.html" style="padding-left: 1rem;">人工介入 (HITL)</a></li>
+                <li><a href="guide-multi-agent.html" style="padding-left: 1rem;">多 Agent 系统</a></li>
+                <li><a href="guide-state-management.html" style="padding-left: 1rem;">状态管理</a></li>
+                <li><a href="guide-monitoring.html" style="padding-left: 1rem;">监控与调试</a></li>
+            </ul>
+        </aside>
+        <main class="content">
+            <h1>CreateAgent vs CreateReactAgent</h1>
+            <p>LangGraphGo 提供了两种预构建 Agent 的方法：<code>CreateAgent</code> 和 <code>CreateReactAgent</code>。虽然它们都用于创建基于 ReAct
+                模式的 Agent，但在灵活性和配置选项上有所不同。</p>
+
+            <h2>1. CreateReactAgent</h2>
+            <h3>功能简介</h3>
+            <p><code>CreateReactAgent</code> 是最基础的构建器。它旨在以最少的配置快速启动一个 ReAct Agent。</p>
+            <h3>特点</h3>
+            <ul>
+                <li><strong>简单易用</strong>：仅需提供 LLM 模型和工具列表。</li>
+                <li><strong>零配置</strong>：不支持自定义系统提示词或状态修改逻辑。</li>
+                <li><strong>快速原型</strong>：适合用于测试工具或构建简单的演示。</li>
+            </ul>
+            <h3>代码示例</h3>
+            <pre><code class="language-go">// 仅需模型和工具
+agent, err := prebuilt.CreateReactAgent(model, tools)
+</code></pre>
+
+            <h2>2. CreateAgent</h2>
+            <h3>功能简介</h3>
+            <p><code>CreateAgent</code> 是一个更高级、更灵活的构建器。它采用了 Go 语言常见的 Option 模式，允许用户对 Agent 的行为进行精细控制。</p>
+            <h3>配置选项</h3>
+            <ul>
+                <li><code>WithSystemMessage(string)</code>: 设置系统提示词 (System Prompt)，用于定义 Agent 的角色和行为准则。</li>
+                <li><code>WithStateModifier(func)</code>: 允许在将消息发送给模型之前，对消息历史进行自定义修改（例如过滤掉过早的历史消息，或添加特定的上下文）。</li>
+                <li><code>WithCheckpointer(CheckpointStore)</code>: 设置检查点保存器，启用状态持久化和记忆功能。</li>
+            </ul>
+            <h3>适用场景</h3>
+            <ul>
+                <li>生产环境应用。</li>
+                <li>需要设定特定角色（如"你是一个有用的助手..."）的场景。</li>
+                <li>需要管理长对话历史或持久化状态的场景。</li>
+            </ul>
+            <h3>代码示例</h3>
+            <pre><code class="language-go">// 使用 Option 模式进行配置
+agent, err := prebuilt.CreateAgent(
+    model, 
+    tools,
+    prebuilt.WithSystemMessage("你是一个专业的 Golang 编程助手。"),
+    prebuilt.WithCheckpointer(checkpointer),
+)
+</code></pre>
+
+            <h2>3. 对比总结</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>特性</th>
+                        <th>CreateReactAgent</th>
+                        <th>CreateAgent</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>配置灵活性</td>
+                        <td>低</td>
+                        <td>高</td>
+                    </tr>
+                    <tr>
+                        <td>系统提示词</td>
+                        <td>不支持</td>
+                        <td>支持 (WithSystemMessage)</td>
+                    </tr>
+                    <tr>
+                        <td>状态持久化</td>
+                        <td>不支持 (默认)</td>
+                        <td>支持 (WithCheckpointer)</td>
+                    </tr>
+                    <tr>
+                        <td>推荐用途</td>
+                        <td>简单测试、原型</td>
+                        <td>生产环境、复杂应用</td>
+                    </tr>
+                </tbody>
+            </table>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+    <script src="../script.js"></script>
+</body>
+
+</html>

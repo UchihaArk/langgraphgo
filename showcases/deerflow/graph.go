@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+
 	"github.com/smallnest/langgraphgo/graph"
 )
 
@@ -15,7 +17,10 @@ type State struct {
 	Request         Request  `json:"request"`
 	Plan            []string `json:"plan"`
 	ResearchResults []string `json:"research_results"`
+	Images          []string `json:"images"` // Image URLs from search results
 	FinalReport     string   `json:"final_report"`
+	PodcastScript   string   `json:"podcast_script"`
+	GeneratePodcast bool     `json:"generate_podcast"`
 	Step            int      `json:"step"`
 }
 
@@ -27,6 +32,7 @@ func NewGraph() (*graph.StateRunnable, error) {
 	workflow.AddNode("planner", PlannerNode)
 	workflow.AddNode("researcher", ResearcherNode)
 	workflow.AddNode("reporter", ReporterNode)
+	workflow.AddNode("podcast", PodcastNode)
 
 	// Add edges
 	// Start -> Planner
@@ -38,8 +44,17 @@ func NewGraph() (*graph.StateRunnable, error) {
 	// Researcher -> Reporter
 	workflow.AddEdge("researcher", "reporter")
 
-	// Reporter -> End
-	workflow.AddEdge("reporter", graph.END)
+	// Reporter -> Podcast (Conditional) or END
+	workflow.AddConditionalEdge("reporter", func(ctx context.Context, state interface{}) string {
+		s := state.(*State)
+		if s.GeneratePodcast {
+			return "podcast"
+		}
+		return graph.END
+	})
+
+	// Podcast -> End
+	workflow.AddEdge("podcast", graph.END)
 
 	return workflow.Compile()
 }

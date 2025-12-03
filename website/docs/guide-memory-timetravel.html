@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>记忆与时间旅行指南 - LangGraphGo 文档</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.cn/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.cn/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+        }
+
+        .doc-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 120px 2rem 4rem;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 3rem;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 120px;
+            height: fit-content;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+        }
+
+        .sidebar-nav li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-nav a {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            display: block;
+            padding: 0.5rem;
+            border-radius: 6px;
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background: #eff6ff;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .content h2 {
+            font-size: 1.8rem;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .content h3 {
+            font-size: 1.4rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .content p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .content :not(pre)>code {
+            background: #f3f4f6;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-family: 'Menlo', monospace;
+            color: #c7254e;
+        }
+
+        .content pre code {
+            background-color: transparent;
+            padding: 0;
+            border-radius: 0;
+            color: inherit;
+        }
+
+        .content pre {
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="nav-container">
+            <a href="../index.html" class="logo">LangGraphGo</a>
+            <ul class="nav-links">
+                <li><a href="../showcases.html">案例</a></li>
+                <li><a href="../docs.html" style="color: var(--primary-color);">文档</a></li>
+                <li><a href="../examples.html">示例</a></li>
+                <li><a href="../en/docs/guide-memory-timetravel.html">English</a></li>
+            </ul>
+            <a href="https://github.com/smallnest/langgraphgo" target="_blank" class="btn-github">
+                <i class="fab fa-github"></i> GitHub
+            </a>
+        </div>
+    </header>
+
+    <div class="doc-container">
+        <aside class="sidebar">
+            <ul class="sidebar-nav">
+                <li><a href="getting-started.html">快速开始</a></li>
+                <li><a href="core-concepts.html">核心概念</a></li>
+                <li><a href="guides.html" class="active">指南</a></li>
+                <li><a href="api.html">API 参考</a></li>
+                <li
+                    style="margin-top: 1.5rem; font-size: 0.85rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">
+                    专题指南</li>
+                <li><a href="guide-basics.html" style="padding-left: 1rem;">基础构建块</a></li>
+                <li><a href="guide-stategraph-vs-messagegraph.html" style="padding-left: 1rem;">StateGraph vs MessageGraph</a></li>
+                <li><a href="guide-createagent-vs-createreactagent.html" style="padding-left: 1rem;">CreateAgent vs CreateReactAgent</a></li>
+                <li><a href="guide-prebuilt-agents.html" style="padding-left: 1rem;">预构建 Agent</a></li>
+                <li><a href="guide-streaming.html" style="padding-left: 1rem;">流式传输</a></li>
+                <li><a href="guide-memory-timetravel.html" class="active" style="padding-left: 1rem;">记忆与时间旅行</a></li>
+                <li><a href="guide-advanced-features.html" style="padding-left: 1rem;">高级特性</a></li>
+                <li><a href="guide-rag.html" style="padding-left: 1rem;">RAG 管道</a></li>
+                <li><a href="guide-hitl.html" style="padding-left: 1rem;">人工介入 (HITL)</a></li>
+                <li><a href="guide-multi-agent.html" style="padding-left: 1rem;">多 Agent 系统</a></li>
+                <li><a href="guide-state-management.html" style="padding-left: 1rem;">状态管理</a></li>
+                <li><a href="guide-monitoring.html" style="padding-left: 1rem;">监控与调试</a></li>
+            </ul>
+        </aside>
+        <main class="content">
+            <h1>记忆与时间旅行</h1>
+            <p>LangGraphGo 的一个核心区别在于其对状态持久化的深度支持。这不仅实现了基本的"记忆"功能，还开启了强大的"时间旅行"能力，允许开发者像操作 Git 一样操作应用的执行历史。</p>
+
+            <h2>1. 记忆 (Memory)</h2>
+
+            <h3>背景与功能</h3>
+            <p>无状态的 LLM 无法记住上下文。为了构建聊天机器人或多轮对话应用，我们需要在轮次之间保存状态。LangGraphGo 将这一责任从应用层下沉到了框架层。你不需要手动管理数据库读写，只需配置一个
+                Checkpointer。</p>
+
+            <h3>实现原理</h3>
+            <p>Checkpointer 是一个接口，负责保存和加载 Checkpoint。Checkpoint 是图在特定步骤（Superstep）结束时的完整状态快照。每次状态更新时，LangGraphGo
+                都会自动创建一个新的 Checkpoint，并将其保存到底层存储（如 Postgres, Redis, SQLite）。</p>
+            <p>通过 <code>ThreadID</code>，我们可以将一系列 Checkpoint 关联到同一个对话线程中。</p>
+
+            <h3>代码展示</h3>
+            <pre><code class="language-go">// 1. 初始化 Checkpointer (以 Memory 为例，生产环境请用 Postgres/Redis)
+checkpointer := memory.NewSaver()
+
+// 2. 编译图时启用 Checkpointer
+runnable, _ := g.Compile(graph.WithCheckpointer(checkpointer))
+
+// 3. 调用时指定 ThreadID
+config := &graph.Config{
+    ThreadID: "conversation-123",
+}
+
+// 第一次对话
+runnable.Invoke(ctx, "Hello", config)
+
+// 第二次对话，框架会自动加载之前的状态（记忆）
+runnable.Invoke(ctx, "My name is Bob", config)</code></pre>
+
+            <h2>2. 时间旅行 (Time Travel)</h2>
+
+            <h3>背景与功能</h3>
+            <p>既然我们保存了每一步的快照，我们就可以随时"回到过去"。这对于调试（重现错误）、人工介入（修正中间步骤）以及探索性执行（尝试不同的分支）非常有价值。</p>
+
+            <h3>实现原理</h3>
+            <p>时间旅行本质上是基于 Checkpoint ID 的状态加载。当你指定一个历史的 <code>CheckpointID</code> 时，LangGraphGo
+                会加载那个时刻的状态，而不是最新的状态。如果你从那个状态继续执行，系统会创建一个新的分支（Fork），保留原始历史不变。</p>
+
+            <h3>代码展示：查看历史</h3>
+            <pre><code class="language-go">// 列出该线程的所有历史 Checkpoint
+checkpoints, _ := runnable.ListCheckpoints(ctx, config)
+
+for _, cp := range checkpoints {
+    fmt.Printf("Step: %d, ID: %s, Time: %s\n", 
+        cp.Metadata["step"], cp.ID, cp.Timestamp)
+    // 你可以查看当时的状态数据
+    // fmt.Println(cp.State)
+}</code></pre>
+
+            <h3>代码展示：回到过去 (Forking)</h3>
+            <pre><code class="language-go">// 假设我们想回到倒数第二步
+pastCheckpoint := checkpoints[1]
+
+forkConfig := &graph.Config{
+    ThreadID: "conversation-123",
+    CheckpointID: pastCheckpoint.ID, // 指定要恢复的 ID
+}
+
+// 从过去的状态继续执行，但这会产生一个新的分支
+runnable.Invoke(ctx, "Let's try a different approach", forkConfig)</code></pre>
+
+            <h3>代码展示：修改历史 (UpdateState)</h3>
+            <p>更进一步，你甚至可以修改过去的状态。这在人工介入场景中非常有用，例如用户纠正了 Agent 在某一步的错误记忆。</p>
+            <pre><code class="language-go">// 假设我们在某个 Checkpoint 发现 Agent 记错了名字
+// 我们手动更新状态
+runnable.UpdateState(ctx, config, map[string]interface{}{
+    "user_name": "Alice", // 修正名字
+})
+
+// 这里的 config 如果包含 CheckpointID，就是修改历史；
+// 如果不包含，就是修改当前最新状态。
+// 修改后，下一次 Invoke 将基于这个修正后的状态运行。</code></pre>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+    <script src="../script.js"></script>
+</body>
+
+</html>

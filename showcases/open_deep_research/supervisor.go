@@ -72,7 +72,7 @@ func CreateSupervisorGraph(config *Configuration, model llms.Model, researcherGr
 
 		// Add research brief as initial human message only if no conversation history
 		if len(messages) == 0 {
-			msgs = append(msgs, llms.TextParts(llms.ChatMessageTypeHuman, fmt.Sprintf("Research Brief: %s\n\nPlease analyze this research brief and decide how to delegate the research. Use the think_tool first to plan your approach, then call ConductResearch to delegate tasks.", researchBrief)))
+			msgs = append(msgs, llms.TextParts(llms.ChatMessageTypeHuman, fmt.Sprintf("研究简报：%s\n\n请分析这份研究简报并决定如何委派研究。首先使用 think_tool 规划你的方法，然后调用 ConductResearch 委派任务。", researchBrief)))
 		} else {
 			// For subsequent iterations, append the conversation history
 			msgs = append(msgs, messages...)
@@ -84,13 +84,13 @@ func CreateSupervisorGraph(config *Configuration, model llms.Model, researcherGr
 				Type: "function",
 				Function: &llms.FunctionDefinition{
 					Name:        "ConductResearch",
-					Description: "Delegate a research task to a specialized sub-agent. Provide a detailed research topic.",
+					Description: "将研究任务委派给专门的子代理。提供详细的研究主题。",
 					Parameters: map[string]interface{}{
 						"type": "object",
 						"properties": map[string]interface{}{
 							"research_topic": map[string]interface{}{
 								"type":        "string",
-								"description": "The topic to research. Should be a single topic described in high detail (at least a paragraph).",
+								"description": "要研究的主题。应该是一个详细描述的单一主题（至少一段）。",
 							},
 						},
 						"required": []string{"research_topic"},
@@ -101,13 +101,13 @@ func CreateSupervisorGraph(config *Configuration, model llms.Model, researcherGr
 				Type: "function",
 				Function: &llms.FunctionDefinition{
 					Name:        "ResearchComplete",
-					Description: "Call this when research is complete and you have enough information.",
+					Description: "当研究完成且你有足够信息时调用此工具。",
 					Parameters: map[string]interface{}{
 						"type": "object",
 						"properties": map[string]interface{}{
 							"complete": map[string]interface{}{
 								"type":        "boolean",
-								"description": "Set to true when research is complete",
+								"description": "当研究完成时设置为 true",
 							},
 						},
 						"required": []string{"complete"},
@@ -118,13 +118,13 @@ func CreateSupervisorGraph(config *Configuration, model llms.Model, researcherGr
 				Type: "function",
 				Function: &llms.FunctionDefinition{
 					Name:        "think_tool",
-					Description: "Use this to reflect on your progress and plan next steps.",
+					Description: "使用此工具反思你的进度并规划下一步。",
 					Parameters: map[string]interface{}{
 						"type": "object",
 						"properties": map[string]interface{}{
 							"reflection": map[string]interface{}{
 								"type":        "string",
-								"description": "Your reflection on the current state and next steps",
+								"description": "你对当前状态和下一步的反思",
 							},
 						},
 						"required": []string{"reflection"},
@@ -194,7 +194,7 @@ func CreateSupervisorGraph(config *Configuration, model llms.Model, researcherGr
 					errMsg := CreateToolMessage(
 						tc.ID,
 						tc.FunctionCall.Name,
-						fmt.Sprintf("Error: Exceeded maximum concurrent research units (%d). Please try again with fewer tasks.", maxConcurrent),
+						fmt.Sprintf("错误：超过了最大并发研究单元数 (%d)。请尝试减少任务数量。", maxConcurrent),
 					)
 					toolMessages = append(toolMessages, errMsg)
 				}

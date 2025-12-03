@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>预构建 Agent 指南 - LangGraphGo 文档</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.cn/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.cn/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+        }
+
+        .doc-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 120px 2rem 4rem;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 3rem;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 120px;
+            height: fit-content;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+        }
+
+        .sidebar-nav li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-nav a {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            display: block;
+            padding: 0.5rem;
+            border-radius: 6px;
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background: #eff6ff;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .content h2 {
+            font-size: 1.8rem;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .content h3 {
+            font-size: 1.4rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .content p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .content :not(pre)>code {
+            background: #f3f4f6;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-family: 'Menlo', monospace;
+            color: #c7254e;
+        }
+
+        .content pre code {
+            background-color: transparent;
+            padding: 0;
+            border-radius: 0;
+            color: inherit;
+        }
+
+        .content pre {
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="nav-container">
+            <a href="../index.html" class="logo">LangGraphGo</a>
+            <ul class="nav-links">
+                <li><a href="../showcases.html">案例</a></li>
+                <li><a href="../docs.html" style="color: var(--primary-color);">文档</a></li>
+                <li><a href="../examples.html">示例</a></li>
+                <li><a href="../en/docs/guide-prebuilt-agents.html">English</a></li>
+            </ul>
+            <a href="https://github.com/smallnest/langgraphgo" target="_blank" class="btn-github">
+                <i class="fab fa-github"></i> GitHub
+            </a>
+        </div>
+    </header>
+
+    <div class="doc-container">
+        <aside class="sidebar">
+            <ul class="sidebar-nav">
+                <li><a href="getting-started.html">快速开始</a></li>
+                <li><a href="core-concepts.html">核心概念</a></li>
+                <li><a href="guides.html" class="active">指南</a></li>
+                <li><a href="api.html">API 参考</a></li>
+                <li
+                    style="margin-top: 1.5rem; font-size: 0.85rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">
+                    专题指南</li>
+                <li><a href="guide-basics.html" style="padding-left: 1rem;">基础构建块</a></li>
+                <li><a href="guide-stategraph-vs-messagegraph.html" style="padding-left: 1rem;">StateGraph vs MessageGraph</a></li>
+                <li><a href="guide-createagent-vs-createreactagent.html" style="padding-left: 1rem;">CreateAgent vs CreateReactAgent</a></li>
+                <li><a href="guide-prebuilt-agents.html" class="active" style="padding-left: 1rem;">预构建 Agent</a></li>
+                <li><a href="guide-streaming.html" style="padding-left: 1rem;">流式传输</a></li>
+                <li><a href="guide-memory-timetravel.html" style="padding-left: 1rem;">记忆与时间旅行</a></li>
+                <li><a href="guide-advanced-features.html" style="padding-left: 1rem;">高级特性</a></li>
+                <li><a href="guide-rag.html" style="padding-left: 1rem;">RAG 管道</a></li>
+                <li><a href="guide-hitl.html" style="padding-left: 1rem;">人工介入 (HITL)</a></li>
+                <li><a href="guide-multi-agent.html" style="padding-left: 1rem;">多 Agent 系统</a></li>
+                <li><a href="guide-state-management.html" style="padding-left: 1rem;">状态管理</a></li>
+                <li><a href="guide-monitoring.html" style="padding-left: 1rem;">监控与调试</a></li>
+            </ul>
+        </aside>
+        <main class="content">
+            <h1>预构建 Agent (Prebuilt Agents)</h1>
+            <p>虽然 LangGraphGo 提供了构建任意图的底层能力，但对于许多常见任务，我们不需要从零开始。LangGraphGo 提供了一系列预构建的 Agent 工厂函数，封装了最佳实践，让你能快速启动。</p>
+
+            <h2>1. ReAct Agent</h2>
+
+            <h3>背景与功能</h3>
+            <p>ReAct (Reason + Act) 是最流行的 Agent 模式之一。它允许 LLM 在生成回复之前，先进行推理并调用工具获取信息。这种循环（思考 -> 行动 -> 观察 -> 思考）使得 Agent
+                能够解决需要外部知识或计算能力的问题。</p>
+
+            <h3>实现原理</h3>
+            <p><code>CreateReactAgent</code> 内部构建了一个包含两个主要节点的图：</p>
+            <ul>
+                <li><strong>Agent 节点</strong>: 调用 LLM，根据当前状态决定是回复用户还是调用工具。</li>
+                <li><strong>Tools 节点</strong>: 执行 LLM 请求的工具调用，并将结果返回给 Agent。</li>
+            </ul>
+            <p>这两个节点通过条件边连接，形成一个闭环，直到 LLM 决定结束。</p>
+
+            <h3>代码展示</h3>
+            <pre><code class="language-go">import "github.com/smallnest/langgraphgo/prebuilt"
+
+// 1. 定义工具
+tools := []llms.Tool{
+    // ... 你的工具定义 ...
+}
+
+// 2. 创建 Agent
+// 这个函数会自动构建图、添加节点和边
+agent := prebuilt.CreateReactAgent(model, tools)
+
+// 3. 运行
+res, err := agent.Invoke(ctx, input)</code></pre>
+
+            <h2>2. 通用 Agent (CreateAgent)</h2>
+
+            <h3>背景与功能</h3>
+            <p>有时你需要比 ReAct 更灵活的配置，例如自定义 System Message、添加 Checkpointer 或修改状态 Schema。<code>CreateAgent</code>
+                提供了一个更通用的入口。</p>
+
+            <h3>实现原理</h3>
+            <p>它使用 Go 的 Option 模式来接收配置。底层逻辑与 ReAct 类似，但允许更多的定制化。</p>
+
+            <h3>代码展示</h3>
+            <pre><code class="language-go">agent := prebuilt.CreateAgent(
+    model,
+    tools,
+    // 自定义系统提示词
+    prebuilt.WithSystemMessage("你是一个专注于数学问题的助手。"),
+    // 启用持久化
+    prebuilt.WithCheckpointer(checkpointer),
+)</code></pre>
+
+            <h2>3. Supervisor (监督者)</h2>
+
+            <h3>背景与功能</h3>
+            <p>如"多 Agent 系统"指南中所述，Supervisor 用于协调多个 Worker Agent。预构建的 <code>CreateSupervisor</code> 让你无需手动编写复杂的路由逻辑。</p>
+
+            <h3>实现原理</h3>
+            <p>它创建一个专门的 Supervisor 节点，该节点使用特殊的 Prompt 来引导 LLM 输出下一个 Worker 的名字。它还处理了状态的传递和结果的汇总。</p>
+
+            <h3>代码展示</h3>
+            <pre><code class="language-go">supervisor := prebuilt.CreateSupervisor(
+    model,
+    []string{"Researcher", "Writer", "Reviewer"}, // Worker 列表
+    prebuilt.WithSupervisorSystemMessage("管理研究员、作家和审稿人..."),
+)</code></pre>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+    <script src="../script.js"></script>
+</body>
+
+</html>

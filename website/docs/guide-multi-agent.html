@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多 Agent 系统指南 - LangGraphGo 文档</title>
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.cn/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.cn/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        body {
+            font-family: 'Inter', 'Noto Sans SC', sans-serif;
+        }
+
+        .doc-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 120px 2rem 4rem;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 3rem;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 120px;
+            height: fit-content;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+        }
+
+        .sidebar-nav li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-nav a {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            display: block;
+            padding: 0.5rem;
+            border-radius: 6px;
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background: #eff6ff;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .content h2 {
+            font-size: 1.8rem;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .content h3 {
+            font-size: 1.4rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .content p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .content :not(pre)>code {
+            background: #f3f4f6;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-family: 'Menlo', monospace;
+            color: #c7254e;
+        }
+
+        .content pre code {
+            background-color: transparent;
+            padding: 0;
+            border-radius: 0;
+            color: inherit;
+        }
+
+        .content pre {
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="nav-container">
+            <a href="../index.html" class="logo">LangGraphGo</a>
+            <ul class="nav-links">
+                <li><a href="../showcases.html">案例</a></li>
+                <li><a href="../docs.html" style="color: var(--primary-color);">文档</a></li>
+                <li><a href="../examples.html">示例</a></li>
+                <li><a href="../en/docs/guide-multi-agent.html">English</a></li>
+            </ul>
+            <a href="https://github.com/smallnest/langgraphgo" target="_blank" class="btn-github">
+                <i class="fab fa-github"></i> GitHub
+            </a>
+        </div>
+    </header>
+
+    <div class="doc-container">
+        <aside class="sidebar">
+            <ul class="sidebar-nav">
+                <li><a href="getting-started.html">快速开始</a></li>
+                <li><a href="core-concepts.html">核心概念</a></li>
+                <li><a href="guides.html" class="active">指南</a></li>
+                <li><a href="api.html">API 参考</a></li>
+                <li
+                    style="margin-top: 1.5rem; font-size: 0.85rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">
+                    专题指南</li>
+                <li><a href="guide-basics.html" style="padding-left: 1rem;">基础构建块</a></li>
+                <li><a href="guide-stategraph-vs-messagegraph.html" style="padding-left: 1rem;">StateGraph vs MessageGraph</a></li>
+                <li><a href="guide-createagent-vs-createreactagent.html" style="padding-left: 1rem;">CreateAgent vs CreateReactAgent</a></li>
+                <li><a href="guide-prebuilt-agents.html" style="padding-left: 1rem;">预构建 Agent</a></li>
+                <li><a href="guide-streaming.html" style="padding-left: 1rem;">流式传输</a></li>
+                <li><a href="guide-memory-timetravel.html" style="padding-left: 1rem;">记忆与时间旅行</a></li>
+                <li><a href="guide-advanced-features.html" style="padding-left: 1rem;">高级特性</a></li>
+                <li><a href="guide-rag.html" style="padding-left: 1rem;">RAG 管道</a></li>
+                <li><a href="guide-hitl.html" style="padding-left: 1rem;">人工介入 (HITL)</a></li>
+                <li><a href="guide-multi-agent.html" class="active" style="padding-left: 1rem;">多 Agent 系统</a></li>
+                <li><a href="guide-state-management.html" style="padding-left: 1rem;">状态管理</a></li>
+                <li><a href="guide-monitoring.html" style="padding-left: 1rem;">监控与调试</a></li>
+            </ul>
+        </aside>
+        <main class="content">
+            <h1>多 Agent 系统 (Multi-Agent Systems)</h1>
+            <p>单体 Agent 往往难以处理过于复杂的任务。通过将任务分解，让多个专注于特定领域的 Agent 协作，我们可以构建出更强大、更稳定的系统。LangGraphGo 的图结构天然适合编排多 Agent 系统。
+            </p>
+
+            <h2>1. Supervisor 模式 (监督者模式)</h2>
+
+            <h3>背景与功能</h3>
+            <p>这是最经典的多 Agent 组织形式。一个中央的 "Supervisor" Agent 充当项目经理，它接收用户请求，将任务分解并分配给下属的 "Worker"
+                Agent（如研究员、程序员、测试员）。Worker 完成任务后向 Supervisor 汇报，Supervisor 汇总结果或要求重做。</p>
+
+            <h3>实现原理</h3>
+            <p>在 LangGraphGo 中，Supervisor 是一个特殊的节点（通常是一个 LLM），它的输出决定了下一个被激活的节点（Worker）。这通过条件边实现。所有 Worker 节点的输出边都指回
+                Supervisor，形成一个星形拓扑结构。</p>
+
+            <h3>代码展示</h3>
+            <pre><code class="language-go">// 1. 定义 Worker 节点
+g.AddNode("Researcher", researcherAgent)
+g.AddNode("Coder", coderAgent)
+
+// 2. 定义 Supervisor 节点
+// 使用预构建的 CreateSupervisor 简化创建
+supervisor := prebuilt.CreateSupervisor(
+    model,
+    []string{"Researcher", "Coder"},
+    prebuilt.WithSupervisorSystemMessage("你是一个技术主管，负责协调研究和编码..."),
+)
+g.AddNode("Supervisor", supervisor)
+
+// 3. 定义路由逻辑
+// Supervisor 的输出是一个指令，告诉图下一步去哪个 Worker
+g.AddConditionalEdge("Supervisor", func(ctx context.Context, state interface{}) string {
+    return state.(AgentState).Next // 例如返回 "Researcher"
+})
+
+// 4. 定义回路
+// Worker 完成后总是回到 Supervisor
+g.AddEdge("Researcher", "Supervisor")
+g.AddEdge("Coder", "Supervisor")</code></pre>
+
+            <h2>2. Hierarchical Teams (分层团队)</h2>
+
+            <h3>背景与功能</h3>
+            <p>当团队规模变大时，扁平的 Supervisor 模式会遇到瓶颈。分层团队模式引入了层级结构：Supervisor 管理的是子图（Subgraphs），而每个子图本身可能也是一个由 Supervisor
+                管理的小组。</p>
+            <p>例如，一个 "Dev Team" 子图可能包含 "Backend" 和 "Frontend" Agent。顶层 Supervisor 只需与 "Dev Team" 交互，而不需要关心具体的后端或前端细节。
+            </p>
+
+            <h3>实现原理</h3>
+            <p>利用 LangGraphGo 的子图特性。我们将每个团队封装为一个 `CompiledGraph`，然后将其作为节点添加到上层图中。对于上层图来说，子图就是一个普通的节点。</p>
+
+            <h3>代码展示</h3>
+            <pre><code class="language-go">// 1. 构建 Research Team 子图
+researchGraph := graph.NewStateGraph(...)
+// ... 添加 researcher agents ...
+researchTeam := researchGraph.Compile()
+
+// 2. 构建 Coding Team 子图
+codingGraph := graph.NewStateGraph(...)
+// ... 添加 coder agents ...
+codingTeam := codingGraph.Compile()
+
+// 3. 构建顶层图
+topGraph := graph.NewStateGraph(...)
+topGraph.AddNode("ResearchTeam", researchTeam)
+topGraph.AddNode("CodingTeam", codingTeam)
+topGraph.AddNode("TopSupervisor", topSupervisor)
+
+// ... 定义顶层路由 ...</code></pre>
+
+            <h2>3. Network / Swarm (网络/蜂群模式)</h2>
+
+            <h3>背景与功能</h3>
+            <p>在去中心化的网络模式中，没有单一的管理者。每个 Agent 都可以根据需要将任务移交给其他 Agent。这类似于微服务架构或人类的社交网络。</p>
+
+            <h3>实现原理</h3>
+            <p>每个 Agent 节点都配备了路由逻辑（条件边）。当 Agent A 认为任务超出了自己的能力范围，或者需要 Agent B 的协助时，它会输出一个特殊的信号，触发条件边跳转到 Agent B。</p>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+    <script src="../script.js"></script>
+</body>
+
+</html>

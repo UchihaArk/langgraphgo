@@ -1,15 +1,23 @@
 :root {
-    --bg-color: #0f1117;
-    --sidebar-bg: #161b22;
-    --card-bg: #1e232e;
-    --text-primary: #e6edf3;
-    --text-secondary: #8b949e;
-    --accent-color: #58a6ff;
-    --accent-hover: #79c0ff;
-    --border-color: #30363d;
-    --input-bg: #0d1117;
-    --success-color: #238636;
+    --bg-color: #f7f5f0;
+    /* Claude.ai-like warm/micro-yellow background */
+    --sidebar-bg: #f7f5f0;
+    /* Match sidebar to main background */
+    --card-bg: #ffffff;
+    --text-primary: #333333;
+    /* Slightly darker for better contrast on warm bg */
+    --text-secondary: #666666;
+    --accent-color: #d97757;
+    /* Let's try a warm accent like Claude's sometimes has */
+    --accent-hover: #c56245;
+    --border-color: #e6e4dd;
+    /* Warm border */
+    --input-bg: #ffffff;
+    /* White input on warm bg */
+    --success-color: #27ae60;
     --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --paper-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+    /* Stronger gray shadow for paper effect */
 }
 
 * {
@@ -44,8 +52,9 @@ body {
 
 .logo {
     display: flex;
-    align-items: center;
-    gap: 12px;
+    align-items: baseline;
+    gap: 8px;
+    /* Reduced gap slightly */
     font-weight: 600;
     font-size: 18px;
     color: var(--text-primary);
@@ -53,6 +62,19 @@ body {
 
 .logo svg {
     color: var(--accent-color);
+    align-self: center;
+    /* Keep icon centered vertically */
+    position: relative;
+    top: 2px;
+    /* Visual adjustment */
+}
+
+.powered-by {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 400;
+    position: relative;
+    top: 3px;
 }
 
 .icon-btn {
@@ -63,6 +85,10 @@ body {
     padding: 8px;
     border-radius: 6px;
     transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .icon-btn:hover {
@@ -77,11 +103,12 @@ body {
 }
 
 .chat-container {
-    flex: 1;
+    width: 40%;
+    min-width: 40%;
+    max-width: 40%;
     display: flex;
     flex-direction: column;
     border-right: 1px solid var(--border-color);
-    max-width: 50%;
 }
 
 .messages {
@@ -119,6 +146,7 @@ body {
 .message.user .avatar {
     background-color: var(--accent-color);
     color: #fff;
+    border: none;
 }
 
 .message .content {
@@ -195,7 +223,8 @@ textarea {
 
 .report-panel {
     flex: 1;
-    background-color: var(--sidebar-bg);
+    background-color: var(--bg-color);
+    /* Use main bg color for panel container */
     display: flex;
     flex-direction: column;
 }
@@ -203,6 +232,8 @@ textarea {
 .panel-header {
     padding: 0 24px;
     height: 60px;
+    background-color: var(--bg-color);
+    /* Match main bg */
     border-bottom: 1px solid var(--border-color);
     display: flex;
     align-items: center;
@@ -282,7 +313,7 @@ textarea {
 }
 
 .log-entry {
-    line-height: 1.5;
+    line-height: 2.0;
     white-space: pre-wrap;
     border-bottom: 1px solid rgba(48, 54, 61, 0.5);
     padding-bottom: 8px;
@@ -333,24 +364,197 @@ textarea {
 
 
 
-.report-content h1,
-.report-content h2,
-.report-content h3 {
-    margin-top: 24px;
-    margin-bottom: 16px;
+
+/* Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    width: 500px;
+    max-width: 90%;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.modal-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.close-btn:hover {
     color: var(--text-primary);
 }
 
-.report-content p {
-    margin-bottom: 16px;
+.modal-content {
+    padding: 16px;
+    overflow-y: auto;
+    flex: 1;
+    /* Ensure content takes available space and scrolls */
+    min-height: 0;
+    /* Prevent flex overflow issues */
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.history-item {
+    padding: 12px;
+    border-radius: 8px;
+    background-color: var(--input-bg);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.history-item:hover {
+    border-color: var(--accent-color);
+    background-color: rgba(88, 166, 255, 0.1);
+}
+
+.history-query {
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: var(--text-primary);
+}
+
+.history-date {
+    font-size: 12px;
     color: var(--text-secondary);
+}
+
+/* Markdown Report Styles */
+.report-content {
+    font-size: 18px;
+    /* Increased base font size */
+    line-height: 1.5;
+    /* Increased line height for better readability */
+    color: var(--text-primary);
+    max-width: 850px;
+    /* Wider paper */
+    margin: 40px auto;
+    padding: 60px 60px;
+    /* Further reduced padding */
+    background-color: #ffffff;
+    box-shadow: var(--paper-shadow);
+    border-radius: 2px;
+    min-height: 1000px;
+    border: 1px solid rgba(0, 0, 0, 0.02);
+}
+
+.report-content h1 {
+    font-size: 2.8em;
+    /* Much larger title */
+    font-weight: 800;
+    /* Heavier weight */
+    margin-top: 0;
+    margin-bottom: 40px;
+    /* Increased margin */
+    padding-bottom: 40px;
+    /* Increased padding */
+    border-bottom: 3px solid var(--text-primary);
+    /* Stronger border */
+    color: var(--text-primary);
+    line-height: 1.5;
+    letter-spacing: -0.02em;
+    /* Tighter tracking for large headings */
+}
+
+.report-content h2 {
+    font-size: 2.0em;
+    /* Larger section headings */
+    font-weight: 700;
+    margin-top: 30px;
+    /* More breathing room above */
+    margin-bottom: 30px;
+    /* Increased margin */
+    color: var(--text-primary);
+    line-height: 1.5;
+    letter-spacing: -0.01em;
+}
+
+.report-content h3 {
+    font-size: 1.5em;
+    font-weight: 600;
+    margin-top: 20px;
+    /* Increased margin */
+    margin-bottom: 20px;
+    /* Increased margin */
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+.report-content p {
+    margin-bottom: 5px;
+    color: var(--text-primary);
+    /* Darker text for better readability with larger font */
+    font-weight: 400;
 }
 
 .report-content ul,
 .report-content ol {
-    margin-bottom: 16px;
-    padding-left: 24px;
+    margin-bottom: 24px;
+    padding-left: 28px;
     color: var(--text-secondary);
+}
+
+.report-content li {
+    margin-bottom: 12px;
+    /* Reduced from 16px */
+}
+
+.report-content li>ul,
+.report-content li>ol {
+    margin-top: 4px;
+    margin-bottom: 4px;
+}
+
+.report-content li li {
+    margin-bottom: 4px;
+    /* Tighter for nested items */
 }
 
 .placeholder-text {
@@ -364,22 +568,31 @@ textarea {
 
 /* Markdown Styles */
 .report-content pre {
-    background-color: var(--input-bg);
+    background-color: #f6f8fa;
+    /* Light code block bg */
     padding: 16px;
-    border-radius: 8px;
+    border-radius: 6px;
     overflow-x: auto;
-    margin-bottom: 16px;
+    margin-bottom: 24px;
     border: 1px solid var(--border-color);
 }
 
 .report-content code {
     font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
-    font-size: 13px;
+    font-size: 14px;
+    background-color: rgba(27, 31, 35, 0.05);
+    /* Light inline code bg */
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
 }
 
 .report-content blockquote {
     border-left: 4px solid var(--accent-color);
-    padding-left: 16px;
-    margin-bottom: 16px;
+    padding: 16px 24px;
+    margin: 24px 0;
+    background-color: #f8f9fa;
+    /* Light quote bg */
     color: var(--text-secondary);
+    font-style: italic;
+    border-radius: 0 4px 4px 0;
 }

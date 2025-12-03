@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Core Concepts - LangGraphGo Docs</title>
+    <link rel="stylesheet" href="../../style.css">
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .doc-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 120px 2rem 4rem;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 3rem;
+        }
+
+        .sidebar {
+            position: sticky;
+            top: 120px;
+            height: fit-content;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+        }
+
+        .sidebar-nav li {
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-nav a {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            display: block;
+            padding: 0.5rem;
+            border-radius: 6px;
+        }
+
+        .sidebar-nav a:hover,
+        .sidebar-nav a.active {
+            background: #eff6ff;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+
+        .content h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .content h2 {
+            font-size: 1.8rem;
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .content h3 {
+            font-size: 1.4rem;
+            margin-top: 2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .content p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .content :not(pre)>code {
+            background: #f3f4f6;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-family: 'Menlo', monospace;
+            color: #c7254e;
+        }
+
+        .content pre code {
+            background-color: transparent;
+            padding: 0;
+            border-radius: 0;
+            color: inherit;
+        }
+
+        .content pre {
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="nav-container">
+            <a href="../index.html" class="logo">LangGraphGo</a>
+            <ul class="nav-links">
+                <li><a href="../showcases.html">Showcases</a></li>
+                <li><a href="../docs.html" style="color: var(--primary-color);">Docs</a></li>
+                <li><a href="../examples.html">Examples</a></li>
+                <li><a href="../../docs/core-concepts.html">中文</a></li>
+            </ul>
+            <a href="https://github.com/smallnest/langgraphgo" target="_blank" class="btn-github">
+                <i class="fab fa-github"></i> GitHub
+            </a>
+        </div>
+    </header>
+
+    <div class="doc-container">
+        <aside class="sidebar">
+            <ul class="sidebar-nav">
+                <li><a href="getting-started.html">Getting Started</a></li>
+                <li><a href="core-concepts.html" class="active">Core Concepts</a></li>
+                <li><a href="guides.html">Guides</a></li>
+                <li><a href="api.html">API Reference</a></li>
+                <li
+                    style="margin-top: 1.5rem; font-size: 0.85rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">
+                    Topic Guides</li>
+                <li><a href="guide-basics.html" style="padding-left: 1rem;">Basic Building Blocks</a></li>
+                <li><a href="guide-stategraph-vs-messagegraph.html" style="padding-left: 1rem;">StateGraph vs MessageGraph</a></li>
+                <li><a href="guide-createagent-vs-createreactagent.html" style="padding-left: 1rem;">CreateAgent vs CreateReactAgent</a></li>
+                <li><a href="guide-prebuilt-agents.html" style="padding-left: 1rem;">Prebuilt Agents</a></li>
+                <li><a href="guide-streaming.html" style="padding-left: 1rem;">Streaming</a></li>
+                <li><a href="guide-memory-timetravel.html" style="padding-left: 1rem;">Memory & Time Travel</a></li>
+                <li><a href="guide-advanced-features.html" style="padding-left: 1rem;">Advanced Features</a></li>
+                <li><a href="guide-rag.html" style="padding-left: 1rem;">RAG Pipeline</a></li>
+                <li><a href="guide-hitl.html" style="padding-left: 1rem;">Human in the Loop (HITL)</a></li>
+                <li><a href="guide-multi-agent.html" style="padding-left: 1rem;">Multi-Agent Systems</a></li>
+                <li><a href="guide-state-management.html" style="padding-left: 1rem;">State Management</a></li>
+                <li><a href="guide-monitoring.html" style="padding-left: 1rem;">Monitoring & Debugging</a></li>
+            </ul>
+        </aside>
+        <main class="content">
+            <h1>Core Concepts</h1>
+
+            <h2>Graph</h2>
+            <p>The core of LangGraphGo is the Graph. It defines the application workflow. It consists of Nodes and
+                Edges.</p>
+            <p><code>StateGraph</code> is the most common graph type, allowing you to define a state Schema and pass
+                state between nodes.</p>
+
+            <h2>State</h2>
+            <p>State is the data maintained by the graph during execution. Each node receives the current state as input
+                and returns state updates as output.</p>
+            <p>LangGraphGo supports custom state Schemas, allowing you to define how to merge updates from different
+                nodes (e.g., overwrite, append, etc.).</p>
+
+            <h2>Nodes</h2>
+            <p>Nodes are functions that execute specific logic. They can be calling an LLM, executing a tool, or just
+                simple code logic.</p>
+            <pre><code class="language-go">func MyNode(ctx context.Context, state MyState) (MyState, error) {
+    // Execute logic
+    return newState, nil
+}</code></pre>
+
+            <h2>Edges</h2>
+            <p>Edges define the control flow between nodes.</p>
+            <ul>
+                <li><strong>Normal Edges</strong>: <code>g.AddEdge("nodeA", "nodeB")</code> - A executes, then B
+                    executes.</li>
+                <li><strong>Conditional Edges</strong>: <code>g.AddConditionalEdges("nodeA", routingFunction)</code> -
+                    Dynamically decide the next node based on A's output.</li>
+            </ul>
+
+            <h2>Parallel Execution</h2>
+            <p>When multiple nodes share the same starting node, LangGraphGo automatically executes them in parallel.
+                Results are merged using the graph's state merger or Schema.</p>
+            <pre><code class="language-go">g.AddEdge("start", "branch_a")
+g.AddEdge("start", "branch_b")
+// branch_a and branch_b will run concurrently</code></pre>
+
+            <h2>Human in the Loop (HITL)</h2>
+            <p>LangGraphGo supports pausing during graph execution, allowing human intervention. This is useful for
+                scenarios requiring human approval or input.</p>
+            <pre><code class="language-go">config := &graph.Config{
+    InterruptBefore: []string{"human_review"},
+}
+// Execution stops before "human_review" node</code></pre>
+
+            <h2>Checkpointers</h2>
+            <p>Checkpointers are used to persist graph state. This allows you to save execution progress and resume
+                later (e.g., for long-running conversations or failure recovery).</p>
+            <p>Supported backends include Redis, Postgres, SQLite, etc.</p>
+            <pre><code class="language-go">import (
+    "github.com/smallnest/langgraphgo/checkpoint/sqlite"
+    "github.com/smallnest/langgraphgo/graph"
+)
+
+// 1. Initialize SQLite Checkpoint Store
+store, err := sqlite.NewSqliteCheckpointStore(sqlite.SqliteOptions{
+    Path:      "./checkpoints.db",
+    TableName: "checkpoints",
+})
+if err != nil {
+    panic(err)
+}
+defer store.Close()
+
+// 2. Configure Checkpoint Options
+config := graph.CheckpointConfig{
+    Store:          store,
+    AutoSave:       true,
+    SaveInterval:   2 * time.Second,
+    MaxCheckpoints: 5,
+}
+
+// 3. Apply configuration to the graph
+g := graph.NewCheckpointableMessageGraph()
+g.SetCheckpointConfig(config)</code></pre>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+    <script src="../../script.js"></script>
+</body>
+
+</html>
