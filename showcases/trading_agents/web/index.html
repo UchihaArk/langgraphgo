@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Agents - AI Stock Analysis</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🤖 Trading Agents</h1>
+            <p class="subtitle">AI-Powered Multi-Agent Stock Analysis</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Input Section -->
+            <section class="input-section">
+                <div class="card">
+                    <h2>Analyze Stock</h2>
+                    <form id="analysisForm">
+                        <div class="form-group">
+                            <label for="symbol">Stock Symbol</label>
+                            <input type="text" id="symbol" placeholder="e.g., AAPL, GOOGL, TSLA" required>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="capital">Capital ($)</label>
+                                <input type="number" id="capital" value="10000" min="1000" step="1000">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="riskTolerance">Risk Tolerance</label>
+                                <select id="riskTolerance">
+                                    <option value="low">Low</option>
+                                    <option value="moderate" selected>Moderate</option>
+                                    <option value="high">High</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="timeframe">Timeframe</label>
+                            <select id="timeframe">
+                                <option value="5m">5 Minutes</option>
+                                <option value="1H">1 Hour</option>
+                                <option value="1D" selected>1 Day</option>
+                                <option value="1W">1 Week</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="analyzeBtn">
+                            <span class="btn-text">Analyze Stock</span>
+                            <span class="spinner" style="display: none;">⏳</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Quick Stats -->
+                <div class="card stats-card" id="statsCard" style="display: none;">
+                    <h3>Quick Stats</h3>
+                    <div class="stats-grid">
+                        <div class="stat">
+                            <div class="stat-label">Current Price</div>
+                            <div class="stat-value" id="currentPrice">-</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">Change</div>
+                            <div class="stat-value" id="priceChange">-</div>
+                        </div>
+                        <div class="stat">
+                            <div class="stat-label">Volume</div>
+                            <div class="stat-value" id="volume">-</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section class="results-section" id="results" style="display: none;">
+                <!-- Recommendation Card -->
+                <div class="card recommendation-card">
+                    <div class="recommendation-header">
+                        <h2>Trading Recommendation</h2>
+                        <div class="timestamp" id="timestamp"></div>
+                    </div>
+
+                    <div class="recommendation-main">
+                        <div class="recommendation-badge" id="recommendation">-</div>
+                        <div class="confidence-container">
+                            <div class="confidence-label">Confidence</div>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" id="confidenceFill"></div>
+                            </div>
+                            <div class="confidence-value" id="confidenceValue">-</div>
+                        </div>
+                    </div>
+
+                    <div class="risk-indicator">
+                        <span class="risk-label">Risk Score:</span>
+                        <span class="risk-value" id="riskScore">-</span>
+                        <div class="risk-bar">
+                            <div class="risk-fill" id="riskFill"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Trade Details -->
+                <div class="card trade-details" id="tradeDetails">
+                    <h3>Trade Details</h3>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">Position Size</span>
+                            <span class="detail-value" id="positionSize">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Entry Price</span>
+                            <span class="detail-value" id="entryPrice">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Stop Loss</span>
+                            <span class="detail-value danger" id="stopLoss">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Take Profit</span>
+                            <span class="detail-value success" id="takeProfit">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reasoning -->
+                <div class="card reasoning-card">
+                    <h3>Analysis & Reasoning</h3>
+                    <div class="reasoning-text" id="reasoning">-</div>
+                </div>
+
+                <!-- Agent Reports -->
+                <div class="card reports-card">
+                    <h3>Agent Reports</h3>
+                    <div class="tabs">
+                        <button class="tab active" onclick="showTab('fundamentals')">📊 Fundamentals</button>
+                        <button class="tab" onclick="showTab('sentiment')">💭 Sentiment</button>
+                        <button class="tab" onclick="showTab('technical')">📉 Technical</button>
+                        <button class="tab" onclick="showTab('bullish')">🐂 Bullish</button>
+                        <button class="tab" onclick="showTab('bearish')">🐻 Bearish</button>
+                        <button class="tab" onclick="showTab('risk')">⚠️ Risk</button>
+                    </div>
+                    <div class="tab-content">
+                        <div class="tab-pane active" id="fundamentals-tab">-</div>
+                        <div class="tab-pane" id="sentiment-tab">-</div>
+                        <div class="tab-pane" id="technical-tab">-</div>
+                        <div class="tab-pane" id="bullish-tab">-</div>
+                        <div class="tab-pane" id="bearish-tab">-</div>
+                        <div class="tab-pane" id="risk-tab">-</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Disclaimer -->
+        <div class="disclaimer">
+            ⚠️ <strong>Disclaimer:</strong> This tool is for educational and research purposes only.
+            Not financial advice. Always consult with qualified financial professionals before making investment decisions.
+        </div>
+
+        <footer>
+            <p>Built with <a href="https://github.com/smallnest/langgraphgo" target="_blank">LangGraph Go</a>
+            and <a href="https://github.com/tmc/langchaingo" target="_blank">LangChain Go</a></p>
+            <p>Inspired by <a href="https://github.com/TauricResearch/TradingAgents" target="_blank">TauricResearch/TradingAgents</a></p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
