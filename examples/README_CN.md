@@ -36,6 +36,7 @@
 - **[Create Agent](create_agent/README_CN.md)**: 使用选项轻松创建代理。
 - **[动态技能代理 (Dynamic Skill Agent)](dynamic_skill_agent/README_CN.md)**: 具有动态技能发现和选择功能的代理。
 - **[ReAct Agent](react_agent/README_CN.md)**: 使用工具的推理与行动 (Reason and Action) 代理。
+- **[Planning Agent](planning_agent/README_CN.md)**: 根据用户请求动态创建工作流计划的智能代理。
 - **[Supervisor](supervisor/README_CN.md)**: 使用 Supervisor 进行多代理编排。
 - **[Swarm](swarm/README_CN.md)**: 使用切换 (handoffs) 的多代理协作.
 
