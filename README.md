@@ -176,7 +176,7 @@ agent, err := ptc.CreatePTCAgent(ptc.PTCAgentConfig{
     Model:         model,
     Tools:         toolList,
     Language:      ptc.LanguagePython, // or ptc.LanguageGo
-    ExecutionMode: ptc.ModeServer,     // HTTP server (default) or ModeDirect
+    ExecutionMode: ptc.ModeDirect,     // Subprocess (default) or ModeServer
     MaxIterations: 10,
 })
 

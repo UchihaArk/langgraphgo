@@ -175,7 +175,7 @@ agent, err := ptc.CreatePTCAgent(ptc.PTCAgentConfig{
     Model:         model,
     Tools:         toolList,
     Language:      ptc.LanguagePython, // 或 ptc.LanguageGo
-    ExecutionMode: ptc.ModeServer,     // HTTP 服务器（默认）或 ModeDirect
+    ExecutionMode: ptc.ModeDirect,     // 子进程（默认）或 ModeServer
     MaxIterations: 10,
 })
 

@@ -25,15 +25,15 @@ const (
 type ExecutionMode string
 
 const (
-	// ModeServer: Tools are called via HTTP server (default, recommended)
+	// ModeServer: Tools are called via HTTP server (alternative)
 	// - Fully implemented and tested
 	// - Better isolation (sandboxed)
 	// - Reliable tool execution
 	ModeServer ExecutionMode = "server"
 
-	// ModeDirect: Tools are directly embedded in code (experimental)
+	// ModeDirect: Tools are directly embedded in code (default)
 	// - Currently uses placeholder implementations
-	// - Not recommended for production use
+	// - Simpler setup, no server required
 	// - Work in progress
 	ModeDirect ExecutionMode = "direct"
 )
@@ -57,9 +57,9 @@ type ExecutionResult struct {
 }
 
 // NewCodeExecutor creates a new code executor for PTC
-// Default mode is ModeServer for reliability
+// Default mode is ModeDirect for simplicity
 func NewCodeExecutor(language ExecutionLanguage, toolList []tools.Tool) *CodeExecutor {
-	return NewCodeExecutorWithMode(language, toolList, ModeServer)
+	return NewCodeExecutorWithMode(language, toolList, ModeDirect)
 }
 
 // NewCodeExecutorWithMode creates a new code executor with specified execution mode

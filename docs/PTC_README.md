@@ -112,7 +112,7 @@ func main() {
         Model:          model,
         Tools:          toolList,
         Language:       ptc.LanguagePython, // or ptc.LanguageGo
-        ExecutionMode:  ptc.ModeServer,     // or ptc.ModeDirect (default: ModeServer, recommended)
+        ExecutionMode:  ptc.ModeDirect,     // or ptc.ModeServer (default: ModeDirect)
         MaxIterations:  10,
     })
 
@@ -219,7 +219,7 @@ type PTCAgentConfig struct {
     // Language is the execution language for code (default: Python)
     Language ExecutionLanguage
 
-    // ExecutionMode determines how tools are executed (default: ModeServer)
+    // ExecutionMode determines how tools are executed (default: ModeDirect)
     ExecutionMode ExecutionMode
 
     // SystemPrompt is custom system prompt (optional)
@@ -263,10 +263,10 @@ Two execution modes are supported:
 
 ```go
 const (
-    // ModeServer: Tools are called via HTTP server (default, recommended)
+    // ModeServer: Tools are called via HTTP server (alternative)
     ModeServer ExecutionMode = "server"
 
-    // ModeDirect: Tools are executed directly via subprocess (experimental)
+    // ModeDirect: Tools are executed directly via subprocess (default)
     ModeDirect ExecutionMode = "direct"
 )
 ```

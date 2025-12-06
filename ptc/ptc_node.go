@@ -15,9 +15,9 @@ type PTCToolNode struct {
 	Executor *CodeExecutor
 }
 
-// NewPTCToolNode creates a new PTC tool node with default execution mode (server)
+// NewPTCToolNode creates a new PTC tool node with default execution mode (direct)
 func NewPTCToolNode(language ExecutionLanguage, toolList []tools.Tool) *PTCToolNode {
-	return NewPTCToolNodeWithMode(language, toolList, ModeServer)
+	return NewPTCToolNodeWithMode(language, toolList, ModeDirect)
 }
 
 // NewPTCToolNodeWithMode creates a new PTC tool node with specified execution mode

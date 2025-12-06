@@ -21,9 +21,9 @@ type PTCAgentConfig struct {
 	// Language is the execution language for code
 	Language ExecutionLanguage
 
-	// ExecutionMode determines how tools are executed (default: ModeServer)
-	// - ModeServer: Tools are executed via HTTP server (recommended, fully implemented)
-	// - ModeDirect: Tools are executed directly via subprocess (experimental, placeholder implementation)
+	// ExecutionMode determines how tools are executed (default: ModeDirect)
+	// - ModeDirect: Tools are executed directly via subprocess (default)
+	// - ModeServer: Tools are executed via HTTP server (alternative)
 	ExecutionMode ExecutionMode
 
 	// SystemPrompt is the system prompt for the agent
@@ -50,7 +50,7 @@ func CreatePTCAgent(config PTCAgentConfig) (*graph.Runnable, error) {
 	}
 
 	if config.ExecutionMode == "" {
-		config.ExecutionMode = ModeServer // Default to server mode (more reliable)
+		config.ExecutionMode = ModeDirect // Default to direct mode
 	}
 
 	if config.MaxIterations == 0 {

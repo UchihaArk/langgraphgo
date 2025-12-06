@@ -112,7 +112,7 @@ func main() {
         Model:         model,
         Tools:         toolList,
         Language:       ptc.LanguagePython, // 或 ptc.LanguageGo
-        ExecutionMode:  ptc.ModeServer,     // 或 ptc.ModeDirect (默认: ModeServer，推荐)
+        ExecutionMode:  ptc.ModeDirect,     // 或 ptc.ModeServer (默认: ModeDirect)
         MaxIterations: 10,
     })
 
@@ -219,7 +219,7 @@ type PTCAgentConfig struct {
     // Language 是代码执行语言（默认：Python）
     Language ExecutionLanguage
 
-    // ExecutionMode 决定工具的执行方式（默认：ModeServer）
+    // ExecutionMode 决定工具的执行方式（默认：ModeDirect）
     ExecutionMode ExecutionMode
 
     // SystemPrompt 是自定义系统提示（可选）
@@ -263,10 +263,10 @@ const (
 
 ```go
 const (
-    // ModeServer: 通过 HTTP 服务器调用工具（默认，推荐）
+    // ModeServer: 通过 HTTP 服务器调用工具（备选）
     ModeServer ExecutionMode = "server"
 
-    // ModeDirect: 通过子进程直接执行工具（实验性）
+    // ModeDirect: 通过子进程直接执行工具（默认）
     ModeDirect ExecutionMode = "direct"
 )
 ```
@@ -357,18 +357,18 @@ sequenceDiagram
 
     Agent->>代码执行器: 执行生成的代码
 
-    alt ModeServer (默认)
+    alt ModeDirect (默认)
+        代码执行器->>代码执行器: 编译 helper 程序
+        代码执行器->>代码执行器: 运行 Python/Go 脚本
+        代码执行器->>代码执行器: 子进程调用 helper
+        Note over 代码执行器: 目前返回占位符
+    else ModeServer (备选)
         代码执行器->>工具服务器: 启动 HTTP 服务器 (如果未启动)
         代码执行器->>代码执行器: 运行 Python/Go 脚本
         代码执行器->>工具服务器: HTTP POST /call {tool_name, input}
         工具服务器->>工具: 执行 tool(input)
         工具->>工具服务器: 返回结果
         工具服务器->>代码执行器: JSON 响应
-    else ModeDirect (实验性)
-        代码执行器->>代码执行器: 编译 helper 程序
-        代码执行器->>代码执行器: 运行 Python/Go 脚本
-        代码执行器->>代码执行器: 子进程调用 helper
-        Note over 代码执行器: 目前返回占位符
     end
 
     代码执行器->>Agent: 执行输出

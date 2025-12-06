@@ -6,7 +6,7 @@
 - **PTC Package**: Added new `ptc` package for programmatic tool calling (#31).
   - LLM generates code that calls tools directly instead of requiring API round-trips
   - Supports both Python and Go code execution
-  - Two execution modes: `ModeServer` (HTTP server, default) and `ModeDirect` (subprocess, experimental)
+  - Two execution modes: `ModeDirect` (subprocess, default) and `ModeServer` (HTTP server, alternative)
   - Reduces latency and token usage by up to 10x for complex tool chains
   - Multi-LLM support (OpenAI, Gemini, Claude, any langchaingo-compatible model)
 

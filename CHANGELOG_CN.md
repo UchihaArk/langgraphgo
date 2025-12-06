@@ -6,7 +6,7 @@
 - **PTC 包**: 新增 `ptc` 包，支持程序化工具调用 (#31)。
   - LLM 生成代码直接调用工具，无需 API 往返
   - 支持 Python 和 Go 代码执行
-  - 两种执行模式：`ModeServer`（HTTP 服务器，默认）和 `ModeDirect`（子进程，实验性）
+  - 两种执行模式：`ModeDirect`（子进程，默认）和 `ModeServer`（HTTP 服务器，备选）
   - 对于复杂工具链，延迟和 token 使用降低高达 10 倍
   - 多 LLM 支持（OpenAI、Gemini、Claude 及任何 langchaingo 兼容模型）
 
