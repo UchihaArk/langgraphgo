@@ -1,8 +1,10 @@
+<img src="https://lango.rpcx.io/images/logo/lango5.svg" alt="LangGraphGo Logo" height="20px">
+
 # LangGraphGo 项目周报 #001
 
 **报告周期**: 2025-12-01 ~ 2025-12-06
 **项目状态**: 🚀 快速发展中
-**当前版本**: v0.5.0 (开发中)
+**当前版本**: v0.5.0
 
 ---
 
