@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.5.0] - 2025-12-06 (In Development)
+## [0.5.0] - 2025-12-06
 
 ### Programmatic Tool Calling (PTC)
 - **PTC Package**: Added new `ptc` package for programmatic tool calling (#31).
