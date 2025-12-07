@@ -10,20 +10,17 @@ on:
 
 jobs:
   lint:
+    name: lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-go@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
         with:
           go-version: stable
-          # Cache is managed by golangci-lint
-          # https://github.com/actions/setup-go#caching-dependency-files-and-build-outputs
-          cache: false
-      - uses: actions/checkout@v3
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         with:
-          args: --timeout=5m --config=.golangci.yaml
-          version: latest
+          version: v2.6
           working-directory: .
   build:
     runs-on: ubuntu-latest
