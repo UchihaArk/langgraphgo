@@ -104,6 +104,8 @@ func main() {
 - **[Exa Search](./examples/tool_exa/)** - Exa search tool integration (New!)
 - **[Streaming](./examples/streaming_pipeline/)** - Real-time progress updates
 - **[Conditional Routing](./examples/conditional_routing/)** - Dynamic path selection
+- **[Parallel Execution](./examples/parallel_execution/)** - Fan-out/fan-in with state merging
+- **[Complex Parallel Execution](./examples/complex_parallel_execution/)** - Advanced parallel patterns with varying branch lengths (New!)
 - **[Checkpointing](./examples/checkpointing/)** - Save and resume state
 - **[Visualization](./examples/visualization/)** - Export graph diagrams
 - **[Listeners](./examples/listeners/)** - Progress, metrics, and logging
@@ -111,6 +113,9 @@ func main() {
 - **[Swarm](./examples/swarm/)** - Multi-agent collaboration
 - **[Create Agent](./examples/create_agent/)** - Flexible agent creation with options (New!)
 - **[Dynamic Skill Agent](./examples/dynamic_skill_agent/)** - Agent with dynamic skill discovery and selection (New!)
+- **[Chat Agent](./examples/chat_agent/)** - Multi-turn conversation with session management (New!)
+- **[Chat Agent Async](./examples/chat_agent_async/)** - Async streaming chat agent (New!)
+- **[Chat Agent Dynamic Tools](./examples/chat_agent_dynamic_tools/)** - Chat agent with runtime tool management (New!)
 - **[State Schema](./examples/state_schema/)** - Complex state management with Reducers
 - **[Smart Messages](./examples/smart_messages/)** - Intelligent message merging (Upserts)
 - **[Command API](./examples/command_api/)** - Dynamic control flow

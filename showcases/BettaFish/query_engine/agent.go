@@ -48,7 +48,28 @@ func generateJSON(ctx context.Context, llm llms.Model, systemPrompt, userContent
 	content = strings.TrimSuffix(content, "```")
 	content = strings.TrimSpace(content)
 
-	return json.Unmarshal([]byte(content), output)
+	// 验证JSON是否有效
+	if !json.Valid([]byte(content)) {
+		// 输出调试信息
+		preview := content
+		if len(preview) > 200 {
+			preview = preview[:200] + "..."
+		}
+		return fmt.Errorf("LLM返回的内容不是有效的JSON，前200字符: %s", preview)
+	}
+
+	// 尝试解析JSON
+	err = json.Unmarshal([]byte(content), output)
+	if err != nil {
+		// 输出更详细的错误信息
+		preview := content
+		if len(preview) > 200 {
+			preview = preview[:200] + "..."
+		}
+		return fmt.Errorf("JSON解析失败: %w, 内容前200字符: %s", err, preview)
+	}
+
+	return nil
 }
 
 // QueryEngineNode implements the main logic.
@@ -182,7 +203,8 @@ func processParagraph(ctx context.Context, llm llms.Model, p *schema.Paragraph) 
 
 	err = generateJSON(ctx, llm, SystemPromptFirstSummary, string(summaryInputJSON), &firstSummaryOutput)
 	if err != nil {
-		fmt.Printf("    生成总结失败: %v\n", err)
+		fmt.Printf("    ❌ 段落 '%s' 生成总结失败: %v\n", p.Title, err)
+		fmt.Printf("    💡 建议：检查LLM返回的内容是否符合JSON格式要求\n")
 		return
 	}
 	p.Research.LatestSummary = firstSummaryOutput.ParagraphLatestState
@@ -208,6 +230,7 @@ func processParagraph(ctx context.Context, llm llms.Model, p *schema.Paragraph) 
 
 		err = generateJSON(ctx, llm, SystemPromptReflection, string(reflectInputJSON), &reflectionOutput)
 		if err != nil {
+			fmt.Printf("    ❌ 段落 '%s' 反思查询生成失败 (轮次 %d/%d): %v\n", p.Title, i+1, maxReflections, err)
 			break
 		}
 
@@ -236,6 +259,7 @@ func processParagraph(ctx context.Context, llm llms.Model, p *schema.Paragraph) 
 
 		err = generateJSON(ctx, llm, SystemPromptReflectionSummary, string(reflectSummaryInputJSON), &reflectionSummaryOutput)
 		if err != nil {
+			fmt.Printf("    ❌ 段落 '%s' 反思总结生成失败 (轮次 %d/%d): %v\n", p.Title, i+1, maxReflections, err)
 			break
 		}
 		p.Research.LatestSummary = reflectionSummaryOutput.UpdatedParagraphLatestState

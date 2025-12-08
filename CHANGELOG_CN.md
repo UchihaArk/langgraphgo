@@ -1,5 +1,32 @@
 # 更新日志
 
+## [未发布] - 2025-12-08
+
+### 示例与模式
+- **[复杂并行执行 (Complex Parallel Execution)](./examples/complex_parallel_execution/)**: 高级并行执行模式 (#36)
+  - 演示不同长度分支的扇出/扇入模式
+  - 三种实现版本：基础版、智能聚合器版、同步版
+  - 所有三种方法的完整 Mermaid 流程图
+  - 详细对比文档 (COMPARISON.md)
+  - 真实场景：多源数据处理、并行分析管道
+
+### 预构建代理
+- **[Chat Agent](./examples/chat_agent/)**: 支持会话管理的多轮对话代理 (#34)
+  - 自动对话历史跟踪
+  - 基于会话的内存管理
+  - 支持多个并发对话
+- **[Chat Agent Async](./examples/chat_agent_async/)**: 异步流式聊天代理
+  - 实时 LLM 响应流式传输
+  - 非阻塞执行以获得更好的性能
+- **[Chat Agent Dynamic Tools](./examples/chat_agent_dynamic_tools/)**: 支持运行时工具管理的聊天代理
+  - 对话期间添加/删除工具
+  - 动态能力调整
+
+### 文档与 CI/CD
+- **DeerFlow**: 为 DeerFlow 示例添加简单文档
+- **GitHub Actions**: 改进 CI/CD 管道，集成 golangci-lint
+- **示例 README**: 更新包含新的聊天代理和并行执行示例
+
 ## [0.5.0] - 2025-12-06
 
 ### 程序化工具调用 (Programmatic Tool Calling, PTC)

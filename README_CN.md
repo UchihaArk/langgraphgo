@@ -103,6 +103,8 @@ func main() {
 - **[Exa 搜索](./examples/tool_exa/)** - Exa 搜索工具集成 (新增!)
 - **[流式传输](./examples/streaming_pipeline/)** - 实时进度更新
 - **[条件路由](./examples/conditional_routing/)** - 动态路径选择
+- **[并行执行](./examples/parallel_execution/)** - 扇出/扇入与状态合并
+- **[复杂并行执行](./examples/complex_parallel_execution/)** - 不同长度分支的高级并行模式 (新增!)
 - **[Checkpointing](./examples/checkpointing/)** - 保存和恢复状态
 - **[可视化](./examples/visualization/)** - 导出图表
 - **[监听器](./examples/listeners/)** - 进度、指标和日志
@@ -110,6 +112,9 @@ func main() {
 - **[Swarm](./examples/swarm/)** - 多 Agent 协作
 - **[Create Agent](./examples/create_agent/)** - 使用选项灵活创建 Agent (新增!)
 - **[动态技能代理 (Dynamic Skill Agent)](./examples/dynamic_skill_agent/)** - 具有动态技能发现和选择功能的代理 (新增!)
+- **[Chat Agent](./examples/chat_agent/)** - 支持会话管理的多轮对话 (新增!)
+- **[Chat Agent Async](./examples/chat_agent_async/)** - 异步流式聊天代理 (新增!)
+- **[Chat Agent Dynamic Tools](./examples/chat_agent_dynamic_tools/)** - 支持运行时工具管理的聊天代理 (新增!)
 - **[State Schema](./examples/state_schema/)** - 使用 Reducer 进行复杂状态管理
 - **[智能消息](./examples/smart_messages/)** - 智能消息合并 (Upserts)
 - **[Command API](./examples/command_api/)** - 动态流控制

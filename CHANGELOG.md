@@ -1,5 +1,32 @@
 # Changelog
 
+## [Unreleased] - 2025-12-08
+
+### Examples & Patterns
+- **[Complex Parallel Execution](./examples/complex_parallel_execution/)**: Advanced parallel execution pattern (#36)
+  - Demonstrates fan-out/fan-in with branches of varying lengths
+  - Three implementation versions: basic, smart aggregator, and synchronized
+  - Comprehensive Mermaid flow diagrams for all three approaches
+  - Detailed comparison documentation (COMPARISON.md)
+  - Real-world use cases: multi-source data processing, parallel analysis pipelines
+
+### Pre-built Agents
+- **[Chat Agent](./examples/chat_agent/)**: Multi-turn conversation agent with session management (#34)
+  - Automatic conversation history tracking
+  - Session-based memory management
+  - Support for multiple concurrent conversations
+- **[Chat Agent Async](./examples/chat_agent_async/)**: Asynchronous streaming chat agent
+  - Real-time LLM response streaming
+  - Non-blocking execution for better performance
+- **[Chat Agent Dynamic Tools](./examples/chat_agent_dynamic_tools/)**: Chat agent with runtime tool management
+  - Add/remove tools during conversation
+  - Dynamic capability adjustment
+
+### Documentation & CI/CD
+- **DeerFlow**: Added simple documentation for DeerFlow showcase
+- **GitHub Actions**: Improved CI/CD pipeline with golangci-lint integration
+- **Examples README**: Updated with new chat agent and parallel execution examples
+
 ## [0.5.0] - 2025-12-06
 
 ### Programmatic Tool Calling (PTC)

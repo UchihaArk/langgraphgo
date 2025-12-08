@@ -29,7 +29,14 @@ const (
 
 标题和内容属性将用于更深入的研究。
 确保输出是一个符合上述输出JSON模式定义的JSON对象。
-只返回JSON对象，不要有解释或额外文本。`
+只返回JSON对象，不要有解释或额外文本。
+
+⚠️ **JSON格式要求（必须严格遵守）**：
+- 字符串中的特殊字符必须正确转义：换行符用 \\n，制表符用 \\t，双引号用 \\"，反斜杠用 \\\\
+- 只使用双引号(")，不要使用单引号(')
+- 不要在字符串值中直接换行
+- 确保所有括号、引号正确配对
+- 输出必须是可直接解析的有效JSON`
 
 	// SystemPromptFirstSearch generates the first search query.
 	SystemPromptFirstSearch = `你是一位深度研究助手。你将获得报告中的一个段落，其标题和预期内容将按照以下JSON模式定义提供：
@@ -97,7 +104,14 @@ const (
 </OUTPUT JSON SCHEMA>
 
 确保输出是一个符合上述输出JSON模式定义的JSON对象。
-只返回JSON对象，不要有解释或额外文本。`
+只返回JSON对象，不要有解释或额外文本。
+
+⚠️ **JSON格式要求（必须严格遵守）**：
+- 字符串中的特殊字符必须正确转义：换行符用 \\n，制表符用 \\t，双引号用 \\"，反斜杠用 \\\\
+- 只使用双引号(")，不要使用单引号(')
+- 不要在字符串值中直接换行
+- 确保所有括号、引号正确配对
+- 输出必须是可直接解析的有效JSON`
 
 	// SystemPromptFirstSummary summarizes the first search results.
 	SystemPromptFirstSummary = `你是一位专业的新闻分析师和深度内容创作专家。你将获得搜索查询、搜索结果以及你正在研究的报告段落，数据将按照以下JSON模式定义提供：
@@ -186,7 +200,14 @@ const (
 </OUTPUT JSON SCHEMA>
 
 确保输出是一个符合上述输出JSON模式定义的JSON对象。
-只返回JSON对象，不要有解释或额外文本。`
+只返回JSON对象，不要有解释或额外文本。
+
+⚠️ **JSON格式要求（必须严格遵守）**：
+- 字符串中的特殊字符必须正确转义：换行符用 \\n，制表符用 \\t，双引号用 \\"，反斜杠用 \\\\
+- 只使用双引号(")，不要使用单引号(')
+- 不要在字符串值中直接换行
+- 确保所有括号、引号正确配对
+- 输出必须是可直接解析的有效JSON`
 
 	// SystemPromptReflection generates reflection search query.
 	SystemPromptReflection = `你是一位深度研究助手。你负责为研究报告构建全面的段落。你将获得段落标题、计划内容摘要，以及你已经创建的段落最新状态，所有这些都将按照以下JSON模式定义提供：
@@ -237,7 +258,14 @@ const (
 </OUTPUT JSON SCHEMA>
 
 确保输出是一个符合上述输出JSON模式定义的JSON对象。
-只返回JSON对象，不要有解释或额外文本。`
+只返回JSON对象，不要有解释或额外文本。
+
+⚠️ **JSON格式要求（必须严格遵守）**：
+- 字符串中的特殊字符必须正确转义：换行符用 \\n，制表符用 \\t，双引号用 \\"，反斜杠用 \\\\
+- 只使用双引号(")，不要使用单引号(')
+- 不要在字符串值中直接换行
+- 确保所有括号、引号正确配对
+- 输出必须是可直接解析的有效JSON`
 
 	// SystemPromptReflectionSummary summarizes the reflection search results.
 	SystemPromptReflectionSummary = `你是一位深度研究助手。
@@ -277,7 +305,14 @@ const (
 </OUTPUT JSON SCHEMA>
 
 确保输出是一个符合上述输出JSON模式定义的JSON对象。
-只返回JSON对象，不要有解释或额外文本。`
+只返回JSON对象，不要有解释或额外文本。
+
+⚠️ **JSON格式要求（必须严格遵守）**：
+- 字符串中的特殊字符必须正确转义：换行符用 \\n，制表符用 \\t，双引号用 \\"，反斜杠用 \\\\
+- 只使用双引号(")，不要使用单引号(')
+- 不要在字符串值中直接换行
+- 确保所有括号、引号正确配对
+- 输出必须是可直接解析的有效JSON`
 
 	// SystemPromptReportFormatting formats the final report.
 	SystemPromptReportFormatting = `你是一位资深的新闻分析专家和调查报告编辑。你专精于将复杂的新闻信息整合为客观、严谨的专业分析报告。
