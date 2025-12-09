@@ -31,7 +31,7 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 50%, #f8fafc 100%);
             height: 100vh;
             margin: 0;
             padding: 20px;
@@ -158,7 +158,8 @@
         }
 
         .collapse-btn:hover {
-            background: #f0f3ff;
+            background: #f8fafc;
+            border-color: #e2e8f0;
             transform: scale(1.1);
         }
 
@@ -182,14 +183,21 @@
         .new-chat-btn {
             width: 100%;
             padding: 12px;
-            background: #667eea;
+            background: #10b981;
             color: white;
             border: none;
             border-radius: 8px;
             cursor: pointer;
             font-size: 14px;
             font-weight: 600;
-            transition: background 0.3s;
+            transition: all 0.3s;
+            box-shadow: 0 1px 3px rgba(16, 185, 129, 0.2);
+        }
+
+        .new-chat-btn:hover {
+            background: #059669;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
 
         /* Hide sidebar content when collapsed */
@@ -207,13 +215,13 @@
             gap: 10px;
             padding: 12px 20px;
             margin: 15px 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
             border-radius: 12px;
             cursor: pointer;
             font-size: 14px;
             font-weight: 600;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
             transition: all 0.3s ease;
             border: 2px solid transparent;
             position: relative;
@@ -235,13 +243,13 @@
 
         .artifact-placeholder:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-            background: linear-gradient(135deg, #5568d3 0%, #6a4c93 100%);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.3);
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
         }
 
         .artifact-placeholder:active {
             transform: translateY(0);
-            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 2px 10px rgba(16, 185, 129, 0.2);
         }
 
         .artifact-placeholder-icon {
@@ -279,10 +287,7 @@
             transform: translateX(3px);
         }
 
-        .new-chat-btn:hover {
-            background: #5568d3;
-        }
-
+    
         .sessions-list {
             flex: 1;
             overflow-y: auto;
@@ -305,8 +310,8 @@
         }
 
         .session-item.active {
-            border-color: #667eea;
-            background: #f0f3ff;
+            border-color: #10b981;
+            background: #f0fdf4;
         }
 
         .session-title {
@@ -396,7 +401,8 @@
         }
 
         .artifacts-collapse-btn:hover {
-            background: #f0f3ff;
+            background: #f8fafc;
+            border-color: #e2e8f0;
             transform: scale(1.1);
         }
 
@@ -422,7 +428,7 @@
 
         .artifacts-header .artifact-title {
             font-size: 16px;
-            color: #667eea;
+            color: #10b981;
             font-weight: 600;
             max-width: 200px;
             overflow: hidden;
@@ -437,10 +443,10 @@
             justify-content: center;
             width: 40px;
             height: 40px;
-            background: #f7f9fc;
+            background: #f0fdf4;
             border-radius: 50%;
             font-size: 20px;
-            color: #667eea;
+            color: #10b981;
             margin-right: 15px;
         }
 
@@ -450,6 +456,128 @@
                 opacity: 0.8;
             }
             50% {
+                opacity: 1;
+            }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s;
+        }
+
+        .modal-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 20px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 28px;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .modal-close:hover {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .modal-body {
+            padding: 25px;
+            overflow-y: auto;
+            max-height: calc(80vh - 80px);
+        }
+
+        .mcp-tools-list {
+            display: grid;
+            gap: 15px;
+        }
+
+        .mcp-tool-item {
+            padding: 15px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .mcp-tool-item:hover {
+            background: #f0fdf4;
+            border-color: #10b981;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+        }
+
+        .mcp-tool-name {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .mcp-tool-description {
+            color: #64748b;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .mcp-no-tools {
+            text-align: center;
+            color: #94a3b8;
+            padding: 40px;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(30px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
                 opacity: 1;
             }
         }
@@ -495,6 +623,68 @@
             color: #7f8c8d;
         }
 
+        .chat-header-left {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .chat-header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .mcp-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .mcp-status:hover {
+            background: #f0fdf4;
+            border-color: #10b981;
+        }
+
+        .mcp-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        .mcp-indicator.disabled {
+            background: #94a3b8;
+            animation: none;
+        }
+
+        .mcp-text {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .mcp-status:hover .mcp-text {
+            color: #10b981;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
         .messages {
             flex: 1;
             overflow-y: auto;
@@ -532,7 +722,7 @@
         }
 
         .message.user .message-content {
-            background: #667eea;
+            background: #10b981;
             color: white;
             border-bottom-right-radius: 4px;
         }
@@ -565,8 +755,8 @@
         }
 
         .copy-btn:hover {
-            background-color: #f0f3ff;
-            color: #2c3e50;
+            background-color: #f0fdf4;
+            color: #059669;
         }
 
         .copy-btn span {
@@ -623,11 +813,11 @@
         }
 
         .message-content blockquote {
-            border-left: 4px solid #667eea;
+            border-left: 4px solid #10b981;
             padding-left: 15px;
             margin: 15px 0;
             color: #555;
-            background: #f9f9f9;
+            background: #f0fdf4;
         }
 
         .message-content table {
@@ -690,23 +880,27 @@
         }
 
         #message-input:focus {
-            border-color: #667eea;
+            border-color: #10b981;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
         }
 
         #send-btn {
             padding: 15px 30px;
-            background: #667eea;
+            background: #10b981;
             color: white;
             border: none;
             border-radius: 25px;
             cursor: pointer;
             font-size: 14px;
             font-weight: 600;
-            transition: background 0.3s;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
         }
 
         #send-btn:hover:not(:disabled) {
-            background: #5568d3;
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3);
         }
 
         #send-btn:disabled {
@@ -779,7 +973,7 @@
         }
 
         .artifact-header {
-            background: #667eea;
+            background: #10b981;
             color: white;
             padding: 12px 20px;
             display: flex;
@@ -891,8 +1085,16 @@
 
         <div class="chat-area">
             <div class="chat-header">
-                <h1>LangGraphGo 聊天</h1>
-                <div class="status" id="status">选择或创建一个会话</div>
+                <div class="chat-header-left">
+                    <h1>LangGraphGo 聊天</h1>
+                    <div class="status" id="status">选择或创建一个会话</div>
+                </div>
+                <div class="chat-header-right">
+                    <div class="mcp-status" id="mcp-status" title="MCP 工具状态">
+                        <span class="mcp-indicator" id="mcp-indicator"></span>
+                        <span class="mcp-text" id="mcp-text">MCP</span>
+                    </div>
+                </div>
             </div>
             <div class="messages" id="messages">
                 <div class="welcome">
@@ -923,17 +1125,57 @@
         </div>
     </div>
 
-    
+    <!-- MCP Tools Modal -->
+    <div class="modal" id="mcp-tools-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🛠️ 可用工具</h2>
+                <button class="modal-close" onclick="closeMCPToolsModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="mcp-tools-list" class="mcp-tools-list">
+                    <p>加载中...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'base',
+            themeVariables: {
+                primaryColor: '#10b981',
+                primaryTextColor: '#2c3e50',
+                primaryBorderColor: '#e2e8f0',
+                lineColor: '#64748b',
+                secondaryColor: '#f0fdf4',
+                tertiaryColor: '#f8fafc',
+                background: '#ffffff',
+                mainBkg: '#ffffff',
+                secondBkg: '#f8fafc',
+                tertiaryBkg: '#f0fdf4'
+            }
+        });
 
         let currentSessionId = null;
+        let mcpTools = [];
+        let mcpEnabled = false;
 
         // Initialize artifacts sidebar as collapsed
         document.addEventListener('DOMContentLoaded', () => {
             const artifactsSidebar = document.getElementById('artifacts-sidebar');
             if (artifactsSidebar) {
                 artifactsSidebar.classList.add('collapsed');
+            }
+
+            // Initialize MCP status
+            updateMCPStatus();
+
+            // Add click listener to MCP status
+            const mcpStatus = document.getElementById('mcp-status');
+            if (mcpStatus) {
+                mcpStatus.addEventListener('click', showMCPToolsModal);
             }
         });
         let sidebarCollapsed = false;
@@ -1038,6 +1280,9 @@
 
             // Load history
             await loadHistory(sessionId);
+
+            // Update MCP status for the new session
+            await updateMCPStatus();
         }
 
         async function loadHistory(sessionId) {
@@ -1625,7 +1870,83 @@
         }
 
   
-      
+        // MCP Functions
+        async function updateMCPStatus() {
+            if (!currentSessionId) return;
+
+            try {
+                const response = await fetch(`/api/mcp/tools?session_id=${currentSessionId}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    mcpEnabled = data.enabled;
+                    mcpTools = data.tools || [];
+
+                    const indicator = document.getElementById('mcp-indicator');
+                    const mcpText = document.getElementById('mcp-text');
+
+                    if (mcpEnabled && mcpTools.length > 0) {
+                        indicator.classList.remove('disabled');
+                        mcpText.textContent = `MCP (${mcpTools.length})`;
+                        document.getElementById('mcp-status').title = `已加载 ${mcpTools.length} 个 MCP 工具`;
+                    } else {
+                        indicator.classList.add('disabled');
+                        mcpText.textContent = 'MCP';
+                        document.getElementById('mcp-status').title = 'MCP 工具未启用';
+                    }
+                } else {
+                    // Server doesn't support MCP
+                    const indicator = document.getElementById('mcp-indicator');
+                    const mcpText = document.getElementById('mcp-text');
+                    indicator.classList.add('disabled');
+                    mcpText.textContent = 'MCP';
+                    document.getElementById('mcp-status').title = 'MCP 未启用';
+                }
+            } catch (error) {
+                console.log('MCP not available:', error);
+                const indicator = document.getElementById('mcp-indicator');
+                const mcpText = document.getElementById('mcp-text');
+                indicator.classList.add('disabled');
+                mcpText.textContent = 'MCP';
+                document.getElementById('mcp-status').title = 'MCP 未启用';
+            }
+        }
+
+        function showMCPToolsModal() {
+            const modal = document.getElementById('mcp-tools-modal');
+            const toolsList = document.getElementById('mcp-tools-list');
+
+            if (!mcpEnabled || mcpTools.length === 0) {
+                toolsList.innerHTML = '<div class="mcp-no-tools">暂无可用工具</div>';
+            } else {
+                toolsList.innerHTML = mcpTools.map(tool => `
+                    <div class="mcp-tool-item">
+                        <div class="mcp-tool-name">${escapeHtml(tool.name)}</div>
+                        <div class="mcp-tool-description">${escapeHtml(tool.description)}</div>
+                    </div>
+                `).join('');
+            }
+
+            modal.classList.add('show');
+        }
+
+        function closeMCPToolsModal() {
+            const modal = document.getElementById('mcp-tools-modal');
+            modal.classList.remove('show');
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('mcp-tools-modal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                closeMCPToolsModal();
+            }
+        });
+
+        // Escape key to close modal
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeMCPToolsModal();
+            }
+        });
         </script>
 </body>
 

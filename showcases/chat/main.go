@@ -12,15 +12,26 @@ import (
 	"sync"
 	"time"
 
+	mcpclient "github.com/smallnest/goskills/mcp"
+	"github.com/smallnest/langgraphgo/adapter/mcp"
 	"github.com/tmc/langchaingo/llms"
 	"github.com/tmc/langchaingo/llms/openai"
+	"github.com/tmc/langchaingo/tools"
 )
+
+// ChatAgent interface defines the contract for chat agents
+type ChatAgent interface {
+	Chat(ctx context.Context, message string) (string, error)
+}
 
 // SimpleChatAgent manages conversation history for a session
 type SimpleChatAgent struct {
-	llm      llms.Model
-	messages []llms.MessageContent
-	mu       sync.RWMutex
+	llm          llms.Model
+	messages     []llms.MessageContent
+	mu           sync.RWMutex
+	mcpClient    *mcpclient.Client
+	mcpTools     []tools.Tool
+	toolsEnabled bool
 }
 
 // NewSimpleChatAgent creates a simple chat agent
@@ -31,10 +42,69 @@ func NewSimpleChatAgent(llm llms.Model) *SimpleChatAgent {
 		Parts: []llms.ContentPart{llms.TextPart("You are a helpful AI assistant. Be concise and friendly.")},
 	}
 
-	return &SimpleChatAgent{
+	agent := &SimpleChatAgent{
 		llm:      llm,
 		messages: []llms.MessageContent{systemMsg},
 	}
+
+	// Try to initialize MCP if config is available
+	mcpConfigPath := os.Getenv("MCP_CONFIG_PATH")
+	if mcpConfigPath == "" {
+		mcpConfigPath = "../../testdata/mcp/mcp.json"
+	}
+
+	ctx := context.Background()
+	if config, err := mcpclient.LoadConfig(mcpConfigPath); err == nil {
+		if client, err := mcpclient.NewClient(ctx, config); err == nil {
+			if tools, err := mcp.MCPToTools(ctx, client); err == nil && len(tools) > 0 {
+				agent.mcpClient = client
+				agent.mcpTools = tools
+				agent.toolsEnabled = true
+				log.Printf("Loaded %d MCP tools", len(tools))
+
+				// Update system message to mention tools
+				toolsInfo := agent.getToolsInfo()
+				systemMsg.Parts[0] = llms.TextPart(fmt.Sprintf(`You are a helpful AI assistant with access to various tools.
+
+Available tools:
+%s
+
+When the user asks for something that can be done with these tools, use the tools to help them.
+Always explain what you're doing with the tools.
+Be concise and friendly in your responses.`, toolsInfo))
+				agent.messages[0] = systemMsg
+			}
+		}
+	} else {
+		log.Printf("Failed to load MCP config: %v", err)
+	}
+
+	return agent
+}
+
+// getToolsInfo returns a formatted string of available tools
+func (a *SimpleChatAgent) getToolsInfo() string {
+	if len(a.mcpTools) == 0 {
+		return "No tools available."
+	}
+
+	var info strings.Builder
+	for _, tool := range a.mcpTools {
+		info.WriteString(fmt.Sprintf("- %s: %s\n", tool.Name(), tool.Description()))
+	}
+	return info.String()
+}
+
+// GetAvailableTools returns the list of available tools
+func (a *SimpleChatAgent) GetAvailableTools() []map[string]string {
+	var tools []map[string]string
+	for _, tool := range a.mcpTools {
+		tools = append(tools, map[string]string{
+			"name":        tool.Name(),
+			"description": tool.Description(),
+		})
+	}
+	return tools
 }
 
 // Chat sends a message and returns response
@@ -48,6 +118,33 @@ func (a *SimpleChatAgent) Chat(ctx context.Context, message string) (string, err
 		Parts: []llms.ContentPart{llms.TextPart(message)},
 	}
 	a.messages = append(a.messages, userMsg)
+
+	// Check if any tool should be used based on the message
+	toolUsed := false
+	if a.toolsEnabled {
+		// Simple keyword matching for tool usage
+		for _, tool := range a.mcpTools {
+			if strings.Contains(strings.ToLower(message), strings.ToLower(tool.Name())) {
+				// Try to call the tool
+				result, err := tool.Call(ctx, "{}") // Empty args for now
+				if err != nil {
+					log.Printf("Tool call failed: %v", err)
+					continue
+				}
+				toolUsed = true
+
+				// Add tool result to conversation
+				toolMsg := llms.MessageContent{
+					Role: llms.ChatMessageTypeTool,
+					Parts: []llms.ContentPart{
+						llms.TextPart(fmt.Sprintf("Used %s tool. Result: %s", tool.Name(), result)),
+					},
+				}
+				a.messages = append(a.messages, toolMsg)
+				break
+			}
+		}
+	}
 
 	// Call LLM with full history
 	response, err := a.llm.GenerateContent(ctx, a.messages)
@@ -63,6 +160,11 @@ func (a *SimpleChatAgent) Chat(ctx context.Context, message string) (string, err
 
 	if responseText == "" {
 		return "", fmt.Errorf("empty response from LLM")
+	}
+
+	// If a tool was used, prepend that information to the response
+	if toolUsed {
+		responseText = fmt.Sprintf("I used a tool to help with your request. %s", responseText)
 	}
 
 	// Add assistant response to history
@@ -101,11 +203,11 @@ func getClientID(r *http.Request) string {
 // ChatServer manages HTTP endpoints and chat agents
 type ChatServer struct {
 	sessionManager  *SessionManager
-	agents          map[string]*SimpleChatAgent
+	agents          map[string]ChatAgent
 	llm             llms.Model
 	agentMu         sync.RWMutex
 	port            string
-	sessionManagers map[string]*SessionManager  // clientID -> SessionManager
+	sessionManagers map[string]*SessionManager // clientID -> SessionManager
 	smMu            sync.RWMutex
 }
 
@@ -149,7 +251,7 @@ func NewChatServer(sessionDir string, maxHistory int, port string) (*ChatServer,
 
 	return &ChatServer{
 		sessionManager:  NewSessionManager(sessionDir, maxHistory),
-		agents:          make(map[string]*SimpleChatAgent),
+		agents:          make(map[string]ChatAgent),
 		llm:             llm,
 		port:            port,
 		sessionManagers: make(map[string]*SessionManager),
@@ -171,7 +273,7 @@ func (cs *ChatServer) getSessionManager(clientID string) *SessionManager {
 }
 
 // getOrCreateAgent gets an existing agent or creates a new one for a session
-func (cs *ChatServer) getOrCreateAgent(sessionID string) (*SimpleChatAgent, error) {
+func (cs *ChatServer) getOrCreateAgent(sessionID string) (ChatAgent, error) {
 	cs.agentMu.RLock()
 	agent, exists := cs.agents[sessionID]
 	cs.agentMu.RUnlock()
@@ -438,6 +540,37 @@ func (cs *ChatServer) handleGetClientID(w http.ResponseWriter, r *http.Request) 
 	})
 }
 
+// handleMCPTools returns the list of available MCP tools
+func (cs *ChatServer) handleMCPTools(w http.ResponseWriter, r *http.Request) {
+	sessionID := r.URL.Query().Get("session_id")
+	if sessionID == "" {
+		http.Error(w, "session_id is required", http.StatusBadRequest)
+		return
+	}
+
+	// Get or create agent for this session
+	agent, err := cs.getOrCreateAgent(sessionID)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Failed to get agent: %v", err), http.StatusInternalServerError)
+		return
+	}
+
+	// Cast to SimpleChatAgent to access MCP methods
+	simpleAgent, ok := agent.(*SimpleChatAgent)
+	if !ok {
+		http.Error(w, "Agent does not support MCP", http.StatusInternalServerError)
+		return
+	}
+
+	tools := simpleAgent.GetAvailableTools()
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"tools":   tools,
+		"enabled": simpleAgent.toolsEnabled,
+	})
+}
+
 // Start starts the HTTP server
 func (cs *ChatServer) Start() error {
 	http.HandleFunc("/", cs.handleIndex)
@@ -455,6 +588,7 @@ func (cs *ChatServer) Start() error {
 		}
 	})
 	http.HandleFunc("/api/chat", cs.handleChat)
+	http.HandleFunc("/api/mcp/tools", cs.handleMCPTools)
 
 	// Serve static files
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
