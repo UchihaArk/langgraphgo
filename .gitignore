@@ -4,5 +4,9 @@ lint-ci.sh
 deerflow
 !deerflow/
 
+langmanus
+!langmanus/
+
 .claude
 .qoder
+.env
