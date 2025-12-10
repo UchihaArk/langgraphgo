@@ -130,6 +130,13 @@
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
+                    <div class="settings-menu-item">
+                        <label class="settings-toggle">
+                            <span class="settings-label">流式输出</span>
+                            <input type="checkbox" id="user-enable-streaming" checked onchange="handleSettingsChange()">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
@@ -362,7 +369,8 @@
         // User Settings Management
         let userSettings = {
             enableSkills: true,
-            enableMCP: true
+            enableMCP: true,
+            enableStreaming: true  // New setting for streaming
         };
 
         // Update tools icons visibility based on user settings
@@ -388,12 +396,16 @@
             // Update checkbox states
             const skillsCheckbox = document.getElementById('user-enable-skills');
             const mcpCheckbox = document.getElementById('user-enable-mcp');
+            const streamingCheckbox = document.getElementById('user-enable-streaming');
 
             if (skillsCheckbox) {
                 skillsCheckbox.checked = userSettings.enableSkills;
             }
             if (mcpCheckbox) {
                 mcpCheckbox.checked = userSettings.enableMCP;
+            }
+            if (streamingCheckbox) {
+                streamingCheckbox.checked = userSettings.enableStreaming;
             }
 
             // Update icons visibility
@@ -433,12 +445,16 @@
         function handleSettingsChange() {
             const skillsCheckbox = document.getElementById('user-enable-skills');
             const mcpCheckbox = document.getElementById('user-enable-mcp');
+            const streamingCheckbox = document.getElementById('user-enable-streaming');
 
             if (skillsCheckbox) {
                 userSettings.enableSkills = skillsCheckbox.checked;
             }
             if (mcpCheckbox) {
                 userSettings.enableMCP = mcpCheckbox.checked;
+            }
+            if (streamingCheckbox) {
+                userSettings.enableStreaming = streamingCheckbox.checked;
             }
 
             saveUserSettings();
@@ -658,6 +674,23 @@
             await addMessageToUI('user', message, new Date());
             input.value = '';
 
+            // Check if streaming is enabled
+            if (userSettings.enableStreaming) {
+                await sendStreamingMessage(message);
+            } else {
+                await sendNormalMessage(message);
+            }
+
+            // Re-enable input
+            input.disabled = false;
+            document.getElementById('send-btn').disabled = false;
+            input.focus();
+
+            // Reload sessions to update message count
+            loadSessions();
+        }
+
+        async function sendNormalMessage(message) {
             // Show typing indicator
             const typingDiv = document.createElement('div');
             typingDiv.className = 'message assistant';
@@ -681,7 +714,8 @@
                         user_settings: {
                             enable_skills: userSettings.enableSkills,
                             enable_mcp: userSettings.enableMCP
-                        }
+                        },
+                        stream: false
                     })
                 });
 
@@ -692,17 +726,329 @@
 
                 // Add assistant response
                 await addMessageToUI('assistant', data.response, new Date());
-
-                // Reload sessions to update message count
-                loadSessions();
             } catch (error) {
                 console.error('Failed to send message:', error);
                 typingDiv.remove();
                 addErrorMessage('Failed to get response. Please try again.');
+            }
+        }
+
+        async function sendStreamingMessage(message) {
+            // Create message container for streaming response
+            let messageDiv = null;
+            let messageContentDiv = null;
+            let responseText = '';
+            let streamComplete = false;
+            let renderTimeout = null;
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        session_id: currentSessionId,
+                        message: message,
+                        user_settings: {
+                            enable_skills: userSettings.enableSkills,
+                            enable_mcp: userSettings.enableMCP
+                        },
+                        stream: true
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.trim() === '') continue;
+
+                        if (line.startsWith('event: ')) {
+                            // Skip event line
+                            continue;
+                        }
+
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.slice(6));
+
+                                if (data.type === 'start') {
+                                    // Create the message div when stream starts
+                                    messageDiv = document.createElement('div');
+                                    messageDiv.className = 'message assistant';
+
+                                    messageContentDiv = document.createElement('div');
+                                    messageContentDiv.className = 'message-content';
+                                    messageContentDiv.innerHTML = '';
+
+                                    messageDiv.appendChild(messageContentDiv);
+                                    document.getElementById('messages').appendChild(messageDiv);
+                                    scrollToBottom();
+                                } else if (data.type === 'chunk') {
+                                    // Append chunk to message
+                                    responseText += data.chunk;
+                                    if (messageContentDiv) {
+                                        // Clear any pending render
+                                        if (renderTimeout) {
+                                            clearTimeout(renderTimeout);
+                                        }
+
+                                        // Show text content immediately for smooth typing effect
+                                        messageContentDiv.textContent = responseText;
+
+                                        // Scroll to bottom
+                                        scrollToBottom();
+
+                                        // Debounced render attempt - only render if we have potential complete markdown blocks
+                                        renderTimeout = setTimeout(() => {
+                                            attemptMarkdownRender(responseText, messageContentDiv);
+                                        }, 300);
+                                    }
+                                } else if (data.type === 'end') {
+                                    // Mark stream as complete
+                                    streamComplete = true;
+
+                                    // Stream complete - finalize the message
+                                    responseText = data.message || responseText;
+
+                                    if (messageContentDiv) {
+                                        // Process the complete content
+                                        const result = extractArtifacts(responseText);
+
+                                        // Store artifacts
+                                        result.artifacts.forEach(artifact => {
+                                            artifacts.set(artifact.id, artifact);
+                                        });
+
+                                        // Parse Markdown now that we have the complete message
+                                        let processedContent = marked.parse(result.content);
+
+                                        // Find and replace artifact markers
+                                        const markerRegex = /<!-- ARTIFACT:(.*?) -->/g;
+                                        processedContent = processedContent.replace(markerRegex, (match, artifactId) => {
+                                            const artifact = artifacts.get(artifactId);
+                                            if (artifact) {
+                                                return `<div class="artifact-placeholder" data-artifact-id="${artifactId}">
+                                                    <span class="artifact-placeholder-icon">${getTypeIcon(artifact.type)}</span>
+                                                    <div class="artifact-placeholder-text">
+                                                        <div class="artifact-placeholder-label">Artifact</div>
+                                                        <div class="artifact-placeholder-title">${artifact.title}</div>
+                                                    </div>
+                                                    <span class="artifact-placeholder-arrow">→</span>
+                                                </div>`;
+                                            }
+                                            return match;
+                                        });
+
+                                        messageContentDiv.innerHTML = processedContent;
+
+                                        // Add footer with time and copy button
+                                        const footer = document.createElement('div');
+                                        footer.className = 'message-footer';
+
+                                        const timeDiv = document.createElement('div');
+                                        timeDiv.className = 'message-time';
+                                        timeDiv.textContent = new Date().toLocaleTimeString();
+
+                                        const copyBtn = document.createElement('div');
+                                        copyBtn.className = 'copy-btn';
+                                        copyBtn.innerHTML = '&#x1f4cb; <span>Copy</span>';
+                                        copyBtn.setAttribute('data-raw-content', responseText);
+                                        copyBtn.onclick = (e) => copyToClipboard(e);
+
+                                        footer.appendChild(timeDiv);
+                                        footer.appendChild(copyBtn);
+                                        messageContentDiv.appendChild(footer);
+
+                                        // Process MathJax, Mermaid, and Highlight.js
+                                        await processSpecialContent(messageDiv, responseText);
+
+                                        // Update artifacts display if sidebar is open
+                                        if (isArtifactsOpen) {
+                                            updateArtifactsDisplay();
+                                        }
+
+                                        // Add click handlers for artifact placeholders
+                                        const placeholders = messageDiv.querySelectorAll('.artifact-placeholder');
+                                        placeholders.forEach(placeholder => {
+                                            placeholder.addEventListener('click', function (e) {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                const artifactId = this.getAttribute('data-artifact-id');
+                                                openArtifactsModal();
+                                                showArtifact(artifactId);
+                                            });
+                                        });
+                                    }
+                                } else if (data.type === 'error') {
+                                    // Handle error
+                                    streamComplete = true;
+                                    addErrorMessage(data.error || 'An error occurred during streaming');
+                                }
+                            } catch (e) {
+                                console.error('Error parsing SSE data:', e);
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to send streaming message:', error);
+                streamComplete = true;
+                // Remove the streaming message if it exists
+                if (messageDiv) {
+                    messageDiv.remove();
+                }
+                addErrorMessage('Failed to get response. Please try again.');
             } finally {
-                input.disabled = false;
-                document.getElementById('send-btn').disabled = false;
-                input.focus();
+                // Clear any pending render timeout
+                if (renderTimeout) {
+                    clearTimeout(renderTimeout);
+                }
+
+                // Ensure input is re-enabled if stream wasn't completed properly
+                if (!streamComplete) {
+                    console.warn('Stream ended without completion signal');
+                    // If we have partial content, try to finalize it
+                    if (messageDiv && messageContentDiv && responseText) {
+                        // Try to render whatever markdown we have
+                        attemptMarkdownRender(responseText, messageContentDiv);
+
+                        // Add a basic footer to indicate incomplete response
+                        const footer = document.createElement('div');
+                        footer.className = 'message-footer';
+
+                        const timeDiv = document.createElement('div');
+                        timeDiv.className = 'message-time';
+                        timeDiv.textContent = new Date().toLocaleTimeString() + ' (Response incomplete)';
+
+                        const copyBtn = document.createElement('div');
+                        copyBtn.className = 'copy-btn';
+                        copyBtn.innerHTML = '&#x1f4cb; <span>Copy</span>';
+                        copyBtn.setAttribute('data-raw-content', responseText);
+                        copyBtn.onclick = (e) => copyToClipboard(e);
+
+                        footer.appendChild(timeDiv);
+                        footer.appendChild(copyBtn);
+                        messageContentDiv.appendChild(footer);
+                    }
+                }
+            }
+        }
+
+        function attemptMarkdownRender(text, messageContentDiv) {
+            // Only attempt to render if we have what looks like complete markdown blocks
+            // Check for code blocks, lists, headers, etc. that are properly closed
+            const hasCodeBlock = text.includes('```');
+            const hasHeaders = /^#+\s/m.test(text);
+            const hasLists = /^[\-\*\+]\s/m.test(text) || /^\d+\.\s/m.test(text);
+            const hasLinks = /\[.*?\]\(.*?\)/.test(text);
+
+            // If we don't have markdown features, just keep as plain text
+            if (!hasCodeBlock && !hasHeaders && !hasLists && !hasLinks) {
+                return;
+            }
+
+            // For code blocks, check if they're properly closed
+            if (hasCodeBlock) {
+                const codeBlockMatches = text.match(/```/g);
+                if (codeBlockMatches && codeBlockMatches.length % 2 !== 0) {
+                    // Unclosed code block, don't render yet
+                    return;
+                }
+            }
+
+            // Try rendering a snapshot of the current content
+            try {
+                const snapshot = text;
+                const result = extractArtifacts(snapshot);
+                let processedContent = marked.parse(result.content);
+
+                // Replace artifact markers if any
+                const markerRegex = /<!-- ARTIFACT:(.*?) -->/g;
+                processedContent = processedContent.replace(markerRegex, (match, artifactId) => {
+                    const artifact = artifacts.get(artifactId);
+                    if (artifact) {
+                        return `<div class="artifact-placeholder" data-artifact-id="${artifactId}">
+                            <span class="artifact-placeholder-icon">${getTypeIcon(artifact.type)}</span>
+                            <div class="artifact-placeholder-text">
+                                <div class="artifact-placeholder-label">Artifact</div>
+                                <div class="artifact-placeholder-title">${artifact.title}</div>
+                            </div>
+                            <span class="artifact-placeholder-arrow">→</span>
+                        </div>`;
+                    }
+                    return match;
+                });
+
+                // Only update if the content is different and looks valid
+                if (processedContent !== messageContentDiv.innerHTML && !processedContent.includes('<p><code>')) {
+                    messageContentDiv.innerHTML = processedContent;
+
+                    // Highlight code blocks if any
+                    if (typeof hljs !== 'undefined') {
+                        messageContentDiv.querySelectorAll('pre code').forEach((block) => {
+                            hljs.highlightElement(block);
+                        });
+                    }
+                }
+            } catch (e) {
+                // If parsing fails, just keep as plain text
+                console.debug('Markdown parse failed during streaming:', e);
+            }
+        }
+
+        async function processSpecialContent(messageDiv, content) {
+            // Check if message contains math formulas and load MathJax if needed
+            if (content.includes('$') || content.includes('\\[') || content.includes('\\(')) {
+                await window.loadMathJax();
+                if (window.MathJax && window.MathJax.typesetPromise) {
+                    try {
+                        await window.MathJax.typesetPromise([messageDiv]);
+                    } catch (e) {
+                        console.error("MathJax rendering error:", e);
+                    }
+                }
+            }
+
+            // Check if message contains Mermaid diagrams
+            const mermaidCodeBlocks = messageDiv.querySelectorAll('pre code.language-mermaid');
+            if (mermaidCodeBlocks.length > 0) {
+                await window.loadMermaid();
+
+                for (const codeBlock of mermaidCodeBlocks) {
+                    const code = codeBlock.textContent;
+                    const mermaidDiv = document.createElement('div');
+                    mermaidDiv.className = 'mermaid';
+                    mermaidDiv.textContent = code;
+                    codeBlock.parentNode.replaceWith(mermaidDiv);
+                }
+
+                if (typeof mermaid !== 'undefined') {
+                    try {
+                        await mermaid.run({
+                            nodes: messageDiv.querySelectorAll('.mermaid')
+                        });
+                    } catch (e) {
+                        console.error("Mermaid rendering error:", e);
+                    }
+                }
+            }
+
+            // Highlight code blocks
+            if (typeof hljs !== 'undefined') {
+                messageDiv.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                });
             }
         }
 

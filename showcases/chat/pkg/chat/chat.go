@@ -784,6 +784,7 @@ func (cs *ChatServer) HandleChat(w http.ResponseWriter, r *http.Request) {
 			EnableSkills bool `json:"enable_skills"`
 			EnableMCP    bool `json:"enable_mcp"`
 		} `json:"user_settings"`
+		Stream       bool   `json:"stream"` // New field for streaming request
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -800,7 +801,7 @@ func (cs *ChatServer) HandleChat(w http.ResponseWriter, r *http.Request) {
 	clientID := getClientID(r)
 	sm := cs.GetSessionManager(clientID)
 
-	log.Printf("Chat request for session %s: %s", req.SessionID, req.Message)
+	log.Printf("Chat request for session %s: %s (stream: %v)", req.SessionID, req.Message, req.Stream)
 
 	// Verify session exists
 	_, err := sm.GetSession(req.SessionID)
@@ -821,10 +822,6 @@ func (cs *ChatServer) HandleChat(w http.ResponseWriter, r *http.Request) {
 	// Add user message to history
 	sm.AddMessage(req.SessionID, "user", req.Message)
 
-	// Get response from agent
-	ctx, cancel := context.WithTimeout(r.Context(), 60*time.Second)
-	defer cancel()
-
 	// Use user settings directly
 	enableSkills := req.UserSettings.EnableSkills
 	enableMCP := req.UserSettings.EnableMCP
@@ -832,23 +829,130 @@ func (cs *ChatServer) HandleChat(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Tool settings for session %s - Skills: %v, MCP: %v",
 		req.SessionID, enableSkills, enableMCP)
 
-	response, err := agent.Chat(ctx, req.Message, enableSkills, enableMCP)
+	if req.Stream {
+		// Handle streaming response
+		cs.HandleChatStream(w, r, agent, req.SessionID, req.Message, enableSkills, enableMCP)
+	} else {
+		// Handle non-streaming response (original behavior)
+		cs.HandleChatNonStream(w, r, agent, req.SessionID, req.Message, enableSkills, enableMCP)
+	}
+}
+
+// HandleChatNonStream handles non-streaming chat responses (original behavior)
+func (cs *ChatServer) HandleChatNonStream(w http.ResponseWriter, r *http.Request, agent ChatAgent, sessionID, message string, enableSkills, enableMCP bool) {
+	ctx, cancel := context.WithTimeout(r.Context(), 60*time.Second)
+	defer cancel()
+
+	response, err := agent.Chat(ctx, message, enableSkills, enableMCP)
 	if err != nil {
-		log.Printf("Chat error for session %s: %v", req.SessionID, err)
+		log.Printf("Chat error for session %s: %v", sessionID, err)
 		http.Error(w, fmt.Sprintf("Chat failed: %v", err), http.StatusInternalServerError)
 		return
 	}
 
-	log.Printf("Chat response for session %s: %s", req.SessionID, response)
+	log.Printf("Chat response for session %s: %s", sessionID, response)
 
 	// Add assistant response to history
-	sm.AddMessage(req.SessionID, "assistant", response)
+	clientID := getClientID(r)
+	sm := cs.GetSessionManager(clientID)
+	sm.AddMessage(sessionID, "assistant", response)
 
 	// Send response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
 		"response": response,
 	})
+}
+
+// HandleChatStream handles streaming chat responses using SSE
+func (cs *ChatServer) HandleChatStream(w http.ResponseWriter, r *http.Request, agent ChatAgent, sessionID, message string, enableSkills, enableMCP bool) {
+	// Set SSE headers
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+
+	// Get a flusher
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		log.Printf("Streaming not supported")
+		http.Error(w, "Streaming not supported", http.StatusInternalServerError)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 60*time.Second)
+	defer cancel()
+
+	clientID := getClientID(r)
+	sm := cs.GetSessionManager(clientID)
+
+	// Send initial event
+	fmt.Fprintf(w, "event: start\ndata: {\"type\": \"start\"}\n\n")
+	flusher.Flush()
+
+	// Create a streaming response collector
+	var responseBuilder strings.Builder
+
+	// Get the full response from agent
+	response, err := agent.Chat(ctx, message, enableSkills, enableMCP)
+	if err != nil {
+		fmt.Fprintf(w, "event: error\ndata: {\"type\": \"error\", \"error\": %q}\n\n", err.Error())
+		flusher.Flush()
+		return
+	}
+
+	// Simulate streaming by sending chunks
+	// Use runes to avoid splitting UTF-8 characters
+	runes := []rune(response)
+	chunkSize := 5 // Send 5 runes at a time (better for multi-byte characters)
+	for i := 0; i < len(runes); i += chunkSize {
+		select {
+		case <-ctx.Done():
+			// Context cancelled, send end event with partial response
+			partialData := map[string]interface{}{
+				"type":    "end",
+				"message": responseBuilder.String(),
+			}
+			jsonPartialData, _ := json.Marshal(partialData)
+			fmt.Fprintf(w, "event: end\ndata: %s\n\n", jsonPartialData)
+			flusher.Flush()
+			return
+		default:
+			end := i + chunkSize
+			if end > len(runes) {
+				end = len(runes)
+			}
+
+			chunk := string(runes[i:end])
+			responseBuilder.WriteString(chunk)
+
+			// Send chunk event
+			data := map[string]interface{}{
+				"type":  "chunk",
+				"chunk": chunk,
+				"index": i,
+			}
+			jsonData, _ := json.Marshal(data)
+			fmt.Fprintf(w, "event: chunk\ndata: %s\n\n", jsonData)
+			flusher.Flush()
+
+			// Small delay to simulate streaming
+			time.Sleep(100 * time.Millisecond)
+		}
+	}
+
+	// Save the complete response to history
+	sm.AddMessage(sessionID, "assistant", response)
+
+	// Send end event
+	endData := map[string]interface{}{
+		"type":    "end",
+		"message": response,
+	}
+	jsonEndData, _ := json.Marshal(endData)
+	fmt.Fprintf(w, "event: end\ndata: %s\n\n", jsonEndData)
+	flusher.Flush()
 }
 
 // HandleGetClientID returns the client ID for the current user
