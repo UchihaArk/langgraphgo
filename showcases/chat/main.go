@@ -99,6 +99,8 @@ type SimpleChatAgent struct {
 	skills        []SkillInfo
 	selectedSkill string // Currently selected skill name
 	toolsEnabled  bool
+	toolsLoading  bool // true when tools are being loaded asynchronously
+	toolsLoaded   bool // true when tools have finished loading
 }
 
 // NewSimpleChatAgent creates a simple chat agent
@@ -114,46 +116,69 @@ func NewSimpleChatAgent(llm llms.Model, config Config) *SimpleChatAgent {
 		messages: []llms.MessageContent{systemMsg},
 	}
 
-	// Try to load Skills
-	skillsDir := os.Getenv("SKILLS_DIR")
-	if skillsDir == "" {
-		skillsDir = "../../testdata/skills"
-	}
-
-	if _, err := os.Stat(skillsDir); err == nil {
-		packages, err := goskills.ParseSkillPackages(skillsDir)
-		if err != nil {
-			log.Printf("Failed to parse skills packages: %v", err)
-		} else {
-			for _, skill := range packages {
-				// Store skill info without converting to tools yet
-				agent.skills = append(agent.skills, SkillInfo{
-					Name:        skill.Meta.Name,
-					Description: skill.Meta.Description,
-					Package:     skill,
-					Loaded:      false,
-				})
-			}
-			log.Printf("Loaded %d skills info", len(agent.skills))
-			agent.toolsEnabled = true
-		}
-	} else {
-		log.Printf("Skills directory not found at %s", skillsDir)
-	}
-
-	// Try to initialize MCP
-	mcpConfigPath := os.Getenv("MCP_CONFIG_PATH")
-	if mcpConfigPath == "" {
-		mcpConfigPath = "../../testdata/mcp/mcp.json"
-	}
-
-	// Safely initialize MCP with error recovery
-	if err := agent.initializeMCP(mcpConfigPath); err != nil {
-		log.Printf("MCP initialization failed (continuing without MCP): %v", err)
-		// Continue without MCP tools
-	}
-
 	return agent
+}
+
+// InitializeToolsAsync asynchronously loads Skills and MCP tools in the background
+// This prevents blocking server startup while tools are being loaded
+func (a *SimpleChatAgent) InitializeToolsAsync() {
+	// Mark as loading
+	a.mu.Lock()
+	a.toolsLoading = true
+	a.toolsLoaded = false
+	a.mu.Unlock()
+
+	go func() {
+		log.Println("Starting background tools initialization...")
+
+		// Load Skills
+		skillsDir := os.Getenv("SKILLS_DIR")
+		if skillsDir == "" {
+			skillsDir = "../../testdata/skills"
+		}
+
+		if _, err := os.Stat(skillsDir); err == nil {
+			packages, err := goskills.ParseSkillPackages(skillsDir)
+			if err != nil {
+				log.Printf("Failed to parse skills packages: %v", err)
+			} else {
+				a.mu.Lock()
+				for _, skill := range packages {
+					// Store skill info without converting to tools yet
+					a.skills = append(a.skills, SkillInfo{
+						Name:        skill.Meta.Name,
+						Description: skill.Meta.Description,
+						Package:     skill,
+						Loaded:      false,
+					})
+				}
+				a.toolsEnabled = true
+				a.mu.Unlock()
+				log.Printf("Loaded %d skills info", len(packages))
+			}
+		} else {
+			log.Printf("Skills directory not found at %s", skillsDir)
+		}
+
+		// Load MCP
+		mcpConfigPath := os.Getenv("MCP_CONFIG_PATH")
+		if mcpConfigPath == "" {
+			mcpConfigPath = "../../testdata/mcp/mcp.json"
+		}
+
+		// Safely initialize MCP with error recovery
+		if err := a.initializeMCP(mcpConfigPath); err != nil {
+			log.Printf("MCP initialization failed (continuing without MCP): %v", err)
+		}
+
+		// Mark as loaded
+		a.mu.Lock()
+		a.toolsLoading = false
+		a.toolsLoaded = true
+		a.mu.Unlock()
+
+		log.Println("Background tools initialization complete")
+	}()
 }
 
 // initializeMCP safely initializes MCP client with error recovery
@@ -204,9 +229,11 @@ func (a *SimpleChatAgent) initializeMCP(mcpConfigPath string) (err error) {
 	}
 
 	// Successfully initialized
+	a.mu.Lock()
 	a.mcpClient = client
 	a.mcpTools = tools
 	a.toolsEnabled = true
+	a.mu.Unlock()
 	log.Printf("Successfully loaded %d MCP tools", len(tools))
 
 	return nil
@@ -540,6 +567,10 @@ func (cs *ChatServer) getOrCreateAgent(sessionID string) (ChatAgent, error) {
 	// Create simple chat agent
 	agent = NewSimpleChatAgent(cs.llm, cs.config)
 	cs.agents[sessionID] = agent
+
+	// Initialize tools asynchronously to avoid blocking
+	agent.(*SimpleChatAgent).InitializeToolsAsync()
+
 	return agent, nil
 }
 
@@ -874,15 +905,26 @@ func (cs *ChatServer) handleToolsHierarchical(w http.ResponseWriter, r *http.Req
 
 	// Prepare hierarchical data
 	var result struct {
-		Skills []map[string]interface{} `json:"skills"`
-		MCPTools []map[string]interface{} `json:"mcp_tools"`
-		Enabled bool `json:"enabled"`
+		Skills       []map[string]interface{} `json:"skills"`
+		MCPTools     []map[string]interface{} `json:"mcp_tools"`
+		Enabled      bool                     `json:"enabled"`
+		ToolsLoading bool                     `json:"tools_loading"`
+		ToolsLoaded  bool                     `json:"tools_loaded"`
 	}
 
+	// Lock for reading skills and MCP tools
+	simpleAgent.mu.RLock()
 	result.Enabled = simpleAgent.toolsEnabled
+	result.ToolsLoading = simpleAgent.toolsLoading
+	result.ToolsLoaded = simpleAgent.toolsLoaded
+	skills := make([]SkillInfo, len(simpleAgent.skills))
+	copy(skills, simpleAgent.skills)
+	mcpTools := make([]tools.Tool, len(simpleAgent.mcpTools))
+	copy(mcpTools, simpleAgent.mcpTools)
+	simpleAgent.mu.RUnlock()
 
 	// Add skills with their tools
-	for _, skill := range simpleAgent.skills {
+	for _, skill := range skills {
 		skillData := map[string]interface{}{
 			"name":        skill.Name,
 			"description": skill.Description,
@@ -914,7 +956,7 @@ func (cs *ChatServer) handleToolsHierarchical(w http.ResponseWriter, r *http.Req
 
 	// Add MCP tools (group them by category if possible, or list them individually)
 	mcpGroups := make(map[string][]map[string]interface{})
-	for _, tool := range simpleAgent.mcpTools {
+	for _, tool := range mcpTools {
 		toolName := tool.Name()
 		desc := tool.Description()
 
