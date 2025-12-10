@@ -96,11 +96,32 @@ type MessageGraph struct {
 }
 
 // NewMessageGraph creates a new instance of MessageGraph.
+// For backward compatibility, this version does not initialize a schema.
+// If you want a MessageGraph with a default schema for message handling,
+// use NewMessageGraphWithSchema() instead.
 func NewMessageGraph() *MessageGraph {
 	return &MessageGraph{
 		nodes:            make(map[string]Node),
 		conditionalEdges: make(map[string]func(ctx context.Context, state interface{}) string),
 	}
+}
+
+// NewMessageGraphWithSchema creates a new MessageGraph with a default schema
+// that handles "messages" using the AddMessages reducer.
+// This is the recommended constructor for chat-based agents that use
+// map[string]interface{} as state with a "messages" key.
+func NewMessageGraphWithSchema() *MessageGraph {
+	g := &MessageGraph{
+		nodes:            make(map[string]Node),
+		conditionalEdges: make(map[string]func(ctx context.Context, state interface{}) string),
+	}
+
+	// Initialize default schema for message handling
+	schema := NewMapSchema()
+	schema.RegisterReducer("messages", AddMessages)
+	g.Schema = schema
+
+	return g
 }
 
 // AddNode adds a new node to the message graph with the given name, description and function.
