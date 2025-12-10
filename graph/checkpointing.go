@@ -372,7 +372,7 @@ func (cl *CheckpointListener) OnGraphStep(ctx context.Context, stepNode string, 
 
 // CheckpointableStateGraph extends ListenableMessageGraph with checkpointing
 type CheckpointableStateGraph struct {
-	*ListenableMessageGraph
+	*ListenableStateGraph
 	config CheckpointConfig
 }
 
@@ -382,8 +382,8 @@ type CheckpointableMessageGraph = CheckpointableStateGraph
 // NewCheckpointableStateGraph creates a new checkpointable state graph
 func NewCheckpointableStateGraph() *CheckpointableStateGraph {
 	return &CheckpointableStateGraph{
-		ListenableMessageGraph: NewListenableMessageGraph(),
-		config:                 DefaultCheckpointConfig(),
+		ListenableStateGraph: NewListenableStateGraph(),
+		config:               DefaultCheckpointConfig(),
 	}
 }
 
@@ -395,8 +395,8 @@ func NewCheckpointableMessageGraph() *CheckpointableMessageGraph {
 // NewCheckpointableStateGraphWithConfig creates a checkpointable graph with custom config
 func NewCheckpointableStateGraphWithConfig(config CheckpointConfig) *CheckpointableStateGraph {
 	return &CheckpointableStateGraph{
-		ListenableMessageGraph: NewListenableMessageGraph(),
-		config:                 config,
+		ListenableStateGraph: NewListenableStateGraph(),
+		config:               config,
 	}
 }
 

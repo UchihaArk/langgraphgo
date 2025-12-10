@@ -184,22 +184,27 @@ func (ln *ListenableNode) GetListeners() []NodeListener {
 	return listeners
 }
 
-// ListenableMessageGraph extends MessageGraph with listener capabilities
-type ListenableMessageGraph struct {
-	*MessageGraph
+// ListenableStateGraph extends StateGraph with listener capabilities
+type ListenableStateGraph struct {
+	*StateGraph
 	listenableNodes map[string]*ListenableNode
 }
 
-// NewListenableMessageGraph creates a new message graph with listener support
-func NewListenableMessageGraph() *ListenableMessageGraph {
-	return &ListenableMessageGraph{
-		MessageGraph:    NewStateGraph(), // Use StateGraph without schema for flexibility
+// NewListenableStateGraph creates a new state graph with listener support
+func NewListenableStateGraph() *ListenableStateGraph {
+	return &ListenableStateGraph{
+		StateGraph:      NewStateGraph(),
 		listenableNodes: make(map[string]*ListenableNode),
 	}
 }
 
+// NewListenableMessageGraph is an alias for NewListenableStateGraph for backward compatibility.
+func NewListenableMessageGraph() *ListenableStateGraph {
+	return NewListenableStateGraph()
+}
+
 // AddNode adds a node with listener capabilities
-func (g *ListenableMessageGraph) AddNode(name string, description string, fn func(ctx context.Context, state interface{}) (interface{}, error)) *ListenableNode {
+func (g *ListenableStateGraph) AddNode(name string, description string, fn func(ctx context.Context, state interface{}) (interface{}, error)) *ListenableNode {
 	node := Node{
 		Name:        name,
 		Description: description,
@@ -209,26 +214,26 @@ func (g *ListenableMessageGraph) AddNode(name string, description string, fn fun
 	listenableNode := NewListenableNode(node)
 
 	// Add to both the base graph and our listenable nodes map
-	g.MessageGraph.AddNode(name, description, fn)
+	g.StateGraph.AddNode(name, description, fn)
 	g.listenableNodes[name] = listenableNode
 
 	return listenableNode
 }
 
 // GetListenableNode returns the listenable node by name
-func (g *ListenableMessageGraph) GetListenableNode(name string) *ListenableNode {
+func (g *ListenableStateGraph) GetListenableNode(name string) *ListenableNode {
 	return g.listenableNodes[name]
 }
 
 // AddGlobalListener adds a listener to all nodes in the graph
-func (g *ListenableMessageGraph) AddGlobalListener(listener NodeListener) {
+func (g *ListenableStateGraph) AddGlobalListener(listener NodeListener) {
 	for _, node := range g.listenableNodes {
 		node.AddListener(listener)
 	}
 }
 
 // RemoveGlobalListener removes a listener from all nodes in the graph
-func (g *ListenableMessageGraph) RemoveGlobalListener(listener NodeListener) {
+func (g *ListenableStateGraph) RemoveGlobalListener(listener NodeListener) {
 	for _, node := range g.listenableNodes {
 		node.RemoveListener(listener)
 	}
@@ -236,12 +241,12 @@ func (g *ListenableMessageGraph) RemoveGlobalListener(listener NodeListener) {
 
 // ListenableRunnable wraps a Runnable with listener capabilities
 type ListenableRunnable struct {
-	graph           *ListenableMessageGraph
+	graph           *ListenableStateGraph
 	listenableNodes map[string]*ListenableNode
 }
 
-// NewListenableRunnable creates a runnable with listener support
-func (g *ListenableMessageGraph) CompileListenable() (*ListenableRunnable, error) {
+// CompileListenable creates a runnable with listener support
+func (g *ListenableStateGraph) CompileListenable() (*ListenableRunnable, error) {
 	if g.entryPoint == "" {
 		return nil, ErrEntryPointNotSet
 	}
@@ -336,5 +341,5 @@ func (lr *ListenableRunnable) InvokeWithConfig(ctx context.Context, initialState
 
 // GetGraph returns a Exporter for visualization
 func (lr *ListenableRunnable) GetGraph() *Exporter {
-	return NewExporter(lr.graph.MessageGraph)
+	return NewExporter(lr.graph.StateGraph)
 }

@@ -359,23 +359,23 @@ func (sr *StreamingRunnable) Stream(ctx context.Context, initialState interface{
 
 // StreamingMessageGraph extends ListenableMessageGraph with streaming capabilities
 type StreamingMessageGraph struct {
-	*ListenableMessageGraph
+	*ListenableStateGraph
 	config StreamConfig
 }
 
 // NewStreamingMessageGraph creates a new streaming message graph
 func NewStreamingMessageGraph() *StreamingMessageGraph {
 	return &StreamingMessageGraph{
-		ListenableMessageGraph: NewListenableMessageGraph(),
-		config:                 DefaultStreamConfig(),
+		ListenableStateGraph: NewListenableMessageGraph(),
+		config:               DefaultStreamConfig(),
 	}
 }
 
 // NewStreamingMessageGraphWithConfig creates a streaming graph with custom config
 func NewStreamingMessageGraphWithConfig(config StreamConfig) *StreamingMessageGraph {
 	return &StreamingMessageGraph{
-		ListenableMessageGraph: NewListenableMessageGraph(),
-		config:                 config,
+		ListenableStateGraph: NewListenableMessageGraph(),
+		config:               config,
 	}
 }
 

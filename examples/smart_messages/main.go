@@ -15,7 +15,7 @@ import (
 func main() {
 	// 1. Create a StateGraph with AddMessages reducer
 	// We use the helper NewMessagesStateGraph which pre-configures "messages" key with AddMessages reducer
-	g := graph.NewMessagesStateGraph()
+	g := graph.NewMessageGraph()
 
 	// 2. Define nodes
 	// Node A: Simulates a user message
