@@ -550,7 +550,10 @@
                 const sessions = await response.json();
                 sessionsList.innerHTML = '';
 
-                if (sessions.length === 0) {
+                // Filter out sessions with 0 messages
+                const filteredSessions = sessions.filter(session => session.message_count > 0);
+
+                if (filteredSessions.length === 0) {
                     // Auto-create first session if none exists
                     sessionsList.innerHTML = '<p style="padding: 20px; text-align: center; color: #7f8c8d;">创建会话中...</p>';
                     // Use setTimeout to not block the UI
@@ -558,14 +561,14 @@
                     return;
                 }
 
-                sessions.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+                filteredSessions.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
 
                 // Auto-select the most recent session if no current session is selected
-                if (!currentSessionId && sessions.length > 0) {
-                    selectSession(sessions[0].id);
+                if (!currentSessionId && filteredSessions.length > 0) {
+                    selectSession(filteredSessions[0].id);
                 }
 
-                sessions.forEach(session => {
+                filteredSessions.forEach(session => {
                     const item = document.createElement('div');
                     item.className = 'session-item' + (session.id === currentSessionId ? ' active' : '');
                     item.setAttribute('data-session-id', session.id);

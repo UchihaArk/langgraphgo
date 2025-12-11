@@ -206,11 +206,13 @@ body {
     justify-content: center;
     gap: 12px;
     position: relative;
+    transition: all 0.3s ease;
 }
 
 .sidebar.collapsed .sidebar-footer {
-    opacity: 0;
-    pointer-events: none;
+    flex-direction: column;
+    padding: 10px 12px;
+    gap: 10px;
 }
 
 .theme-selector-sidebar {
@@ -1306,6 +1308,10 @@ body {
     min-width: 220px;
     z-index: 1000;
     padding: 10px 0;
+}
+
+.sidebar.collapsed .settings-menu {
+    left: 70px;
 }
 
 .settings-menu-item {
