@@ -204,81 +204,7 @@ func (r *StateRunnable) InvokeWithConfig(ctx context.Context, initialState inter
 		}
 
 		// Execute nodes in parallel
-		var wg sync.WaitGroup
-		results := make([]interface{}, len(currentNodes))
-		errorsList := make([]error, len(currentNodes))
-
-		for i, nodeName := range currentNodes {
-			node, ok := r.graph.nodes[nodeName]
-			if !ok {
-				return nil, fmt.Errorf("%w: %s", ErrNodeNotFound, nodeName)
-			}
-
-			wg.Add(1)
-			go func(index int, n Node, name string) {
-				defer wg.Done()
-
-				// Recover from panics in node execution
-				defer func() {
-					if r := recover(); r != nil {
-						errorsList[index] = fmt.Errorf("panic in node %s: %v", name, r)
-					}
-				}()
-
-				// Start node tracing
-				var nodeSpan *TraceSpan
-				if r.tracer != nil {
-					nodeSpan = r.tracer.StartSpan(ctx, TraceEventNodeStart, name)
-					nodeSpan.State = state
-				}
-
-				var err error
-				var res interface{}
-
-				// Execute node with retry logic
-				res, err = r.executeNodeWithRetry(ctx, n, state)
-
-				// End node tracing
-				if r.tracer != nil && nodeSpan != nil {
-					if err != nil {
-						r.tracer.EndSpan(ctx, nodeSpan, res, err)
-						// Also emit error event
-						errorSpan := r.tracer.StartSpan(ctx, TraceEventNodeError, name)
-						errorSpan.Error = err
-						errorSpan.State = res
-						r.tracer.EndSpan(ctx, errorSpan, res, err)
-					} else {
-						r.tracer.EndSpan(ctx, nodeSpan, res, nil)
-					}
-				}
-
-				if err != nil {
-					var nodeInterrupt *NodeInterrupt
-					if errors.As(err, &nodeInterrupt) {
-						nodeInterrupt.Node = name
-					}
-					errorsList[index] = fmt.Errorf("error in node %s: %w", name, err)
-					return
-				}
-
-				results[index] = res
-
-				// Notify callbacks of node execution (as tool)
-				if config != nil && len(config.Callbacks) > 0 {
-					nodeRunID := generateRunID()
-					serialized := map[string]interface{}{
-						"name": name,
-						"type": "tool",
-					}
-					for _, cb := range config.Callbacks {
-						cb.OnToolStart(ctx, serialized, convertStateToString(res), nodeRunID, &runID, config.Tags, config.Metadata)
-						cb.OnToolEnd(ctx, convertStateToString(res), nodeRunID)
-					}
-				}
-			}(i, node, nodeName)
-		}
-
-		wg.Wait()
+		results, errorsList := r.executeNodesParallel(ctx, currentNodes, state, config, runID)
 
 		// Check for errors
 		for _, err := range errorsList {
@@ -304,98 +230,20 @@ func (r *StateRunnable) InvokeWithConfig(ctx context.Context, initialState inter
 			}
 		}
 
-		// Process results and check for Commands
-		var nextNodesFromCommands []string
-		processedResults := make([]interface{}, len(results))
-
-		for i, res := range results {
-			if cmd, ok := res.(*Command); ok {
-				// It's a Command
-				processedResults[i] = cmd.Update
-
-				if cmd.Goto != nil {
-					switch g := cmd.Goto.(type) {
-					case string:
-						nextNodesFromCommands = append(nextNodesFromCommands, g)
-					case []string:
-						nextNodesFromCommands = append(nextNodesFromCommands, g...)
-					}
-				}
-			} else {
-				// Regular result
-				processedResults[i] = res
-			}
-		}
+		// Process results
+		processedResults, nextNodesFromCommands := r.processNodeResults(results)
 
 		// Merge results
-		if r.graph.Schema != nil {
-			// If Schema is defined, use it to update state with results
-			for _, res := range processedResults {
-				var err error
-				state, err = r.graph.Schema.Update(state, res)
-				if err != nil {
-					return nil, fmt.Errorf("schema update failed: %w", err)
-				}
-			}
-		} else if r.graph.stateMerger != nil {
-			var err error
-			state, err = r.graph.stateMerger(ctx, state, processedResults)
-			if err != nil {
-				return nil, fmt.Errorf("state merge failed: %w", err)
-			}
-		} else {
-			if len(processedResults) > 0 {
-				state = processedResults[len(processedResults)-1]
-			}
+		var err error
+		state, err = r.mergeState(ctx, state, processedResults)
+		if err != nil {
+			return nil, err
 		}
 
 		// Determine next nodes
-		var nextNodesList []string
-
-		if len(nextNodesFromCommands) > 0 {
-			// Command.Goto overrides static edges
-			// We deduplicate
-			seen := make(map[string]bool)
-			for _, n := range nextNodesFromCommands {
-				if !seen[n] && n != END {
-					seen[n] = true
-					nextNodesList = append(nextNodesList, n)
-				}
-			}
-		} else {
-			// Use static edges
-			nextNodesSet := make(map[string]bool)
-
-			for _, nodeName := range currentNodes {
-				// First check for conditional edges
-				nextNodeFn, hasConditional := r.graph.conditionalEdges[nodeName]
-				if hasConditional {
-					nextNode := nextNodeFn(ctx, state)
-					if nextNode == "" {
-						return nil, fmt.Errorf("conditional edge returned empty next node from %s", nodeName)
-					}
-					nextNodesSet[nextNode] = true
-				} else {
-					// Then check regular edges
-					foundNext := false
-					for _, edge := range r.graph.edges {
-						if edge.From == nodeName {
-							nextNodesSet[edge.To] = true
-							foundNext = true
-							// Do NOT break here, to allow fan-out (multiple edges from same node)
-						}
-					}
-
-					if !foundNext {
-						return nil, fmt.Errorf("%w: %s", ErrNoOutgoingEdge, nodeName)
-					}
-				}
-			}
-
-			// Update nextNodesList from set
-			for node := range nextNodesSet {
-				nextNodesList = append(nextNodesList, node)
-			}
+		nextNodesList, err := r.determineNextNodes(ctx, currentNodes, state, nextNodesFromCommands)
+		if err != nil {
+			return nil, err
 		}
 
 		// Check InterruptAfter
@@ -553,4 +401,185 @@ func (r *StateRunnable) calculateBackoffDelay(attempt int) time.Duration {
 	default:
 		return baseDelay
 	}
+}
+
+// executeNodesParallel executes valid nodes in parallel and returns their results or errors
+func (r *StateRunnable) executeNodesParallel(ctx context.Context, nodes []string, state interface{}, config *Config, runID string) ([]interface{}, []error) {
+	var wg sync.WaitGroup
+	results := make([]interface{}, len(nodes))
+	errorsList := make([]error, len(nodes))
+
+	for i, nodeName := range nodes {
+		node, ok := r.graph.nodes[nodeName]
+		if !ok {
+			errorsList[i] = fmt.Errorf("%w: %s", ErrNodeNotFound, nodeName)
+			continue
+		}
+
+		// Prepare variables for closure
+		idx := i
+		n := node
+		name := nodeName
+
+		SafeGo(&wg, func() {
+			// Start node tracing
+			var nodeSpan *TraceSpan
+			if r.tracer != nil {
+				nodeSpan = r.tracer.StartSpan(ctx, TraceEventNodeStart, name)
+				nodeSpan.State = state
+			}
+
+			var err error
+			var res interface{}
+
+			// Execute node with retry logic
+			res, err = r.executeNodeWithRetry(ctx, n, state)
+
+			// End node tracing
+			if r.tracer != nil && nodeSpan != nil {
+				if err != nil {
+					r.tracer.EndSpan(ctx, nodeSpan, res, err)
+					// Also emit error event
+					errorSpan := r.tracer.StartSpan(ctx, TraceEventNodeError, name)
+					errorSpan.Error = err
+					errorSpan.State = res
+					r.tracer.EndSpan(ctx, errorSpan, res, err)
+				} else {
+					r.tracer.EndSpan(ctx, nodeSpan, res, nil)
+				}
+			}
+
+			if err != nil {
+				var nodeInterrupt *NodeInterrupt
+				if errors.As(err, &nodeInterrupt) {
+					nodeInterrupt.Node = name
+				}
+				errorsList[idx] = fmt.Errorf("error in node %s: %w", name, err)
+				return
+			}
+
+			results[idx] = res
+
+			// Notify callbacks of node execution (as tool)
+			if config != nil && len(config.Callbacks) > 0 {
+				nodeRunID := generateRunID()
+				serialized := map[string]interface{}{
+					"name": name,
+					"type": "tool",
+				}
+				for _, cb := range config.Callbacks {
+					cb.OnToolStart(ctx, serialized, convertStateToString(res), nodeRunID, &runID, config.Tags, config.Metadata)
+					cb.OnToolEnd(ctx, convertStateToString(res), nodeRunID)
+				}
+			}
+		}, func(panicVal interface{}) {
+			errorsList[idx] = fmt.Errorf("panic in node %s: %v", name, panicVal)
+		})
+	}
+	wg.Wait()
+	return results, errorsList
+}
+
+// processNodeResults processes the raw results from nodes, handling Commands
+func (r *StateRunnable) processNodeResults(results []interface{}) ([]interface{}, []string) {
+	var nextNodesFromCommands []string
+	processedResults := make([]interface{}, len(results))
+
+	for i, res := range results {
+		if cmd, ok := res.(*Command); ok {
+			// It's a Command
+			processedResults[i] = cmd.Update
+
+			if cmd.Goto != nil {
+				switch g := cmd.Goto.(type) {
+				case string:
+					nextNodesFromCommands = append(nextNodesFromCommands, g)
+				case []string:
+					nextNodesFromCommands = append(nextNodesFromCommands, g...)
+				}
+			}
+		} else {
+			// Regular result
+			processedResults[i] = res
+		}
+	}
+	return processedResults, nextNodesFromCommands
+}
+
+// mergeState merges the processed results into the current state
+func (r *StateRunnable) mergeState(ctx context.Context, currentState interface{}, results []interface{}) (interface{}, error) {
+	state := currentState
+	if r.graph.Schema != nil {
+		// If Schema is defined, use it to update state with results
+		for _, res := range results {
+			var err error
+			state, err = r.graph.Schema.Update(state, res)
+			if err != nil {
+				return nil, fmt.Errorf("schema update failed: %w", err)
+			}
+		}
+	} else if r.graph.stateMerger != nil {
+		var err error
+		state, err = r.graph.stateMerger(ctx, state, results)
+		if err != nil {
+			return nil, fmt.Errorf("state merge failed: %w", err)
+		}
+	} else {
+		if len(results) > 0 {
+			state = results[len(results)-1]
+		}
+	}
+	return state, nil
+}
+
+// determineNextNodes determines the next nodes to execute based on static edges, conditional edges, or commands
+func (r *StateRunnable) determineNextNodes(ctx context.Context, currentNodes []string, state interface{}, nextNodesFromCommands []string) ([]string, error) {
+	var nextNodesList []string
+
+	if len(nextNodesFromCommands) > 0 {
+		// Command.Goto overrides static edges
+		// We deduplicate
+		seen := make(map[string]bool)
+		for _, n := range nextNodesFromCommands {
+			if !seen[n] && n != END {
+				seen[n] = true
+				nextNodesList = append(nextNodesList, n)
+			}
+		}
+	} else {
+		// Use static edges
+		nextNodesSet := make(map[string]bool)
+
+		for _, nodeName := range currentNodes {
+			// First check for conditional edges
+			nextNodeFn, hasConditional := r.graph.conditionalEdges[nodeName]
+			if hasConditional {
+				nextNode := nextNodeFn(ctx, state)
+				if nextNode == "" {
+					return nil, fmt.Errorf("conditional edge returned empty next node from %s", nodeName)
+				}
+				nextNodesSet[nextNode] = true
+			} else {
+				// Then check regular edges
+				foundNext := false
+				for _, edge := range r.graph.edges {
+					if edge.From == nodeName {
+						nextNodesSet[edge.To] = true
+						foundNext = true
+						// Do NOT break here, to allow fan-out (multiple edges from same node)
+					}
+				}
+
+				if !foundNext {
+					return nil, fmt.Errorf("%w: %s", ErrNoOutgoingEdge, nodeName)
+				}
+			}
+		}
+
+		// Update nextNodesList from set
+		for node := range nextNodesSet {
+			nextNodesList = append(nextNodesList, node)
+		}
+	}
+	return nextNodesList, nil
 }

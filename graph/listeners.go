@@ -277,6 +277,18 @@ func (lr *ListenableRunnable) InvokeWithConfig(ctx context.Context, initialState
 			break
 		}
 
+		// Check InterruptBefore
+		if config != nil && len(config.InterruptBefore) > 0 {
+			for _, interrupt := range config.InterruptBefore {
+				if currentNode == interrupt {
+					return state, &GraphInterrupt{
+						Node:  currentNode,
+						State: state,
+					}
+				}
+			}
+		}
+
 		listenableNode, ok := lr.listenableNodes[currentNode]
 		if !ok {
 			return nil, ErrNodeNotFound
@@ -324,6 +336,19 @@ func (lr *ListenableRunnable) InvokeWithConfig(ctx context.Context, initialState
 			for _, cb := range config.Callbacks {
 				if gcb, ok := cb.(GraphCallbackHandler); ok {
 					gcb.OnGraphStep(ctx, currentNode, state)
+				}
+			}
+		}
+
+		// Check InterruptAfter
+		if config != nil && len(config.InterruptAfter) > 0 {
+			for _, interrupt := range config.InterruptAfter {
+				if currentNode == interrupt {
+					return state, &GraphInterrupt{
+						Node:      currentNode,
+						State:     state,
+						NextNodes: []string{nextNode},
+					}
 				}
 			}
 		}

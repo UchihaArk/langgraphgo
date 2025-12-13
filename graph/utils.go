@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 
 	"github.com/google/uuid"
 )
@@ -61,4 +62,27 @@ func GetConfig(ctx context.Context) *Config {
 		return config
 	}
 	return nil
+}
+
+// SafeGo runs a function in a goroutine with panic recovery.
+// It uses a WaitGroup (if provided) and supports a custom panic handler.
+func SafeGo(wg *sync.WaitGroup, fn func(), onPanic func(interface{})) {
+	if wg != nil {
+		wg.Add(1)
+	}
+	go func() {
+		defer func() {
+			if wg != nil {
+				wg.Done()
+			}
+			if r := recover(); r != nil {
+				if onPanic != nil {
+					onPanic(r)
+				} else {
+					fmt.Printf("panic recovered in SafeGo: %v\n", r)
+				}
+			}
+		}()
+		fn()
+	}()
 }

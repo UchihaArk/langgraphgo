@@ -4,10 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
+	"os"
+	"path/filepath"
 	"sort"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // Checkpoint represents a saved state at a specific point in execution
@@ -118,17 +121,20 @@ func (m *MemoryCheckpointStore) Clear(_ context.Context, executionID string) err
 
 // FileCheckpointStore provides file-based checkpoint storage
 type FileCheckpointStore struct {
-	writer io.Writer
-	reader io.Reader
-	mutex  sync.RWMutex
+	path  string
+	mutex sync.RWMutex
 }
 
 // NewFileCheckpointStore creates a new file-based checkpoint store
-func NewFileCheckpointStore(writer io.Writer, reader io.Reader) *FileCheckpointStore {
-	return &FileCheckpointStore{
-		writer: writer,
-		reader: reader,
+func NewFileCheckpointStore(path string) (*FileCheckpointStore, error) {
+	// Ensure directory exists
+	if err := os.MkdirAll(path, 0755); err != nil {
+		return nil, fmt.Errorf("failed to create checkpoint directory: %w", err)
 	}
+
+	return &FileCheckpointStore{
+		path: path,
+	}, nil
 }
 
 // Save implements CheckpointStore interface for file storage
@@ -136,14 +142,16 @@ func (f *FileCheckpointStore) Save(_ context.Context, checkpoint *Checkpoint) er
 	f.mutex.Lock()
 	defer f.mutex.Unlock()
 
+	// Create filename from ID
+	filename := filepath.Join(f.path, fmt.Sprintf("%s.json", checkpoint.ID))
+
 	data, err := json.Marshal(checkpoint)
 	if err != nil {
 		return fmt.Errorf("failed to marshal checkpoint: %w", err)
 	}
 
-	_, err = f.writer.Write(data)
-	if err != nil {
-		return fmt.Errorf("failed to write checkpoint: %w", err)
+	if err := os.WriteFile(filename, data, 0644); err != nil {
+		return fmt.Errorf("failed to write checkpoint file: %w", err)
 	}
 
 	return nil
@@ -154,9 +162,14 @@ func (f *FileCheckpointStore) Load(_ context.Context, checkpointID string) (*Che
 	f.mutex.RLock()
 	defer f.mutex.RUnlock()
 
-	data, err := io.ReadAll(f.reader)
+	filename := filepath.Join(f.path, fmt.Sprintf("%s.json", checkpointID))
+
+	data, err := os.ReadFile(filename)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read checkpoint: %w", err)
+		if os.IsNotExist(err) {
+			return nil, fmt.Errorf("checkpoint not found: %s", checkpointID)
+		}
+		return nil, fmt.Errorf("failed to read checkpoint file: %w", err)
 	}
 
 	var checkpoint Checkpoint
@@ -165,30 +178,97 @@ func (f *FileCheckpointStore) Load(_ context.Context, checkpointID string) (*Che
 		return nil, fmt.Errorf("failed to unmarshal checkpoint: %w", err)
 	}
 
-	if checkpoint.ID != checkpointID {
-		return nil, fmt.Errorf("checkpoint not found: %s", checkpointID)
-	}
-
 	return &checkpoint, nil
 }
 
 // List implements CheckpointStore interface for file storage
-func (f *FileCheckpointStore) List(_ context.Context, _ string) ([]*Checkpoint, error) {
-	// For file storage, this would typically involve reading from multiple files
-	// This is a simplified implementation
-	return nil, fmt.Errorf("list operation not implemented for file store")
+func (f *FileCheckpointStore) List(_ context.Context, executionID string) ([]*Checkpoint, error) {
+	f.mutex.RLock()
+	defer f.mutex.RUnlock()
+
+	files, err := os.ReadDir(f.path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read checkpoint directory: %w", err)
+	}
+
+	var checkpoints []*Checkpoint
+
+	for _, file := range files {
+		if !file.IsDir() && filepath.Ext(file.Name()) == ".json" {
+			data, err := os.ReadFile(filepath.Join(f.path, file.Name()))
+			if err != nil {
+				// Skip unreadable files
+				continue
+			}
+
+			var checkpoint Checkpoint
+			if err := json.Unmarshal(data, &checkpoint); err != nil {
+				// Skip invalid files
+				continue
+			}
+
+			// Filter by executionID or threadID
+			execID, _ := checkpoint.Metadata["execution_id"].(string)
+			threadID, _ := checkpoint.Metadata["thread_id"].(string)
+
+			if execID == executionID || threadID == executionID {
+				checkpoints = append(checkpoints, &checkpoint)
+			}
+		}
+	}
+
+	// Sort by version (ascending order) so latest is last
+	sort.Slice(checkpoints, func(i, j int) bool {
+		return checkpoints[i].Version < checkpoints[j].Version
+	})
+
+	return checkpoints, nil
 }
 
 // Delete implements CheckpointStore interface for file storage
 func (f *FileCheckpointStore) Delete(_ context.Context, checkpointID string) error {
-	// For file storage, this would involve file system operations
-	return fmt.Errorf("delete operation not implemented for file store")
+	f.mutex.Lock()
+	defer f.mutex.Unlock()
+
+	filename := filepath.Join(f.path, fmt.Sprintf("%s.json", checkpointID))
+
+	if err := os.Remove(filename); err != nil {
+		if os.IsNotExist(err) {
+			// If file doesn't exist, we consider it deleted
+			return nil
+		}
+		return fmt.Errorf("failed to delete checkpoint file: %w", err)
+	}
+
+	return nil
 }
 
 // Clear implements CheckpointStore interface for file storage
-func (f *FileCheckpointStore) Clear(_ context.Context, executionID string) error {
-	// For file storage, this would involve file system operations
-	return fmt.Errorf("clear operation not implemented for file store")
+func (f *FileCheckpointStore) Clear(ctx context.Context, executionID string) error {
+	// We iterate through all files using List (which already filters and reads),
+	// but we should probably do a raw read here to avoid overhead if list is slow,
+	// however, List Logic is fine for now as it reuses logic.
+	// Actually, let's just re-implement simple loop to avoid locking recursion if we called f.Delete inside f.List loop scope if we weren't careful.
+	// But List is read-lock. Delete is write-lock. upgrading lock is dangerous.
+	// So we should get IDs first, then delete.
+
+	checkpoints, err := f.List(ctx, executionID)
+	if err != nil {
+		return err
+	}
+
+	var errs []error
+	for _, cp := range checkpoints {
+		if err := f.Delete(ctx, cp.ID); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	if len(errs) > 0 {
+		return fmt.Errorf("failed to clear some checkpoints: %v", errs)
+	}
+
+	return nil
 }
 
 // CheckpointConfig configures checkpointing behavior
@@ -418,7 +498,7 @@ func generateExecutionID() string {
 }
 
 func generateCheckpointID() string {
-	return fmt.Sprintf("checkpoint_%d", time.Now().UnixNano())
+	return fmt.Sprintf("checkpoint_%s", uuid.New().String())
 }
 
 // StateSnapshot represents a snapshot of the graph state
@@ -533,30 +613,25 @@ func (cr *CheckpointableRunnable) UpdateState(ctx context.Context, config *Confi
 	// 2. Merge values
 	newState := values
 	if cr.runnable.graph.Schema != nil {
-		// If we have a current state, merge into it
+		// If Schema is defined, use it to update state with results
+		var baseState interface{}
 		if currentState != nil {
-			newState, err = cr.runnable.graph.Schema.Update(currentState, values)
-			if err != nil {
-				return nil, fmt.Errorf("failed to merge state: %w", err)
-			}
+			baseState = currentState
 		} else {
-			// If no current state, maybe Init + Update?
-			// Or just use values if it matches schema?
-			// Let's try Init + Update
-			initial := cr.runnable.graph.Schema.Init()
-			newState, err = cr.runnable.graph.Schema.Update(initial, values)
-			if err != nil {
-				return nil, fmt.Errorf("failed to initialize and merge state: %w", err)
-			}
+			baseState = cr.runnable.graph.Schema.Init()
+		}
+
+		if merged, err := cr.runnable.graph.Schema.Update(baseState, values); err != nil {
+			return nil, fmt.Errorf("failed to merge state: %w", err)
+		} else {
+			newState = merged
 		}
 	} else if currentState != nil {
 		// No schema, but have current state.
-		// If map, try to merge? Or just overwrite?
-		// Without schema, we usually default to overwrite or simple merge if map.
-		// Let's assume overwrite if no schema, or maybe simple map merge if both are maps.
+		// Detailed map merge logic
 		if curMap, ok := currentState.(map[string]interface{}); ok {
 			if valMap, ok := values.(map[string]interface{}); ok {
-				// Simple map merge
+				// Create a new map for the merged state to avoid mutating the original
 				merged := make(map[string]interface{})
 				for k, v := range curMap {
 					merged[k] = v

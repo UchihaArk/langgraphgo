@@ -24,6 +24,25 @@ func AddMessages(current, new interface{}) (interface{}, error) {
 		return new, nil
 	}
 
+	// Optimization: Fast path for []llms.MessageContent
+	if currentSlice, ok := current.([]llms.MessageContent); ok {
+		var newSlice []llms.MessageContent
+		if ns, ok := new.([]llms.MessageContent); ok {
+			newSlice = ns
+		} else if n, ok := new.(llms.MessageContent); ok {
+			newSlice = []llms.MessageContent{n}
+		} else {
+			// Fallback to reflection if new is not compatible
+			goto ReflectionPath
+		}
+
+		// Since standard MessageContent doesn't support IDs in this implementation
+		// (unless wrapped), and we are in the fast path for standard types,
+		// we just append.
+		return append(currentSlice, newSlice...), nil
+	}
+
+ReflectionPath:
 	// We expect current to be a slice of messages
 	currentVal := reflect.ValueOf(current)
 	if currentVal.Kind() != reflect.Slice {

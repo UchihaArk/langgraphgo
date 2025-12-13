@@ -1,7 +1,6 @@
 package graph_test
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"strings"
@@ -231,8 +230,11 @@ func TestMemoryCheckpointStore_Clear(t *testing.T) {
 func TestFileCheckpointStore_SaveAndLoad(t *testing.T) {
 	t.Parallel()
 
-	var buf bytes.Buffer
-	store := graph.NewFileCheckpointStore(&buf, &buf)
+	tempDir := t.TempDir()
+	store, err := graph.NewFileCheckpointStore(tempDir)
+	if err != nil {
+		t.Fatalf("Failed to create file checkpoint store: %v", err)
+	}
 	ctx := context.Background()
 
 	checkpoint := &graph.Checkpoint{
@@ -243,7 +245,7 @@ func TestFileCheckpointStore_SaveAndLoad(t *testing.T) {
 	}
 
 	// Test Save
-	err := store.Save(ctx, checkpoint)
+	err = store.Save(ctx, checkpoint)
 	if err != nil {
 		t.Fatalf("Failed to save checkpoint: %v", err)
 	}
@@ -256,6 +258,180 @@ func TestFileCheckpointStore_SaveAndLoad(t *testing.T) {
 
 	if loaded.ID != checkpoint.ID {
 		t.Errorf("Expected ID %s, got %s", checkpoint.ID, loaded.ID)
+	}
+}
+
+func TestFileCheckpointStore_List(t *testing.T) {
+	t.Parallel()
+
+	tempDir := t.TempDir()
+	store, err := graph.NewFileCheckpointStore(tempDir)
+	if err != nil {
+		t.Fatalf("Failed to create file checkpoint store: %v", err)
+	}
+	ctx := context.Background()
+	executionID := "exec_123"
+
+	// Save multiple checkpoints
+	checkpoints := []*graph.Checkpoint{
+		{
+			ID: "checkpoint_1",
+			Metadata: map[string]interface{}{
+				"execution_id": executionID,
+			},
+			Version: 1,
+		},
+		{
+			ID: "checkpoint_2",
+			Metadata: map[string]interface{}{
+				"execution_id": executionID,
+			},
+			Version: 2,
+		},
+		{
+			ID: "checkpoint_3",
+			Metadata: map[string]interface{}{
+				"execution_id": "different_exec",
+			},
+			Version: 1,
+		},
+	}
+
+	for _, checkpoint := range checkpoints {
+		err := store.Save(ctx, checkpoint)
+		if err != nil {
+			t.Fatalf("Failed to save checkpoint: %v", err)
+		}
+	}
+
+	// List checkpoints for specific execution
+	listed, err := store.List(ctx, executionID)
+	if err != nil {
+		t.Fatalf("Failed to list checkpoints: %v", err)
+	}
+
+	if len(listed) != 2 {
+		t.Errorf("Expected 2 checkpoints, got %d", len(listed))
+	}
+
+	// Verify correct checkpoints returned
+	ids := make(map[string]bool)
+	for _, checkpoint := range listed {
+		ids[checkpoint.ID] = true
+	}
+
+	if !ids["checkpoint_1"] || !ids["checkpoint_2"] {
+		t.Error("Wrong checkpoints returned")
+	}
+
+	// Verify sorting order
+	if listed[0].Version > listed[1].Version {
+		t.Error("Checkpoints should be sorted by version ascending")
+	}
+}
+
+func TestFileCheckpointStore_Delete(t *testing.T) {
+	t.Parallel()
+
+	tempDir := t.TempDir()
+	store, err := graph.NewFileCheckpointStore(tempDir)
+	if err != nil {
+		t.Fatalf("Failed to create file checkpoint store: %v", err)
+	}
+	ctx := context.Background()
+
+	checkpoint := &graph.Checkpoint{
+		ID: "test_checkpoint",
+	}
+
+	// Save and verify
+	err = store.Save(ctx, checkpoint)
+	if err != nil {
+		t.Fatalf("Failed to save checkpoint: %v", err)
+	}
+
+	_, err = store.Load(ctx, "test_checkpoint")
+	if err != nil {
+		t.Error("Checkpoint should exist before deletion")
+	}
+
+	// Delete
+	err = store.Delete(ctx, "test_checkpoint")
+	if err != nil {
+		t.Fatalf("Failed to delete checkpoint: %v", err)
+	}
+
+	// Verify deletion
+	_, err = store.Load(ctx, "test_checkpoint")
+	if err == nil {
+		t.Error("Checkpoint should not exist after deletion")
+	}
+}
+
+func TestFileCheckpointStore_Clear(t *testing.T) {
+	t.Parallel()
+
+	tempDir := t.TempDir()
+	store, err := graph.NewFileCheckpointStore(tempDir)
+	if err != nil {
+		t.Fatalf("Failed to create file checkpoint store: %v", err)
+	}
+	ctx := context.Background()
+	executionID := "exec_123"
+
+	// Save checkpoints
+	checkpoints := []*graph.Checkpoint{
+		{
+			ID: "checkpoint_1",
+			Metadata: map[string]interface{}{
+				"execution_id": executionID,
+			},
+		},
+		{
+			ID: "checkpoint_2",
+			Metadata: map[string]interface{}{
+				"execution_id": executionID,
+			},
+		},
+		{
+			ID: "checkpoint_3",
+			Metadata: map[string]interface{}{
+				"execution_id": "different_exec",
+			},
+		},
+	}
+
+	for _, checkpoint := range checkpoints {
+		err := store.Save(ctx, checkpoint)
+		if err != nil {
+			t.Fatalf("Failed to save checkpoint: %v", err)
+		}
+	}
+
+	// Clear execution
+	err = store.Clear(ctx, executionID)
+	if err != nil {
+		t.Fatalf("Failed to clear checkpoints: %v", err)
+	}
+
+	// Verify clearing
+	listed, err := store.List(ctx, executionID)
+	if err != nil {
+		t.Fatalf("Failed to list checkpoints: %v", err)
+	}
+
+	if len(listed) != 0 {
+		t.Errorf("Expected 0 checkpoints after clear, got %d", len(listed))
+	}
+
+	// Verify other execution's checkpoints still exist
+	listed, err = store.List(ctx, "different_exec")
+	if err != nil {
+		t.Fatalf("Failed to list other execution's checkpoints: %v", err)
+	}
+
+	if len(listed) != 1 {
+		t.Errorf("Expected 1 checkpoint for other execution, got %d", len(listed))
 	}
 }
 
