@@ -117,7 +117,7 @@ func main() {
     })
 
     // 4. 运行查询
-    result, _ := agent.Invoke(context.Background(), map[string]interface{}{
+    result, _ := agent.Invoke(context.Background(), map[string]any{
         "messages": []llms.MessageContent{
             {
                 Role:  llms.ChatMessageTypeHuman,

@@ -115,7 +115,7 @@ func (r *GPTResearcher) buildGraph() error {
 }
 
 // plannerNode is the graph node for the planner agent
-func (r *GPTResearcher) plannerNode(ctx context.Context, stateInterface interface{}) (interface{}, error) {
+func (r *GPTResearcher) plannerNode(ctx context.Context, stateInterface any) (any, error) {
 	state := r.interfaceToState(stateInterface)
 
 	if err := r.PlannerAgent.GenerateQuestions(ctx, state); err != nil {
@@ -126,7 +126,7 @@ func (r *GPTResearcher) plannerNode(ctx context.Context, stateInterface interfac
 }
 
 // executorNode is the graph node for the execution agent
-func (r *GPTResearcher) executorNode(ctx context.Context, stateInterface interface{}) (interface{}, error) {
+func (r *GPTResearcher) executorNode(ctx context.Context, stateInterface any) (any, error) {
 	state := r.interfaceToState(stateInterface)
 
 	if err := r.ExecutionAgent.ExecuteAll(ctx, state); err != nil {
@@ -137,7 +137,7 @@ func (r *GPTResearcher) executorNode(ctx context.Context, stateInterface interfa
 }
 
 // publisherNode is the graph node for the publisher agent
-func (r *GPTResearcher) publisherNode(ctx context.Context, stateInterface interface{}) (interface{}, error) {
+func (r *GPTResearcher) publisherNode(ctx context.Context, stateInterface any) (any, error) {
 	state := r.interfaceToState(stateInterface)
 
 	if err := r.PublisherAgent.GenerateReport(ctx, state); err != nil {
@@ -201,9 +201,9 @@ func (r *GPTResearcher) WriteReport(ctx context.Context, state *ResearchState) (
 	return state.FinalReport, nil
 }
 
-// stateToInterface converts ResearchState to map[string]interface{} for graph
-func (r *GPTResearcher) stateToInterface(state *ResearchState) map[string]interface{} {
-	return map[string]interface{}{
+// stateToInterface converts ResearchState to map[string]any for graph
+func (r *GPTResearcher) stateToInterface(state *ResearchState) map[string]any {
+	return map[string]any{
 		"query":              state.Query,
 		"research_goal":      state.ResearchGoal,
 		"questions":          state.Questions,
@@ -222,9 +222,9 @@ func (r *GPTResearcher) stateToInterface(state *ResearchState) map[string]interf
 	}
 }
 
-// interfaceToState converts map[string]interface{} back to ResearchState
-func (r *GPTResearcher) interfaceToState(stateInterface interface{}) *ResearchState {
-	stateMap, ok := stateInterface.(map[string]interface{})
+// interfaceToState converts map[string]any back to ResearchState
+func (r *GPTResearcher) interfaceToState(stateInterface any) *ResearchState {
+	stateMap, ok := stateInterface.(map[string]any)
 	if !ok {
 		return NewResearchState("")
 	}
@@ -239,7 +239,7 @@ func (r *GPTResearcher) interfaceToState(stateInterface interface{}) *ResearchSt
 	}
 	if v, ok := stateMap["questions"].([]string); ok {
 		state.Questions = v
-	} else if v, ok := stateMap["questions"].([]interface{}); ok {
+	} else if v, ok := stateMap["questions"].([]any); ok {
 		for _, q := range v {
 			if str, ok := q.(string); ok {
 				state.Questions = append(state.Questions, str)

@@ -11,7 +11,7 @@ func TestRuntimeConfiguration(t *testing.T) {
 	g := NewStateGraph()
 
 	// Define a node that reads config from context
-	g.AddNode("reader", "reader", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("reader", "reader", func(ctx context.Context, state any) (any, error) {
 		config := GetConfig(ctx)
 		if config == nil {
 			return "no config", nil
@@ -31,7 +31,7 @@ func TestRuntimeConfiguration(t *testing.T) {
 
 	// Test with config
 	config := &Config{
-		Configurable: map[string]interface{}{
+		Configurable: map[string]any{
 			"model": "gpt-4",
 		},
 	}
@@ -49,7 +49,7 @@ func TestRuntimeConfiguration(t *testing.T) {
 func TestStateGraph_RuntimeConfiguration(t *testing.T) {
 	g := NewStateGraph()
 
-	g.AddNode("reader", "reader", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("reader", "reader", func(ctx context.Context, state any) (any, error) {
 		config := GetConfig(ctx)
 		if config == nil {
 			return "no config", nil
@@ -68,7 +68,7 @@ func TestStateGraph_RuntimeConfiguration(t *testing.T) {
 	assert.NoError(t, err)
 
 	config := &Config{
-		Configurable: map[string]interface{}{
+		Configurable: map[string]any{
 			"api_key": "secret-123",
 		},
 	}

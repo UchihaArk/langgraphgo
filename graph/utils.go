@@ -15,23 +15,23 @@ func generateRunID() string {
 }
 
 // convertStateToMap converts a state to a map for callbacks
-func convertStateToMap(state interface{}) map[string]interface{} {
+func convertStateToMap(state any) map[string]any {
 	// Try to convert to map directly
-	if m, ok := state.(map[string]interface{}); ok {
+	if m, ok := state.(map[string]any); ok {
 		return m
 	}
 
 	// Try to marshal/unmarshal through JSON
 	data, err := json.Marshal(state)
 	if err != nil {
-		return map[string]interface{}{
+		return map[string]any{
 			"state": fmt.Sprintf("%v", state),
 		}
 	}
 
-	var result map[string]interface{}
+	var result map[string]any
 	if err := json.Unmarshal(data, &result); err != nil {
-		return map[string]interface{}{
+		return map[string]any{
 			"state": string(data),
 		}
 	}
@@ -40,7 +40,7 @@ func convertStateToMap(state interface{}) map[string]interface{} {
 }
 
 // convertStateToString converts a state to a string for callbacks
-func convertStateToString(state interface{}) string {
+func convertStateToString(state any) string {
 	// Try to marshal to JSON
 	data, err := json.Marshal(state)
 	if err != nil {
@@ -66,7 +66,7 @@ func GetConfig(ctx context.Context) *Config {
 
 // SafeGo runs a function in a goroutine with panic recovery.
 // It uses a WaitGroup (if provided) and supports a custom panic handler.
-func SafeGo(wg *sync.WaitGroup, fn func(), onPanic func(interface{})) {
+func SafeGo(wg *sync.WaitGroup, fn func(), onPanic func(any)) {
 	if wg != nil {
 		wg.Add(1)
 	}

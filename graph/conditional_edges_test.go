@@ -16,8 +16,8 @@ func TestConditionalEdges(t *testing.T) {
 	tests := []struct {
 		name           string
 		buildGraph     func() *graph.StateGraph
-		initialState   interface{}
-		expectedResult interface{}
+		initialState   any
+		expectedResult any
 		expectError    bool
 	}{
 		{
@@ -26,23 +26,23 @@ func TestConditionalEdges(t *testing.T) {
 				g := graph.NewStateGraph()
 
 				// Add nodes
-				g.AddNode("start", "start", func(ctx context.Context, state interface{}) (interface{}, error) {
+				g.AddNode("start", "start", func(ctx context.Context, state any) (any, error) {
 					// Just pass through
 					return state, nil
 				})
 
-				g.AddNode("calculator", "calculator", func(ctx context.Context, state interface{}) (interface{}, error) {
+				g.AddNode("calculator", "calculator", func(ctx context.Context, state any) (any, error) {
 					messages := state.([]llms.MessageContent)
 					return append(messages, llms.TextParts("ai", "Calculating: 2+2=4")), nil
 				})
 
-				g.AddNode("general", "general", func(ctx context.Context, state interface{}) (interface{}, error) {
+				g.AddNode("general", "general", func(ctx context.Context, state any) (any, error) {
 					messages := state.([]llms.MessageContent)
 					return append(messages, llms.TextParts("ai", "General response")), nil
 				})
 
 				// Add conditional edge from start
-				g.AddConditionalEdge("start", func(ctx context.Context, state interface{}) string {
+				g.AddConditionalEdge("start", func(ctx context.Context, state any) string {
 					messages := state.([]llms.MessageContent)
 					if len(messages) > 0 {
 						lastMessage := messages[len(messages)-1]
@@ -76,21 +76,21 @@ func TestConditionalEdges(t *testing.T) {
 			buildGraph: func() *graph.StateGraph {
 				g := graph.NewStateGraph()
 
-				g.AddNode("start", "start", func(ctx context.Context, state interface{}) (interface{}, error) {
+				g.AddNode("start", "start", func(ctx context.Context, state any) (any, error) {
 					return state, nil
 				})
 
-				g.AddNode("calculator", "calculator", func(ctx context.Context, state interface{}) (interface{}, error) {
+				g.AddNode("calculator", "calculator", func(ctx context.Context, state any) (any, error) {
 					messages := state.([]llms.MessageContent)
 					return append(messages, llms.TextParts("ai", "Calculating: 2+2=4")), nil
 				})
 
-				g.AddNode("general", "general", func(ctx context.Context, state interface{}) (interface{}, error) {
+				g.AddNode("general", "general", func(ctx context.Context, state any) (any, error) {
 					messages := state.([]llms.MessageContent)
 					return append(messages, llms.TextParts("ai", "General response")), nil
 				})
 
-				g.AddConditionalEdge("start", func(ctx context.Context, state interface{}) string {
+				g.AddConditionalEdge("start", func(ctx context.Context, state any) string {
 					messages := state.([]llms.MessageContent)
 					if len(messages) > 0 {
 						lastMessage := messages[len(messages)-1]
@@ -123,27 +123,27 @@ func TestConditionalEdges(t *testing.T) {
 			buildGraph: func() *graph.StateGraph {
 				g := graph.NewStateGraph()
 
-				g.AddNode("router", "router", func(ctx context.Context, state interface{}) (interface{}, error) {
+				g.AddNode("router", "router", func(ctx context.Context, state any) (any, error) {
 					return state, nil
 				})
 
-				g.AddNode("urgent", "urgent", func(ctx context.Context, state interface{}) (interface{}, error) {
+				g.AddNode("urgent", "urgent", func(ctx context.Context, state any) (any, error) {
 					s := state.(string)
 					return s + " -> handled urgently", nil
 				})
 
-				g.AddNode("normal", "normal", func(ctx context.Context, state interface{}) (interface{}, error) {
+				g.AddNode("normal", "normal", func(ctx context.Context, state any) (any, error) {
 					s := state.(string)
 					return s + " -> handled normally", nil
 				})
 
-				g.AddNode("low", "low", func(ctx context.Context, state interface{}) (interface{}, error) {
+				g.AddNode("low", "low", func(ctx context.Context, state any) (any, error) {
 					s := state.(string)
 					return s + " -> handled with low priority", nil
 				})
 
 				// Conditional routing based on priority keywords
-				g.AddConditionalEdge("router", func(ctx context.Context, state interface{}) string {
+				g.AddConditionalEdge("router", func(ctx context.Context, state any) string {
 					s := state.(string)
 					if strings.Contains(s, "URGENT") || strings.Contains(s, "ASAP") {
 						return "urgent"
@@ -170,17 +170,17 @@ func TestConditionalEdges(t *testing.T) {
 			buildGraph: func() *graph.StateGraph {
 				g := graph.NewStateGraph()
 
-				g.AddNode("check", "check", func(ctx context.Context, state interface{}) (interface{}, error) {
+				g.AddNode("check", "check", func(ctx context.Context, state any) (any, error) {
 					return state, nil
 				})
 
-				g.AddNode("process", "process", func(ctx context.Context, state interface{}) (interface{}, error) {
+				g.AddNode("process", "process", func(ctx context.Context, state any) (any, error) {
 					n := state.(int)
 					return n * 2, nil
 				})
 
 				// Conditional edge that can go directly to END
-				g.AddConditionalEdge("check", func(ctx context.Context, state interface{}) string {
+				g.AddConditionalEdge("check", func(ctx context.Context, state any) string {
 					n := state.(int)
 					if n < 0 {
 						return graph.END
@@ -254,27 +254,27 @@ func TestConditionalEdges_ChainedConditions(t *testing.T) {
 	g := graph.NewStateGraph()
 
 	// Create a chain of conditional decisions
-	g.AddNode("start", "start", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("start", "start", func(ctx context.Context, state any) (any, error) {
 		return state, nil
 	})
 
-	g.AddNode("step1", "step1", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("step1", "step1", func(ctx context.Context, state any) (any, error) {
 		n := state.(int)
 		return n + 10, nil
 	})
 
-	g.AddNode("step2", "step2", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("step2", "step2", func(ctx context.Context, state any) (any, error) {
 		n := state.(int)
 		return n * 2, nil
 	})
 
-	g.AddNode("step3", "step3", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("step3", "step3", func(ctx context.Context, state any) (any, error) {
 		n := state.(int)
 		return n - 5, nil
 	})
 
 	// First conditional
-	g.AddConditionalEdge("start", func(ctx context.Context, state interface{}) string {
+	g.AddConditionalEdge("start", func(ctx context.Context, state any) string {
 		n := state.(int)
 		if n > 0 {
 			return "step1"
@@ -283,7 +283,7 @@ func TestConditionalEdges_ChainedConditions(t *testing.T) {
 	})
 
 	// Second conditional
-	g.AddConditionalEdge("step1", func(ctx context.Context, state interface{}) string {
+	g.AddConditionalEdge("step1", func(ctx context.Context, state any) string {
 		n := state.(int)
 		if n > 15 {
 			return "step3"

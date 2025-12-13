@@ -67,17 +67,17 @@ func (a *HealthAnalysisAgent) CreateAnalysisGraph() (*graph.StateRunnable, error
 	workflow.SetSchema(schema)
 
 	// 添加节点：数据提取
-	workflow.AddNode("extract_data", "从报告文本中提取结构化数据", func(ctx context.Context, state interface{}) (interface{}, error) {
+	workflow.AddNode("extract_data", "从报告文本中提取结构化数据", func(ctx context.Context, state any) (any, error) {
 		return a.extractDataNode(ctx, state)
 	})
 
 	// 添加节点：分析报告
-	workflow.AddNode("analyze_report", "分析血液报告并生成健康洞察", func(ctx context.Context, state interface{}) (interface{}, error) {
+	workflow.AddNode("analyze_report", "分析血液报告并生成健康洞察", func(ctx context.Context, state any) (any, error) {
 		return a.analyzeReportNode(ctx, state)
 	})
 
 	// 添加节点：完成
-	workflow.AddNode("finish", "完成分析", func(ctx context.Context, state interface{}) (interface{}, error) {
+	workflow.AddNode("finish", "完成分析", func(ctx context.Context, state any) (any, error) {
 		if a.verbose {
 			fmt.Println("✅ 分析完成")
 		}
@@ -94,15 +94,15 @@ func (a *HealthAnalysisAgent) CreateAnalysisGraph() (*graph.StateRunnable, error
 }
 
 // extractDataNode 数据提取节点
-func (a *HealthAnalysisAgent) extractDataNode(ctx context.Context, state interface{}) (interface{}, error) {
-	mState, ok := state.(map[string]interface{})
+func (a *HealthAnalysisAgent) extractDataNode(ctx context.Context, state any) (any, error) {
+	mState, ok := state.(map[string]any)
 	if !ok {
 		return nil, fmt.Errorf("invalid state type")
 	}
 
 	reportText, ok := mState["report_text"].(string)
 	if !ok || reportText == "" {
-		return map[string]interface{}{
+		return map[string]any{
 			"error": "报告文本为空",
 		}, fmt.Errorf("empty report text")
 	}
@@ -131,7 +131,7 @@ func (a *HealthAnalysisAgent) extractDataNode(ctx context.Context, state interfa
 		llms.WithMaxTokens(2000),
 	)
 	if err != nil {
-		return map[string]interface{}{
+		return map[string]any{
 			"error": fmt.Sprintf("数据提取失败: %v", err),
 		}, err
 	}
@@ -142,29 +142,29 @@ func (a *HealthAnalysisAgent) extractDataNode(ctx context.Context, state interfa
 	}
 
 	// 解析JSON
-	var extracted map[string]interface{}
+	var extracted map[string]any
 	if err := json.Unmarshal([]byte(extractJSON(extractedText)), &extracted); err != nil {
 		// 如果解析失败，使用原始文本
-		extracted = map[string]interface{}{
+		extracted = map[string]any{
 			"raw_text": extractedText,
 		}
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"extracted_data": extracted,
 		"messages":       []string{"数据提取完成"},
 	}, nil
 }
 
 // analyzeReportNode 分析报告节点
-func (a *HealthAnalysisAgent) analyzeReportNode(ctx context.Context, state interface{}) (interface{}, error) {
-	mState, ok := state.(map[string]interface{})
+func (a *HealthAnalysisAgent) analyzeReportNode(ctx context.Context, state any) (any, error) {
+	mState, ok := state.(map[string]any)
 	if !ok {
 		return nil, fmt.Errorf("invalid state type")
 	}
 
 	reportText := mState["report_text"].(string)
-	extractedData, _ := mState["extracted_data"].(map[string]interface{})
+	extractedData, _ := mState["extracted_data"].(map[string]any)
 
 	if a.verbose {
 		fmt.Println("🔍 正在进行健康分析...")
@@ -190,7 +190,7 @@ func (a *HealthAnalysisAgent) analyzeReportNode(ctx context.Context, state inter
 		llms.WithMaxTokens(a.config.MaxTokens),
 	)
 	if err != nil {
-		return map[string]interface{}{
+		return map[string]any{
 			"error": fmt.Sprintf("分析失败: %v", err),
 		}, err
 	}
@@ -204,20 +204,20 @@ func (a *HealthAnalysisAgent) analyzeReportNode(ctx context.Context, state inter
 	analysis, err := parseAnalysisResult(analysisText)
 	if err != nil {
 		// 如果解析失败，返回原始文本
-		analysis = map[string]interface{}{
+		analysis = map[string]any{
 			"raw_analysis": analysisText,
 			"disclaimer":   "此分析由AI生成，不应被视为专业医疗建议的替代品。请咨询医疗保健提供者以获得适当的医疗诊断和治疗。",
 		}
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"analysis": analysis,
 		"messages": []string{"健康分析完成"},
 	}, nil
 }
 
 // Analyze 执行完整的分析流程
-func (a *HealthAnalysisAgent) Analyze(ctx context.Context, reportText string) (map[string]interface{}, error) {
+func (a *HealthAnalysisAgent) Analyze(ctx context.Context, reportText string) (map[string]any, error) {
 	startTime := time.Now()
 
 	if a.verbose {
@@ -232,7 +232,7 @@ func (a *HealthAnalysisAgent) Analyze(ctx context.Context, reportText string) (m
 	}
 
 	// 初始状态
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"report_text":    reportText,
 		"extracted_data": nil,
 		"analysis":       nil,
@@ -252,7 +252,7 @@ func (a *HealthAnalysisAgent) Analyze(ctx context.Context, reportText string) (m
 		fmt.Println("=== 分析完成 ===\n")
 	}
 
-	resultMap := result.(map[string]interface{})
+	resultMap := result.(map[string]any)
 	resultMap["processing_time_ms"] = processingTime.Milliseconds()
 
 	return resultMap, nil
@@ -290,7 +290,7 @@ func buildExtractionPrompt(reportText string) string {
 %s`, reportText)
 }
 
-func buildAnalysisPrompt(reportText string, extractedData map[string]interface{}) string {
+func buildAnalysisPrompt(reportText string, extractedData map[string]any) string {
 	var dataStr string
 	if extractedData != nil {
 		dataBytes, _ := json.MarshalIndent(extractedData, "", "  ")
@@ -353,9 +353,9 @@ func getAnalysisFormat() string {
 请确保输出是有效的JSON格式。`
 }
 
-func parseAnalysisResult(text string) (map[string]interface{}, error) {
+func parseAnalysisResult(text string) (map[string]any, error) {
 	jsonStr := extractJSON(text)
-	var result map[string]interface{}
+	var result map[string]any
 	err := json.Unmarshal([]byte(jsonStr), &result)
 	return result, err
 }

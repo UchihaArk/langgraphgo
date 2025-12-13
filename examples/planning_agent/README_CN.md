@@ -53,7 +53,7 @@ agent, err := prebuilt.CreatePlanningAgent(
 ### 步骤 3：使用用户请求执行
 ```go
 query := "获取用户数据，验证它，并保存结果"
-initialState := map[string]interface{}{
+initialState := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman, query),
     },
@@ -112,8 +112,8 @@ START → fetch_data → validate_data → transform_data → analyze_data → g
 
 ### 定义节点
 ```go
-func fetchDataNode(ctx context.Context, state interface{}) (interface{}, error) {
-    mState := state.(map[string]interface{})
+func fetchDataNode(ctx context.Context, state any) (any, error) {
+    mState := state.(map[string]any)
     messages := mState["messages"].([]llms.MessageContent)
 
     // 你的业务逻辑
@@ -124,7 +124,7 @@ func fetchDataNode(ctx context.Context, state interface{}) (interface{}, error) 
         Parts: []llms.ContentPart{llms.TextPart("数据获取成功")},
     }
 
-    return map[string]interface{}{
+    return map[string]any{
         "messages": append(messages, msg),
     }, nil
 }

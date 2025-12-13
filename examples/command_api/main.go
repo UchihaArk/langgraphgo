@@ -20,33 +20,33 @@ func main() {
 	g.SetSchema(schema)
 
 	// Node A: Decides where to go based on state
-	g.AddNode("router", "router", func(ctx context.Context, state interface{}) (interface{}, error) {
-		m := state.(map[string]interface{})
+	g.AddNode("router", "router", func(ctx context.Context, state any) (any, error) {
+		m := state.(map[string]any)
 		count := m["count"].(int)
 
 		if count > 5 {
 			// Dynamic Goto: Skip "process" and go straight to "end_high"
 			return &graph.Command{
-				Update: map[string]interface{}{"status": "high"},
+				Update: map[string]any{"status": "high"},
 				Goto:   "end_high",
 			}, nil
 		}
 
 		// Normal flow: Update state and let static edges handle it (or Goto "process")
 		return &graph.Command{
-			Update: map[string]interface{}{"status": "normal"},
+			Update: map[string]any{"status": "normal"},
 			Goto:   "process",
 		}, nil
 	})
 
-	g.AddNode("process", "process", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("process", "process", func(ctx context.Context, state any) (any, error) {
 		fmt.Println("Executing Process Node")
-		return map[string]interface{}{"processed": true}, nil
+		return map[string]any{"processed": true}, nil
 	})
 
-	g.AddNode("end_high", "end_high", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("end_high", "end_high", func(ctx context.Context, state any) (any, error) {
 		fmt.Println("Executing End High Node")
-		return map[string]interface{}{"final": "high value"}, nil
+		return map[string]any{"final": "high value"}, nil
 	})
 
 	g.SetEntryPoint("router")
@@ -62,11 +62,11 @@ func main() {
 
 	// Case 1: Normal Flow
 	fmt.Println("--- Case 1: Count = 3 ---")
-	res, _ := runnable.Invoke(context.Background(), map[string]interface{}{"count": 3})
+	res, _ := runnable.Invoke(context.Background(), map[string]any{"count": 3})
 	fmt.Printf("Result: %v\n", res)
 
 	// Case 2: High Value Flow (Skip Process)
 	fmt.Println("\n--- Case 2: Count = 10 ---")
-	res, _ = runnable.Invoke(context.Background(), map[string]interface{}{"count": 10})
+	res, _ = runnable.Invoke(context.Background(), map[string]any{"count": 10})
 	fmt.Printf("Result: %v\n", res)
 }

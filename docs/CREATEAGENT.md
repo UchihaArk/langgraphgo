@@ -500,7 +500,7 @@ func main() {
     }
 
     // 4. Prepare initial state
-    initialState := map[string]interface{}{
+    initialState := map[string]any{
         "messages": []llms.MessageContent{
             llms.TextParts(llms.ChatMessageTypeHuman,
                 "What's the weather in London?"),
@@ -514,7 +514,7 @@ func main() {
     }
 
     // 6. Extract result
-    finalState := result.(map[string]interface{})
+    finalState := result.(map[string]any)
     messages := finalState["messages"].([]llms.MessageContent)
     lastMessage := messages[len(messages)-1]
 
@@ -554,7 +554,7 @@ func main() {
         log.Fatal(err)
     }
 
-    initialState := map[string]interface{}{
+    initialState := map[string]any{
         "messages": []llms.MessageContent{
             llms.TextParts(llms.ChatMessageTypeHuman,
                 "Find the latest news about AI and summarize it"),
@@ -621,7 +621,7 @@ agent, _ := prebuilt.CreateAgent(model, tools,
     prebuilt.WithSystemMessage("You are a math tutor. Explain each step clearly."),
 )
 
-initialState := map[string]interface{}{
+initialState := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman,
             "Solve: 2x + 5 = 13"),
@@ -642,7 +642,7 @@ agent, _ := prebuilt.CreateAgent(model, []tools.Tool{},
     prebuilt.WithVerbose(true),
 )
 
-initialState := map[string]interface{}{
+initialState := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman,
             "What are the latest developments in quantum computing?"),
@@ -850,7 +850,7 @@ analysis := analysisAgent.Invoke(ctx, buildAnalysisQuery(research))
 ### Streaming with CreateAgent
 
 ```go
-streamChan := make(chan map[string]interface{})
+streamChan := make(chan map[string]any)
 
 go func() {
     defer close(streamChan)

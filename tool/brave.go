@@ -126,7 +126,7 @@ func (b *BraveSearch) Call(ctx context.Context, input string) (string, error) {
 		return "", fmt.Errorf("brave api returned status: %d", resp.StatusCode)
 	}
 
-	var result map[string]interface{}
+	var result map[string]any
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return "", fmt.Errorf("failed to decode response: %w", err)
 	}
@@ -135,10 +135,10 @@ func (b *BraveSearch) Call(ctx context.Context, input string) (string, error) {
 	var sb strings.Builder
 
 	// Extract web results
-	if web, ok := result["web"].(map[string]interface{}); ok {
-		if results, ok := web["results"].([]interface{}); ok {
+	if web, ok := result["web"].(map[string]any); ok {
+		if results, ok := web["results"].([]any); ok {
 			for i, r := range results {
-				if item, ok := r.(map[string]interface{}); ok {
+				if item, ok := r.(map[string]any); ok {
 					title, _ := item["title"].(string)
 					url, _ := item["url"].(string)
 					description, _ := item["description"].(string)

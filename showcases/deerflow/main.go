@@ -317,8 +317,8 @@ func handleHistory(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func sendSSE(w http.ResponseWriter, flusher http.Flusher, eventType string, data interface{}) {
-	payload := map[string]interface{}{
+func sendSSE(w http.ResponseWriter, flusher http.Flusher, eventType string, data any) {
+	payload := map[string]any{
 		"type": eventType,
 	}
 

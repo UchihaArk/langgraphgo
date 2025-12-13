@@ -30,9 +30,9 @@ The **Swarm** pattern (inspired by OpenAI's Swarm framework) is a decentralized 
 var HandoffTool = llms.Tool{
     Name: "handoff",
     // ...
-    Parameters: map[string]interface{}{
-        "properties": map[string]interface{}{
-            "to": map[string]interface{}{
+    Parameters: map[string]any{
+        "properties": map[string]any{
+            "to": map[string]any{
                 "enum": []string{"Researcher", "Writer"},
             },
         },
@@ -44,7 +44,7 @@ var HandoffTool = llms.Tool{
 ```go
 if tc.FunctionCall.Name == "handoff" {
     // ... parse args ...
-    return map[string]interface{}{
+    return map[string]any{
         // Add tool call and response to history
         "messages": []llms.MessageContent{ ... },
         // Set the next agent
@@ -55,8 +55,8 @@ if tc.FunctionCall.Name == "handoff" {
 
 ### Conditional Routing
 ```go
-router := func(ctx context.Context, state interface{}) string {
-    mState := state.(map[string]interface{})
+router := func(ctx context.Context, state any) string {
+    mState := state.(map[string]any)
     next := mState["next"].(string)
     if next == "" || next == "END" {
         return graph.END

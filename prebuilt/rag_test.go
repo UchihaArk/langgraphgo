@@ -17,7 +17,7 @@ func TestSimpleTextSplitter(t *testing.T) {
 			PageContent: "This is a long document that needs to be split into smaller chunks. " +
 				"Each chunk should be around 100 characters with 20 characters overlap. " +
 				"This helps maintain context between chunks.",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"source": "test.txt",
 			},
 		},
@@ -49,15 +49,15 @@ func TestInMemoryVectorStore(t *testing.T) {
 	docs := []Document{
 		{
 			PageContent: "LangGraph is a library for building stateful, multi-actor applications with LLMs.",
-			Metadata:    map[string]interface{}{"source": "doc1.txt"},
+			Metadata:    map[string]any{"source": "doc1.txt"},
 		},
 		{
 			PageContent: "RAG (Retrieval-Augmented Generation) combines retrieval with generation.",
-			Metadata:    map[string]interface{}{"source": "doc2.txt"},
+			Metadata:    map[string]any{"source": "doc2.txt"},
 		},
 		{
 			PageContent: "Vector databases store embeddings for efficient similarity search.",
-			Metadata:    map[string]interface{}{"source": "doc3.txt"},
+			Metadata:    map[string]any{"source": "doc3.txt"},
 		},
 	}
 
@@ -188,11 +188,11 @@ func TestRAGPipelineBasic(t *testing.T) {
 	docs := []Document{
 		{
 			PageContent: "LangGraph is a library for building stateful, multi-actor applications with LLMs. It extends LangChain with graph-based workflows.",
-			Metadata:    map[string]interface{}{"source": "langgraph_docs.txt"},
+			Metadata:    map[string]any{"source": "langgraph_docs.txt"},
 		},
 		{
 			PageContent: "RAG (Retrieval-Augmented Generation) is a technique that combines information retrieval with text generation to produce more accurate and contextual responses.",
-			Metadata:    map[string]interface{}{"source": "rag_guide.txt"},
+			Metadata:    map[string]any{"source": "rag_guide.txt"},
 		},
 	}
 
@@ -264,8 +264,8 @@ func TestRAGPipelineAdvanced(t *testing.T) {
 
 	// Add test documents
 	docs := []Document{
-		{PageContent: "Document 1 about AI", Metadata: map[string]interface{}{"source": "doc1.txt"}},
-		{PageContent: "Document 2 about ML", Metadata: map[string]interface{}{"source": "doc2.txt"}},
+		{PageContent: "Document 1 about AI", Metadata: map[string]any{"source": "doc1.txt"}},
+		{PageContent: "Document 2 about ML", Metadata: map[string]any{"source": "doc2.txt"}},
 	}
 
 	texts := make([]string, len(docs))

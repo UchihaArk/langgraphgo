@@ -42,7 +42,7 @@ workflow.AddNode("reporter", ..., ReporterNode)
 workflow.AddNode("podcast", ..., PodcastNode)
 
 // 关键的条件边
-workflow.AddConditionalEdge("reporter", func(ctx context.Context, state interface{}) string {
+workflow.AddConditionalEdge("reporter", func(ctx context.Context, state any) string {
     s := state.(*State)
     if s.GeneratePodcast {
         return "podcast"

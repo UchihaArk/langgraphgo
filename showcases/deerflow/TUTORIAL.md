@@ -84,7 +84,7 @@ type State struct {
 
 **核心代码**：
 ```go
-func PlannerNode(ctx context.Context, state interface{}) (interface{}, error) {
+func PlannerNode(ctx context.Context, state any) (any, error) {
     s := state.(*State)
     llm, _ := getLLM()
 
@@ -120,7 +120,7 @@ func PlannerNode(ctx context.Context, state interface{}) (interface{}, error) {
 
 **核心代码**：
 ```go
-func ResearcherNode(ctx context.Context, state interface{}) (interface{}, error) {
+func ResearcherNode(ctx context.Context, state any) (any, error) {
     s := state.(*State)
     llm, _ := getLLM()
 
@@ -148,7 +148,7 @@ func ResearcherNode(ctx context.Context, state interface{}) (interface{}, error)
 
 **核心代码**：
 ```go
-func ReporterNode(ctx context.Context, state interface{}) (interface{}, error) {
+func ReporterNode(ctx context.Context, state any) (any, error) {
     s := state.(*State)
     llm, _ := getLLM()
 
@@ -190,7 +190,7 @@ func ReporterNode(ctx context.Context, state interface{}) (interface{}, error) {
 
 **核心代码**：
 ```go
-func PodcastNode(ctx context.Context, state interface{}) (interface{}, error) {
+func PodcastNode(ctx context.Context, state any) (any, error) {
     s := state.(*State)
     llm, _ := getLLM()
 

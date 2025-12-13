@@ -12,7 +12,7 @@ import (
 )
 
 // MediaEngineNode searches for media content.
-func MediaEngineNode(ctx context.Context, state interface{}) (interface{}, error) {
+func MediaEngineNode(ctx context.Context, state any) (any, error) {
 	s := state.(*schema.BettaFishState)
 	fmt.Printf("MediaEngine: 正在搜索媒体内容 '%s'...\n", s.Query)
 

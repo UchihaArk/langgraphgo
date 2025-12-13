@@ -27,8 +27,8 @@ func CreateSupervisor(model llms.Model, members map[string]*graph.StateRunnable)
 	}
 
 	// Define supervisor node
-	workflow.AddNode("supervisor", "Supervisor orchestration node", func(ctx context.Context, state interface{}) (interface{}, error) {
-		mState, ok := state.(map[string]interface{})
+	workflow.AddNode("supervisor", "Supervisor orchestration node", func(ctx context.Context, state any) (any, error) {
+		mState, ok := state.(map[string]any)
 		if !ok {
 			return nil, fmt.Errorf("invalid state type")
 		}
@@ -45,10 +45,10 @@ func CreateSupervisor(model llms.Model, members map[string]*graph.StateRunnable)
 			Function: &llms.FunctionDefinition{
 				Name:        "route",
 				Description: "Select the next role.",
-				Parameters: map[string]interface{}{
+				Parameters: map[string]any{
 					"type": "object",
-					"properties": map[string]interface{}{
-						"next": map[string]interface{}{
+					"properties": map[string]any{
+						"next": map[string]any{
 							"type": "string",
 							"enum": options,
 						},
@@ -99,7 +99,7 @@ func CreateSupervisor(model llms.Model, members map[string]*graph.StateRunnable)
 		// We don't append to messages here, or maybe we do?
 		// Usually supervisor output is not part of conversation history unless we want to track decisions.
 		// For now, let's just return "next" in state for conditional edge.
-		return map[string]interface{}{
+		return map[string]any{
 			"next": args.Next,
 		}, nil
 	})
@@ -112,7 +112,7 @@ func CreateSupervisor(model llms.Model, members map[string]*graph.StateRunnable)
 		agentName := name
 		agentRunnable := agent
 
-		workflow.AddNode(agentName, "Agent: "+agentName, func(ctx context.Context, state interface{}) (interface{}, error) {
+		workflow.AddNode(agentName, "Agent: "+agentName, func(ctx context.Context, state any) (any, error) {
 			// Invoke agent
 			// We pass the full state
 			res, err := agentRunnable.Invoke(ctx, state)
@@ -130,8 +130,8 @@ func CreateSupervisor(model llms.Model, members map[string]*graph.StateRunnable)
 	workflow.SetEntryPoint("supervisor")
 
 	// Conditional edge from supervisor
-	workflow.AddConditionalEdge("supervisor", func(ctx context.Context, state interface{}) string {
-		mState := state.(map[string]interface{})
+	workflow.AddConditionalEdge("supervisor", func(ctx context.Context, state any) string {
+		mState := state.(map[string]any)
 		next, ok := mState["next"].(string)
 		if !ok {
 			return graph.END

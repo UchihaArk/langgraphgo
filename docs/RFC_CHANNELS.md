@@ -4,7 +4,7 @@
 This RFC proposes introducing a formal `Channel` architecture to LangGraphGo, aligning it more closely with the Python implementation. Channels provide a flexible and powerful way to manage state updates, synchronization, and data flow between nodes in the graph.
 
 ## Motivation
-Currently, LangGraphGo uses a `StateSchema` with `Reducer` functions to manage state updates. While effective for simple cases (like `map[string]interface{}` with append logic), it lacks the expressiveness of Python's Channels.
+Currently, LangGraphGo uses a `StateSchema` with `Reducer` functions to manage state updates. While effective for simple cases (like `map[string]any` with append logic), it lacks the expressiveness of Python's Channels.
 
 Channels allow for:
 - **De-duplication**: Ensuring only unique values are stored.
@@ -23,16 +23,16 @@ Formalizing Channels will enable more complex agentic patterns, such as "Swarm" 
 type Channel interface {
     // Update applies a sequence of updates to the channel.
     // It returns the new value of the channel.
-    Update(ctx context.Context, updates []interface{}) (interface{}, error)
+    Update(ctx context.Context, updates []any) (any, error)
 
     // Get returns the current value of the channel.
-    Get(ctx context.Context) (interface{}, error)
+    Get(ctx context.Context) (any, error)
 
     // Checkpoint returns a serializable representation of the channel's state.
-    Checkpoint() (interface{}, error)
+    Checkpoint() (any, error)
 
     // Restore restores the channel's state from a checkpoint.
-    Restore(checkpoint interface{}) error
+    Restore(checkpoint any) error
 }
 ```
 

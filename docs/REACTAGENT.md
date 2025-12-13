@@ -344,7 +344,7 @@ if err != nil {
 ### Step 3: Prepare Initial State
 
 ```go
-initialState := map[string]interface{}{
+initialState := map[string]any{
     "messages": []llms.MessageContent{
         {
             Role:  llms.ChatMessageTypeHuman,
@@ -368,7 +368,7 @@ if err != nil {
 ### Step 5: Extract Results
 
 ```go
-finalState := result.(map[string]interface{})
+finalState := result.(map[string]any)
 messages := finalState["messages"].([]llms.MessageContent)
 
 // Get final AI response
@@ -389,7 +389,7 @@ agent, _ := prebuilt.CreateReactAgent(model, []tools.Tool{
     WeatherTool{},
 })
 
-initialState := map[string]interface{}{
+initialState := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman,
             "What's the weather in San Francisco?"),
@@ -413,7 +413,7 @@ agent, _ := prebuilt.CreateReactAgent(model, []tools.Tool{
     SearchTool{},
 })
 
-initialState := map[string]interface{}{
+initialState := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman,
             "What is 15% of the Eiffel Tower's height?"),
@@ -441,7 +441,7 @@ agent, _ := prebuilt.CreateReactAgent(model, []tools.Tool{
     SummarizerTool{},
 })
 
-initialState := map[string]interface{}{
+initialState := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman,
             "Research the latest developments in quantum computing"),
@@ -577,7 +577,7 @@ customWorkflow.AddNode("postprocess", postprocessNode)
 
 ```go
 // Use streaming for real-time updates
-streamChan := make(chan map[string]interface{})
+streamChan := make(chan map[string]any)
 
 go func() {
     defer close(streamChan)

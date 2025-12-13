@@ -22,7 +22,7 @@ type ConversationState struct {
 }
 
 // IntentClassifier analyzes user input and determines intent
-func classifyIntent(ctx context.Context, state interface{}) (interface{}, error) {
+func classifyIntent(ctx context.Context, state any) (any, error) {
 	s := state.(ConversationState)
 	fmt.Println("\n[Node: Classify Intent]")
 
@@ -65,7 +65,7 @@ func classifyIntent(ctx context.Context, state interface{}) (interface{}, error)
 }
 
 // RetrieveInformation retrieves relevant information based on intent
-func retrieveInformation(ctx context.Context, state interface{}) (interface{}, error) {
+func retrieveInformation(ctx context.Context, state any) (any, error) {
 	s := state.(ConversationState)
 	fmt.Println("\n[Node: Retrieve Information]")
 
@@ -102,7 +102,7 @@ func retrieveInformation(ctx context.Context, state interface{}) (interface{}, e
 }
 
 // GenerateResponse creates a response based on intent and context
-func generateResponse(ctx context.Context, state interface{}) (interface{}, error) {
+func generateResponse(ctx context.Context, state any) (any, error) {
 	s := state.(ConversationState)
 	fmt.Println("\n[Node: Generate Response]")
 
@@ -384,8 +384,8 @@ func demoGraphMemory() {
 	conversations := []string{
 		"What's the price?",
 		"Tell me about the warranty",
-		"Does the price include warranty?", // Connects price + warranty
-		"What features justify this price?", // Connects features + price
+		"Does the price include warranty?",   // Connects price + warranty
+		"What features justify this price?",  // Connects features + price
 		"Is shipping included in the price?", // Connects shipping + price
 	}
 

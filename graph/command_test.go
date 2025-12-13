@@ -12,7 +12,7 @@ func TestCommandGoto(t *testing.T) {
 
 	// Define schema
 	schema := NewMapSchema()
-	schema.RegisterReducer("count", func(curr, new interface{}) (interface{}, error) {
+	schema.RegisterReducer("count", func(curr, new any) (any, error) {
 		if curr == nil {
 			return new, nil
 		}
@@ -21,21 +21,21 @@ func TestCommandGoto(t *testing.T) {
 	g.SetSchema(schema)
 
 	// Node A: Returns Command to update count and go to C (skipping B)
-	g.AddNode("A", "A", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("A", "A", func(ctx context.Context, state any) (any, error) {
 		return &Command{
-			Update: map[string]interface{}{"count": 1},
+			Update: map[string]any{"count": 1},
 			Goto:   "C",
 		}, nil
 	})
 
 	// Node B: Should be skipped
-	g.AddNode("B", "B", func(ctx context.Context, state interface{}) (interface{}, error) {
-		return map[string]interface{}{"count": 10}, nil
+	g.AddNode("B", "B", func(ctx context.Context, state any) (any, error) {
+		return map[string]any{"count": 10}, nil
 	})
 
 	// Node C: Final node
-	g.AddNode("C", "C", func(ctx context.Context, state interface{}) (interface{}, error) {
-		return map[string]interface{}{"count": 100}, nil
+	g.AddNode("C", "C", func(ctx context.Context, state any) (any, error) {
+		return map[string]any{"count": 100}, nil
 	})
 
 	g.SetEntryPoint("A")
@@ -46,10 +46,10 @@ func TestCommandGoto(t *testing.T) {
 	runnable, err := g.Compile()
 	assert.NoError(t, err)
 
-	res, err := runnable.Invoke(context.Background(), map[string]interface{}{"count": 0})
+	res, err := runnable.Invoke(context.Background(), map[string]any{"count": 0})
 	assert.NoError(t, err)
 
-	mRes, ok := res.(map[string]interface{})
+	mRes, ok := res.(map[string]any)
 	assert.True(t, ok)
 
 	// Expected: 0 + 1 (A) + 100 (C) = 101. B is skipped.

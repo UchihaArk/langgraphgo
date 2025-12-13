@@ -19,7 +19,7 @@ func TestListenableNode_AddListener(t *testing.T) {
 
 	node := graph.Node{
 		Name: testNode,
-		Function: func(ctx context.Context, state interface{}) (interface{}, error) {
+		Function: func(ctx context.Context, state any) (any, error) {
 			return resultValue, nil
 		},
 	}
@@ -29,7 +29,7 @@ func TestListenableNode_AddListener(t *testing.T) {
 	// Test adding listener
 	var eventReceived bool
 	var mu sync.Mutex
-	listener := graph.NodeListenerFunc(func(ctx context.Context, event graph.NodeEvent, nodeName string, state interface{}, err error) {
+	listener := graph.NodeListenerFunc(func(ctx context.Context, event graph.NodeEvent, nodeName string, state any, err error) {
 		mu.Lock()
 		eventReceived = true
 		mu.Unlock()
@@ -67,7 +67,7 @@ func TestListenableNode_Execute(t *testing.T) {
 
 	node := graph.Node{
 		Name: testNode,
-		Function: func(ctx context.Context, state interface{}) (interface{}, error) {
+		Function: func(ctx context.Context, state any) (any, error) {
 			return fmt.Sprintf("processed_%v", state), nil
 		},
 	}
@@ -78,7 +78,7 @@ func TestListenableNode_Execute(t *testing.T) {
 	var events []graph.NodeEvent
 	var mutex sync.Mutex
 
-	listener := graph.NodeListenerFunc(func(ctx context.Context, event graph.NodeEvent, nodeName string, state interface{}, err error) {
+	listener := graph.NodeListenerFunc(func(ctx context.Context, event graph.NodeEvent, nodeName string, state any, err error) {
 		mutex.Lock()
 		defer mutex.Unlock()
 		events = append(events, event)
@@ -139,7 +139,7 @@ func TestListenableNode_ExecuteWithError(t *testing.T) {
 
 	node := graph.Node{
 		Name: "error_node",
-		Function: func(ctx context.Context, state interface{}) (interface{}, error) {
+		Function: func(ctx context.Context, state any) (any, error) {
 			return nil, fmt.Errorf("test error")
 		},
 	}
@@ -151,7 +151,7 @@ func TestListenableNode_ExecuteWithError(t *testing.T) {
 	var lastError error
 	var mutex sync.Mutex
 
-	listener := graph.NodeListenerFunc(func(ctx context.Context, event graph.NodeEvent, nodeName string, state interface{}, err error) {
+	listener := graph.NodeListenerFunc(func(ctx context.Context, event graph.NodeEvent, nodeName string, state any, err error) {
 		mutex.Lock()
 		defer mutex.Unlock()
 		events = append(events, event)
@@ -216,7 +216,7 @@ func TestListenableStateGraph_AddNode(t *testing.T) {
 	g := graph.NewListenableStateGraph()
 
 	// Add a node
-	node := g.AddNode(testNode, testNode, func(ctx context.Context, state interface{}) (interface{}, error) {
+	node := g.AddNode(testNode, testNode, func(ctx context.Context, state any) (any, error) {
 		return resultValue, nil
 	})
 
@@ -242,11 +242,11 @@ func TestListenableStateGraph_GlobalListeners(t *testing.T) {
 	g := graph.NewListenableStateGraph()
 
 	// Add multiple nodes
-	node1 := g.AddNode("node1", "node1", func(ctx context.Context, state interface{}) (interface{}, error) {
+	node1 := g.AddNode("node1", "node1", func(ctx context.Context, state any) (any, error) {
 		return "result1", nil
 	})
 
-	node2 := g.AddNode("node2", "node2", func(ctx context.Context, state interface{}) (interface{}, error) {
+	node2 := g.AddNode("node2", "node2", func(ctx context.Context, state any) (any, error) {
 		return "result2", nil
 	})
 
@@ -254,7 +254,7 @@ func TestListenableStateGraph_GlobalListeners(t *testing.T) {
 	var eventCount int
 	var mutex sync.Mutex
 
-	globalListener := graph.NodeListenerFunc(func(ctx context.Context, event graph.NodeEvent, nodeName string, state interface{}, err error) {
+	globalListener := graph.NodeListenerFunc(func(ctx context.Context, event graph.NodeEvent, nodeName string, state any, err error) {
 		mutex.Lock()
 		defer mutex.Unlock()
 		eventCount++
@@ -294,11 +294,11 @@ func TestListenableRunnable_Invoke(t *testing.T) {
 	g := graph.NewListenableStateGraph()
 
 	// Create a simple pipeline
-	node1 := g.AddNode("node1", "node1", func(ctx context.Context, state interface{}) (interface{}, error) {
+	node1 := g.AddNode("node1", "node1", func(ctx context.Context, state any) (any, error) {
 		return fmt.Sprintf("step1_%v", state), nil
 	})
 
-	node2 := g.AddNode("node2", "node2", func(ctx context.Context, state interface{}) (interface{}, error) {
+	node2 := g.AddNode("node2", "node2", func(ctx context.Context, state any) (any, error) {
 		return fmt.Sprintf("step2_%v", state), nil
 	})
 
@@ -311,7 +311,7 @@ func TestListenableRunnable_Invoke(t *testing.T) {
 	var executionFlow []string
 	var mutex sync.Mutex
 
-	listener := graph.NodeListenerFunc(func(ctx context.Context, event graph.NodeEvent, nodeName string, state interface{}, err error) {
+	listener := graph.NodeListenerFunc(func(ctx context.Context, event graph.NodeEvent, nodeName string, state any, err error) {
 		mutex.Lock()
 		defer mutex.Unlock()
 		executionFlow = append(executionFlow, fmt.Sprintf("%s:%s", nodeName, event))
@@ -373,7 +373,7 @@ func TestListenerPanicRecovery(t *testing.T) {
 
 	node := graph.Node{
 		Name: testNode,
-		Function: func(ctx context.Context, state interface{}) (interface{}, error) {
+		Function: func(ctx context.Context, state any) (any, error) {
 			return resultValue, nil
 		},
 	}
@@ -381,7 +381,7 @@ func TestListenerPanicRecovery(t *testing.T) {
 	listenableNode := graph.NewListenableNode(node)
 
 	// Add a panicking listener
-	panicListener := graph.NodeListenerFunc(func(ctx context.Context, event graph.NodeEvent, nodeName string, state interface{}, err error) {
+	panicListener := graph.NodeListenerFunc(func(ctx context.Context, event graph.NodeEvent, nodeName string, state any, err error) {
 		panic("test panic")
 	})
 
@@ -389,7 +389,7 @@ func TestListenerPanicRecovery(t *testing.T) {
 	var normalListenerCalled bool
 	var mutex sync.Mutex
 
-	normalListener := graph.NodeListenerFunc(func(ctx context.Context, event graph.NodeEvent, nodeName string, state interface{}, err error) {
+	normalListener := graph.NodeListenerFunc(func(ctx context.Context, event graph.NodeEvent, nodeName string, state any, err error) {
 		mutex.Lock()
 		defer mutex.Unlock()
 		normalListenerCalled = true
@@ -432,7 +432,7 @@ func TestStreamEvent_Creation(t *testing.T) {
 		Event:     graph.NodeEventComplete,
 		State:     testState,
 		Error:     nil,
-		Metadata:  map[string]interface{}{"key": "value"},
+		Metadata:  map[string]any{"key": "value"},
 		Duration:  100 * time.Millisecond,
 	}
 
@@ -461,7 +461,7 @@ func TestStreamEvent_Creation(t *testing.T) {
 func BenchmarkListenableNode_Execute(b *testing.B) {
 	node := graph.Node{
 		Name: "benchmark_node",
-		Function: func(ctx context.Context, state interface{}) (interface{}, error) {
+		Function: func(ctx context.Context, state any) (any, error) {
 			return state, nil
 		},
 	}
@@ -469,7 +469,7 @@ func BenchmarkListenableNode_Execute(b *testing.B) {
 	listenableNode := graph.NewListenableNode(node)
 
 	// Add a listener
-	listener := graph.NodeListenerFunc(func(ctx context.Context, event graph.NodeEvent, nodeName string, state interface{}, err error) {
+	listener := graph.NodeListenerFunc(func(ctx context.Context, event graph.NodeEvent, nodeName string, state any, err error) {
 		// No-op listener for benchmarking
 	})
 
@@ -486,7 +486,7 @@ func BenchmarkListenableNode_Execute(b *testing.B) {
 func BenchmarkListenableRunnable_Invoke(b *testing.B) {
 	g := graph.NewListenableStateGraph()
 
-	node := g.AddNode("node", "node", func(ctx context.Context, state interface{}) (interface{}, error) {
+	node := g.AddNode("node", "node", func(ctx context.Context, state any) (any, error) {
 		return state, nil
 	})
 
@@ -494,7 +494,7 @@ func BenchmarkListenableRunnable_Invoke(b *testing.B) {
 	g.SetEntryPoint("node")
 
 	// Add listener
-	listener := graph.NodeListenerFunc(func(ctx context.Context, event graph.NodeEvent, nodeName string, state interface{}, err error) {
+	listener := graph.NodeListenerFunc(func(ctx context.Context, event graph.NodeEvent, nodeName string, state any, err error) {
 		// No-op for benchmarking
 	})
 

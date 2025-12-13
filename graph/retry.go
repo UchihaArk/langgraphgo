@@ -49,7 +49,7 @@ func NewRetryNode(node Node, config *RetryConfig) *RetryNode {
 }
 
 // Execute runs the node with retry logic
-func (rn *RetryNode) Execute(ctx context.Context, state interface{}) (interface{}, error) {
+func (rn *RetryNode) Execute(ctx context.Context, state any) (any, error) {
 	var lastErr error
 	delay := rn.config.InitialDelay
 
@@ -98,7 +98,7 @@ func (rn *RetryNode) Execute(ctx context.Context, state interface{}) (interface{
 func (g *StateGraph) AddNodeWithRetry(
 	name string,
 	description string,
-	fn func(context.Context, interface{}) (interface{}, error),
+	fn func(context.Context, any) (any, error),
 	config *RetryConfig,
 ) {
 	node := Node{
@@ -125,14 +125,14 @@ func NewTimeoutNode(node Node, timeout time.Duration) *TimeoutNode {
 }
 
 // Execute runs the node with timeout
-func (tn *TimeoutNode) Execute(ctx context.Context, state interface{}) (interface{}, error) {
+func (tn *TimeoutNode) Execute(ctx context.Context, state any) (any, error) {
 	// Create a timeout context
 	timeoutCtx, cancel := context.WithTimeout(ctx, tn.timeout)
 	defer cancel()
 
 	// Channel for result
 	type result struct {
-		value interface{}
+		value any
 		err   error
 	}
 	resultChan := make(chan result, 1)
@@ -156,7 +156,7 @@ func (tn *TimeoutNode) Execute(ctx context.Context, state interface{}) (interfac
 func (g *StateGraph) AddNodeWithTimeout(
 	name string,
 	description string,
-	fn func(context.Context, interface{}) (interface{}, error),
+	fn func(context.Context, any) (any, error),
 	timeout time.Duration,
 ) {
 	node := Node{
@@ -206,7 +206,7 @@ func NewCircuitBreaker(node Node, config CircuitBreakerConfig) *CircuitBreaker {
 }
 
 // Execute runs the node with circuit breaker logic
-func (cb *CircuitBreaker) Execute(ctx context.Context, state interface{}) (interface{}, error) {
+func (cb *CircuitBreaker) Execute(ctx context.Context, state any) (any, error) {
 	// Check circuit state
 	switch cb.state {
 	case CircuitClosed:
@@ -259,7 +259,7 @@ func (cb *CircuitBreaker) Execute(ctx context.Context, state interface{}) (inter
 func (g *StateGraph) AddNodeWithCircuitBreaker(
 	name string,
 	description string,
-	fn func(context.Context, interface{}) (interface{}, error),
+	fn func(context.Context, any) (any, error),
 	config CircuitBreakerConfig,
 ) {
 	node := Node{
@@ -290,7 +290,7 @@ func NewRateLimiter(node Node, maxCalls int, window time.Duration) *RateLimiter 
 }
 
 // Execute runs the node with rate limiting
-func (rl *RateLimiter) Execute(ctx context.Context, state interface{}) (interface{}, error) {
+func (rl *RateLimiter) Execute(ctx context.Context, state any) (any, error) {
 	now := time.Now()
 
 	// Remove old calls outside the window
@@ -321,7 +321,7 @@ func (rl *RateLimiter) Execute(ctx context.Context, state interface{}) (interfac
 func (g *StateGraph) AddNodeWithRateLimit(
 	name string,
 	description string,
-	fn func(context.Context, interface{}) (interface{}, error),
+	fn func(context.Context, any) (any, error),
 	maxCalls int,
 	window time.Duration,
 ) {
@@ -337,10 +337,10 @@ func (g *StateGraph) AddNodeWithRateLimit(
 // ExponentialBackoffRetry implements exponential backoff with jitter
 func ExponentialBackoffRetry(
 	ctx context.Context,
-	fn func() (interface{}, error),
+	fn func() (any, error),
 	maxAttempts int,
 	baseDelay time.Duration,
-) (interface{}, error) {
+) (any, error) {
 	for attempt := 0; attempt < maxAttempts; attempt++ {
 		result, err := fn()
 		if err == nil {

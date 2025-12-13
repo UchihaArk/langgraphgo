@@ -64,7 +64,7 @@ func NewStateGraphWithSchema() *StateGraph {
 func NewMessageGraph() *MessageGraph {
     g := &MessageGraph{
         nodes:            make(map[string]Node),
-        conditionalEdges: make(map[string]func(ctx context.Context, state interface{}) string),
+        conditionalEdges: make(map[string]func(ctx context.Context, state any) string),
     }
     
     schema := NewMapSchema()

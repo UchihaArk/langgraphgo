@@ -231,8 +231,8 @@ nodes := []*graph.Node{
 Each node should follow the standard LangGraphGo node signature.
 
 ```go
-func fetchDataNode(ctx context.Context, state interface{}) (interface{}, error) {
-    mState := state.(map[string]interface{})
+func fetchDataNode(ctx context.Context, state any) (any, error) {
+    mState := state.(map[string]any)
     messages := mState["messages"].([]llms.MessageContent)
 
     // Your business logic here
@@ -246,7 +246,7 @@ func fetchDataNode(ctx context.Context, state interface{}) (interface{}, error) 
         },
     }
 
-    return map[string]interface{}{
+    return map[string]any{
         "messages": append(messages, msg),
         "data":     data, // Store data in state
     }, nil
@@ -289,7 +289,7 @@ func main() {
 ```go
 query := "Fetch user data, validate it, transform to JSON, and save the results"
 
-initialState := map[string]interface{}{
+initialState := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman, query),
     },
@@ -301,7 +301,7 @@ if err != nil {
 }
 
 // Access results
-finalState := result.(map[string]interface{})
+finalState := result.(map[string]any)
 messages := finalState["messages"].([]llms.MessageContent)
 ```
 
@@ -349,7 +349,7 @@ START → fetch_data → validate_data → save_results → END
 **Code**:
 ```go
 query := "Fetch user data, validate it, and save the results"
-initialState := map[string]interface{}{
+initialState := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman, query),
     },
@@ -423,8 +423,8 @@ Each node should have a single, clear responsibility.
 Implement proper error handling in node functions.
 
 ```go
-func myNode(ctx context.Context, state interface{}) (interface{}, error) {
-    mState := state.(map[string]interface{})
+func myNode(ctx context.Context, state any) (any, error) {
+    mState := state.(map[string]any)
 
     data, err := performOperation()
     if err != nil {
@@ -435,14 +435,14 @@ func myNode(ctx context.Context, state interface{}) (interface{}, error) {
                 llms.TextPart(fmt.Sprintf("Error: %v", err)),
             },
         }
-        return map[string]interface{}{
+        return map[string]any{
             "messages": append(mState["messages"].([]llms.MessageContent), msg),
             "error":    err.Error(),
         }, nil
     }
 
     // Success case
-    return map[string]interface{}{
+    return map[string]any{
         "messages": append(mState["messages"].([]llms.MessageContent), successMsg),
         "data":     data,
     }, nil
@@ -522,8 +522,8 @@ Planning Agent uses a schema-based state with the following channels:
 
 ```go
 // Nodes can access and modify state
-func myNode(ctx context.Context, state interface{}) (interface{}, error) {
-    mState := state.(map[string]interface{})
+func myNode(ctx context.Context, state any) (any, error) {
+    mState := state.(map[string]any)
 
     // Access workflow plan
     plan := mState["workflow_plan"].(*prebuilt.WorkflowPlan)
@@ -532,7 +532,7 @@ func myNode(ctx context.Context, state interface{}) (interface{}, error) {
     messages := mState["messages"].([]llms.MessageContent)
 
     // Add custom data
-    return map[string]interface{}{
+    return map[string]any{
         "messages": append(messages, newMsg),
         "my_data":  customData,
     }, nil
@@ -554,7 +554,7 @@ agent, err := prebuilt.CreatePlanningAgent(
 result, err := agent.Invoke(ctx, initialState)
 
 // Inspect final state
-finalState := result.(map[string]interface{})
+finalState := result.(map[string]any)
 plan := finalState["workflow_plan"].(*prebuilt.WorkflowPlan)
 fmt.Printf("Executed plan: %+v\n", plan)
 ```

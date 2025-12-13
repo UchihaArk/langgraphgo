@@ -51,14 +51,14 @@ const (
 // NodeListener defines the interface for node event listeners
 type NodeListener interface {
 	// OnNodeEvent is called when a node event occurs
-	OnNodeEvent(ctx context.Context, event NodeEvent, nodeName string, state interface{}, err error)
+	OnNodeEvent(ctx context.Context, event NodeEvent, nodeName string, state any, err error)
 }
 
 // NodeListenerFunc is a function adapter for NodeListener
-type NodeListenerFunc func(ctx context.Context, event NodeEvent, nodeName string, state interface{}, err error)
+type NodeListenerFunc func(ctx context.Context, event NodeEvent, nodeName string, state any, err error)
 
 // OnNodeEvent implements the NodeListener interface
-func (f NodeListenerFunc) OnNodeEvent(ctx context.Context, event NodeEvent, nodeName string, state interface{}, err error) {
+func (f NodeListenerFunc) OnNodeEvent(ctx context.Context, event NodeEvent, nodeName string, state any, err error) {
 	f(ctx, event, nodeName, state, err)
 }
 
@@ -74,13 +74,13 @@ type StreamEvent struct {
 	Event NodeEvent
 
 	// State is the current state at the time of the event
-	State interface{}
+	State any
 
 	// Error contains any error that occurred (if Event is NodeEventError)
 	Error error
 
 	// Metadata contains additional event-specific data
-	Metadata map[string]interface{}
+	Metadata map[string]any
 
 	// Duration is how long the node took (only for Complete events)
 	Duration time.Duration
@@ -125,7 +125,7 @@ func (ln *ListenableNode) RemoveListener(listener NodeListener) {
 }
 
 // NotifyListeners notifies all listeners of an event
-func (ln *ListenableNode) NotifyListeners(ctx context.Context, event NodeEvent, state interface{}, err error) {
+func (ln *ListenableNode) NotifyListeners(ctx context.Context, event NodeEvent, state any, err error) {
 	ln.mutex.RLock()
 	listeners := make([]NodeListener, len(ln.listeners))
 	copy(listeners, ln.listeners)
@@ -157,7 +157,7 @@ func (ln *ListenableNode) NotifyListeners(ctx context.Context, event NodeEvent, 
 }
 
 // Execute runs the node function with listener notifications
-func (ln *ListenableNode) Execute(ctx context.Context, state interface{}) (interface{}, error) {
+func (ln *ListenableNode) Execute(ctx context.Context, state any) (any, error) {
 	// Notify start
 	ln.NotifyListeners(ctx, NodeEventStart, state, nil)
 
@@ -199,7 +199,7 @@ func NewListenableStateGraph() *ListenableStateGraph {
 }
 
 // AddNode adds a node with listener capabilities
-func (g *ListenableStateGraph) AddNode(name string, description string, fn func(ctx context.Context, state interface{}) (interface{}, error)) *ListenableNode {
+func (g *ListenableStateGraph) AddNode(name string, description string, fn func(ctx context.Context, state any) (any, error)) *ListenableNode {
 	node := Node{
 		Name:        name,
 		Description: description,
@@ -254,7 +254,7 @@ func (g *ListenableStateGraph) CompileListenable() (*ListenableRunnable, error) 
 
 	// Configure the runnable to use our listenable nodes
 	nodes := g.listenableNodes
-	runnable.nodeRunner = func(ctx context.Context, nodeName string, state interface{}) (interface{}, error) {
+	runnable.nodeRunner = func(ctx context.Context, nodeName string, state any) (any, error) {
 		node, ok := nodes[nodeName]
 		if !ok {
 			return nil, fmt.Errorf("%w: %s", ErrNodeNotFound, nodeName)
@@ -270,12 +270,12 @@ func (g *ListenableStateGraph) CompileListenable() (*ListenableRunnable, error) 
 }
 
 // Invoke executes the graph with listener notifications
-func (lr *ListenableRunnable) Invoke(ctx context.Context, initialState interface{}) (interface{}, error) {
+func (lr *ListenableRunnable) Invoke(ctx context.Context, initialState any) (any, error) {
 	return lr.runnable.Invoke(ctx, initialState)
 }
 
 // InvokeWithConfig executes the graph with listener notifications and config
-func (lr *ListenableRunnable) InvokeWithConfig(ctx context.Context, initialState interface{}, config *Config) (interface{}, error) {
+func (lr *ListenableRunnable) InvokeWithConfig(ctx context.Context, initialState any, config *Config) (any, error) {
 	if config != nil {
 		ctx = WithConfig(ctx, config)
 	}

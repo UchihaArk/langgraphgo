@@ -75,7 +75,7 @@ func main() {
 
 	fmt.Printf("Query: %s\n\n", query)
 
-	result, err := agent.Invoke(context.Background(), map[string]interface{}{
+	result, err := agent.Invoke(context.Background(), map[string]any{
 		"messages": []llms.MessageContent{
 			{
 				Role:  llms.ChatMessageTypeHuman,
@@ -88,7 +88,7 @@ func main() {
 	}
 
 	// Print result
-	messages := result.(map[string]interface{})["messages"].([]llms.MessageContent)
+	messages := result.(map[string]any)["messages"].([]llms.MessageContent)
 	lastMsg := messages[len(messages)-1]
 
 	fmt.Println("Answer:")

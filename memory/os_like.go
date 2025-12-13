@@ -33,13 +33,13 @@ type OSLikeMemory struct {
 
 // MemoryPage represents a page of memory (like OS paging)
 type MemoryPage struct {
-	ID           string
-	Messages     []*Message
-	LastAccess   time.Time
-	AccessCount  int
-	Priority     int // Higher priority = less likely to be evicted
-	Dirty        bool // Has been modified
-	Size         int  // Token count
+	ID          string
+	Messages    []*Message
+	LastAccess  time.Time
+	AccessCount int
+	Priority    int  // Higher priority = less likely to be evicted
+	Dirty       bool // Has been modified
+	Size        int  // Token count
 }
 
 // OSLikeConfig holds configuration for OS-like memory
@@ -275,11 +275,11 @@ func (o *OSLikeMemory) getPageID(msg *Message) string {
 }
 
 // GetMemoryInfo returns detailed information about memory usage
-func (o *OSLikeMemory) GetMemoryInfo() map[string]interface{} {
+func (o *OSLikeMemory) GetMemoryInfo() map[string]any {
 	o.mu.RLock()
 	defer o.mu.RUnlock()
 
-	return map[string]interface{}{
+	return map[string]any{
 		"active_pages":   len(o.activeMemory),
 		"cached_pages":   len(o.cache),
 		"archived_pages": len(o.archived),
@@ -301,11 +301,11 @@ func (h LRUHeap) Swap(i, j int) {
 	h[i], h[j] = h[j], h[i]
 }
 
-func (h *LRUHeap) Push(x interface{}) {
+func (h *LRUHeap) Push(x any) {
 	*h = append(*h, x.(*MemoryPage))
 }
 
-func (h *LRUHeap) Pop() interface{} {
+func (h *LRUHeap) Pop() any {
 	old := *h
 	n := len(old)
 	x := old[n-1]

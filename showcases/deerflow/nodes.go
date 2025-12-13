@@ -17,7 +17,7 @@ import (
 
 type logKey struct{}
 
-func logf(ctx context.Context, format string, args ...interface{}) {
+func logf(ctx context.Context, format string, args ...any) {
 	msg := fmt.Sprintf(format, args...)
 	// Always print to stdout
 	fmt.Print(msg)
@@ -33,7 +33,7 @@ func logf(ctx context.Context, format string, args ...interface{}) {
 }
 
 // PlannerNode generates a research plan based on the query.
-func PlannerNode(ctx context.Context, state interface{}) (interface{}, error) {
+func PlannerNode(ctx context.Context, state any) (any, error) {
 	s := state.(*State)
 	logf(ctx, "--- 规划节点：正在为查询 '%s' 进行规划 ---\n", s.Request.Query)
 
@@ -102,7 +102,7 @@ func PlannerNode(ctx context.Context, state interface{}) (interface{}, error) {
 }
 
 // ResearcherNode executes the research plan using LLM.
-func ResearcherNode(ctx context.Context, state interface{}) (interface{}, error) {
+func ResearcherNode(ctx context.Context, state any) (any, error) {
 	s := state.(*State)
 	logf(ctx, "--- 研究节点：正在执行计划（使用 LLM） ---\n")
 
@@ -132,7 +132,7 @@ func ResearcherNode(ctx context.Context, state interface{}) (interface{}, error)
 var imgRe = regexp.MustCompile(`\[IMAGE_(\d+)[：:]([^\]]+)\]`)
 
 // ReporterNode compiles the final report.
-func ReporterNode(ctx context.Context, state interface{}) (interface{}, error) {
+func ReporterNode(ctx context.Context, state any) (any, error) {
 	s := state.(*State)
 	logf(ctx, "--- 报告节点：正在生成最终报告 ---\n")
 
@@ -201,7 +201,7 @@ func ReporterNode(ctx context.Context, state interface{}) (interface{}, error) {
 }
 
 // PodcastNode generates a podcast script based on the research results.
-func PodcastNode(ctx context.Context, state interface{}) (interface{}, error) {
+func PodcastNode(ctx context.Context, state any) (any, error) {
 	s := state.(*State)
 	logf(ctx, "--- 播客节点：正在生成播客脚本 ---\n")
 

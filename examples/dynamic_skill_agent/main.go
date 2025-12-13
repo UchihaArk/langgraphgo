@@ -50,7 +50,7 @@ func main() {
 	input := "Please run the hello world script."
 
 	fmt.Println("User:", input)
-	resp, err := agent.Invoke(ctx, map[string]interface{}{
+	resp, err := agent.Invoke(ctx, map[string]any{
 		"messages": []llms.MessageContent{
 			llms.TextParts(llms.ChatMessageTypeHuman, input),
 		},

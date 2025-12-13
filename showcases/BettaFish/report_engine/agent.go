@@ -11,7 +11,7 @@ import (
 )
 
 // ReportEngineNode generates the final report file.
-func ReportEngineNode(ctx context.Context, state interface{}) (interface{}, error) {
+func ReportEngineNode(ctx context.Context, state any) (any, error) {
 	s := state.(*schema.BettaFishState)
 	fmt.Println("ReportEngine: 正在生成最终报告...")
 

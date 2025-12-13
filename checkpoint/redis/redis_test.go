@@ -28,10 +28,10 @@ func TestRedisCheckpointStore(t *testing.T) {
 	cp := &graph.Checkpoint{
 		ID:        "cp-1",
 		NodeName:  "node-a",
-		State:     map[string]interface{}{"foo": "bar"},
+		State:     map[string]any{"foo": "bar"},
 		Timestamp: time.Now(),
 		Version:   1,
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"execution_id": execID,
 		},
 	}
@@ -47,7 +47,7 @@ func TestRedisCheckpointStore(t *testing.T) {
 	assert.Equal(t, cp.NodeName, loaded.NodeName)
 	// JSON unmarshal converts numbers to float64, so exact map comparison might fail on types if not careful
 	// But here we used string, so it should be fine.
-	state, ok := loaded.State.(map[string]interface{})
+	state, ok := loaded.State.(map[string]any)
 	assert.True(t, ok)
 	assert.Equal(t, "bar", state["foo"])
 
@@ -70,8 +70,8 @@ func TestRedisCheckpointStore(t *testing.T) {
 
 	// Test Clear
 	// Add multiple checkpoints
-	cp2 := &graph.Checkpoint{ID: "cp-2", Metadata: map[string]interface{}{"execution_id": execID}}
-	cp3 := &graph.Checkpoint{ID: "cp-3", Metadata: map[string]interface{}{"execution_id": execID}}
+	cp2 := &graph.Checkpoint{ID: "cp-2", Metadata: map[string]any{"execution_id": execID}}
+	cp3 := &graph.Checkpoint{ID: "cp-3", Metadata: map[string]any{"execution_id": execID}}
 	store.Save(ctx, cp2)
 	store.Save(ctx, cp3)
 

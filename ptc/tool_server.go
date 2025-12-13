@@ -25,17 +25,17 @@ type ToolServer struct {
 
 // ToolRequest represents a tool execution request
 type ToolRequest struct {
-	ToolName string      `json:"tool_name"`
-	Input    interface{} `json:"input"`
+	ToolName string `json:"tool_name"`
+	Input    any    `json:"input"`
 }
 
 // ToolResponse represents a tool execution response
 type ToolResponse struct {
-	Success bool        `json:"success"`
-	Result  string      `json:"result"`
-	Error   string      `json:"error,omitempty"`
-	Tool    string      `json:"tool"`
-	Input   interface{} `json:"input"`
+	Success bool   `json:"success"`
+	Result  string `json:"result"`
+	Error   string `json:"error,omitempty"`
+	Tool    string `json:"tool"`
+	Input   any    `json:"input"`
 }
 
 // NewToolServer creates a new tool server
@@ -127,7 +127,7 @@ func (ts *ToolServer) GetBaseURL() string {
 // handleHealth handles health check requests
 func (ts *ToolServer) handleHealth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	json.NewEncoder(w).Encode(map[string]any{
 		"status": "ok",
 		"tools":  len(ts.tools),
 	})
@@ -152,7 +152,7 @@ func (ts *ToolServer) handleListTools(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	json.NewEncoder(w).Encode(map[string]any{
 		"tools": toolList,
 	})
 }
@@ -188,7 +188,7 @@ func (ts *ToolServer) handleCallTool(w http.ResponseWriter, r *http.Request) {
 	switch v := req.Input.(type) {
 	case string:
 		inputStr = v
-	case map[string]interface{}:
+	case map[string]any:
 		inputBytes, _ := json.Marshal(v)
 		inputStr = string(inputBytes)
 	default:
@@ -214,7 +214,7 @@ func (ts *ToolServer) handleCallTool(w http.ResponseWriter, r *http.Request) {
 }
 
 // sendSuccessResponse sends a successful tool response
-func (ts *ToolServer) sendSuccessResponse(w http.ResponseWriter, toolName string, input interface{}, result string) {
+func (ts *ToolServer) sendSuccessResponse(w http.ResponseWriter, toolName string, input any, result string) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(ToolResponse{
 		Success: true,
@@ -225,7 +225,7 @@ func (ts *ToolServer) sendSuccessResponse(w http.ResponseWriter, toolName string
 }
 
 // sendErrorResponse sends an error tool response
-func (ts *ToolServer) sendErrorResponse(w http.ResponseWriter, toolName string, input interface{}, errorMsg string) {
+func (ts *ToolServer) sendErrorResponse(w http.ResponseWriter, toolName string, input any, errorMsg string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusBadRequest)
 	json.NewEncoder(w).Encode(ToolResponse{

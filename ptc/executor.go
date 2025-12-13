@@ -564,8 +564,8 @@ import (
 const toolServerURL = "%s"
 
 // callTool calls a tool through the HTTP tool server
-func callTool(ctx context.Context, toolName string, toolInput interface{}) (string, error) {
-	requestBody := map[string]interface{}{
+func callTool(ctx context.Context, toolName string, toolInput any) (string, error) {
+	requestBody := map[string]any{
 		"tool_name": toolName,
 		"input":     toolInput,
 	}
@@ -593,7 +593,7 @@ func callTool(ctx context.Context, toolName string, toolInput interface{}) (stri
 		return "", fmt.Errorf("failed to read response: %%w", err)
 	}
 
-	var result map[string]interface{}
+	var result map[string]any
 	if err := json.Unmarshal(body, &result); err != nil {
 		return "", fmt.Errorf("failed to unmarshal response: %%w", err)
 	}
@@ -642,7 +642,7 @@ const internalToolServer = "%s"
 
 // Helper function to call generic tools via internal server
 func callGenericTool(ctx context.Context, toolName string, input string) (string, error) {
-	requestBody := map[string]interface{}{
+	requestBody := map[string]any{
 		"tool_name": toolName,
 		"input":     input,
 	}
@@ -670,7 +670,7 @@ func callGenericTool(ctx context.Context, toolName string, input string) (string
 		return "", fmt.Errorf("failed to read response: %%w", err)
 	}
 
-	var result map[string]interface{}
+	var result map[string]any
 	if err := json.Unmarshal(body, &result); err != nil {
 		return "", fmt.Errorf("failed to unmarshal response: %%w", err)
 	}
@@ -768,7 +768,7 @@ func writeFile(filePath string, content string) (string, error) {
 // %s: %s (Direct shell execution - embedded)
 func %s(ctx context.Context, input string) (string, error) {
 	// Parse input as JSON if possible
-	var params map[string]interface{}
+	var params map[string]any
 	if err := json.Unmarshal([]byte(input), &params); err == nil {
 		// Structured input
 		code := ""
@@ -780,7 +780,7 @@ func %s(ctx context.Context, input string) (string, error) {
 
 		args := []string{}
 		if argsVal, ok := params["args"]; ok {
-			if argsList, ok := argsVal.([]interface{}); ok {
+			if argsList, ok := argsVal.([]any); ok {
 				for _, arg := range argsList {
 					args = append(args, fmt.Sprintf("%%v", arg))
 				}
@@ -798,7 +798,7 @@ func %s(ctx context.Context, input string) (string, error) {
 			funcImpl = fmt.Sprintf(`
 // %s: %s (Direct Python execution - embedded)
 func %s(ctx context.Context, input string) (string, error) {
-	var params map[string]interface{}
+	var params map[string]any
 	if err := json.Unmarshal([]byte(input), &params); err == nil {
 		code := ""
 		if codeVal, ok := params["code"]; ok {
@@ -809,7 +809,7 @@ func %s(ctx context.Context, input string) (string, error) {
 
 		args := []string{}
 		if argsVal, ok := params["args"]; ok {
-			if argsList, ok := argsVal.([]interface{}); ok {
+			if argsList, ok := argsVal.([]any); ok {
 				for _, arg := range argsList {
 					args = append(args, fmt.Sprintf("%%v", arg))
 				}
@@ -826,7 +826,7 @@ func %s(ctx context.Context, input string) (string, error) {
 			funcImpl = fmt.Sprintf(`
 // %s: %s (Direct file reading - embedded)
 func %s(ctx context.Context, input string) (string, error) {
-	var params map[string]interface{}
+	var params map[string]any
 	if err := json.Unmarshal([]byte(input), &params); err == nil {
 		if filePathVal, ok := params["filePath"]; ok {
 			return readFile(fmt.Sprintf("%%v", filePathVal))
@@ -846,7 +846,7 @@ func %s(ctx context.Context, input string) (string, error) {
 			funcImpl = fmt.Sprintf(`
 // %s: %s (Direct file writing - embedded)
 func %s(ctx context.Context, input string) (string, error) {
-	var params map[string]interface{}
+	var params map[string]any
 	if err := json.Unmarshal([]byte(input), &params); err != nil {
 		return "", fmt.Errorf("write_file requires JSON input with filePath and content")
 	}
@@ -958,25 +958,25 @@ import (
 const toolServerURL = "%s"
 
 type Request struct {
-	ToolName string ` + "`json:\"tool_name\"`" + `
-	Input    string ` + "`json:\"input\"`" + `
+	ToolName string `+"`json:\"tool_name\"`"+`
+	Input    string `+"`json:\"input\"`"+`
 }
 
 type Response struct {
-	Success bool   ` + "`json:\"success\"`" + `
-	Result  string ` + "`json:\"result,omitempty\"`" + `
-	Error   string ` + "`json:\"error,omitempty\"`" + `
+	Success bool   `+"`json:\"success\"`"+`
+	Result  string `+"`json:\"result,omitempty\"`"+`
+	Error   string `+"`json:\"error,omitempty\"`"+`
 }
 
 type ToolCallRequest struct {
-	ToolName string      ` + "`json:\"tool_name\"`" + `
-	Input    interface{} ` + "`json:\"input\"`" + `
+	ToolName string      `+"`json:\"tool_name\"`"+`
+	Input    any `+"`json:\"input\"`"+`
 }
 
 type ToolCallResponse struct {
-	Success bool   ` + "`json:\"success\"`" + `
-	Result  string ` + "`json:\"result,omitempty\"`" + `
-	Error   string ` + "`json:\"error,omitempty\"`" + `
+	Success bool   `+"`json:\"success\"`"+`
+	Result  string `+"`json:\"result,omitempty\"`"+`
+	Error   string `+"`json:\"error,omitempty\"`"+`
 }
 
 // callToolServer calls a tool through the internal tool server

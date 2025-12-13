@@ -41,7 +41,7 @@ latestCP := checkpoints[len(checkpoints)-1]
 
 // 2. 配置恢复
 config := &graph.Config{
-    Configurable: map[string]interface{}{"thread_id": threadID},
+    Configurable: map[string]any{"thread_id": threadID},
     ResumeFrom:   []string{"step3"}, // 从 step3 开始恢复
 }
 

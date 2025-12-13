@@ -89,7 +89,7 @@ func (b *BochaSearch) Description() string {
 
 // Call executes the search.
 func (b *BochaSearch) Call(ctx context.Context, input string) (string, error) {
-	reqBody := map[string]interface{}{
+	reqBody := map[string]any{
 		"query":     input,
 		"count":     b.Count,
 		"freshness": b.Freshness,
@@ -119,7 +119,7 @@ func (b *BochaSearch) Call(ctx context.Context, input string) (string, error) {
 		return "", fmt.Errorf("bocha api returned status: %d", resp.StatusCode)
 	}
 
-	var result map[string]interface{}
+	var result map[string]any
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return "", fmt.Errorf("failed to decode response: %w", err)
 	}
@@ -146,9 +146,9 @@ func (b *BochaSearch) Call(ctx context.Context, input string) (string, error) {
 	var sb strings.Builder
 
 	// Helper function to extract and format items
-	formatItems := func(items []interface{}) {
+	formatItems := func(items []any) {
 		for _, item := range items {
-			if m, ok := item.(map[string]interface{}); ok {
+			if m, ok := item.(map[string]any); ok {
 				title, _ := m["name"].(string)
 				if title == "" {
 					title, _ = m["title"].(string)
@@ -167,9 +167,9 @@ func (b *BochaSearch) Call(ctx context.Context, input string) (string, error) {
 	}
 
 	// Try to find the list of results
-	if data, ok := result["data"].(map[string]interface{}); ok {
-		if webPages, ok := data["webPages"].(map[string]interface{}); ok {
-			if value, ok := webPages["value"].([]interface{}); ok {
+	if data, ok := result["data"].(map[string]any); ok {
+		if webPages, ok := data["webPages"].(map[string]any); ok {
+			if value, ok := webPages["value"].([]any); ok {
 				formatItems(value)
 				return sb.String(), nil
 			}
@@ -177,18 +177,18 @@ func (b *BochaSearch) Call(ctx context.Context, input string) (string, error) {
 	}
 
 	// Fallback: check if "results" exists at top level (like Tavily)
-	if results, ok := result["results"].([]interface{}); ok {
+	if results, ok := result["results"].([]any); ok {
 		formatItems(results)
 		return sb.String(), nil
 	}
-	
+
 	// Fallback: check if "webPages" exists at top level
-	if webPages, ok := result["webPages"].(map[string]interface{}); ok {
-         if value, ok := webPages["value"].([]interface{}); ok {
-             formatItems(value)
-             return sb.String(), nil
-         }
-    }
+	if webPages, ok := result["webPages"].(map[string]any); ok {
+		if value, ok := webPages["value"].([]any); ok {
+			formatItems(value)
+			return sb.String(), nil
+		}
+	}
 
 	// If we can't parse it nicely, return the raw JSON (indented)
 	formattedJSON, _ := json.MarshalIndent(result, "", "  ")

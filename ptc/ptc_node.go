@@ -28,10 +28,10 @@ func NewPTCToolNodeWithMode(language ExecutionLanguage, toolList []tools.Tool, m
 }
 
 // Invoke executes the PTC node logic
-func (node *PTCToolNode) Invoke(ctx context.Context, state interface{}) (interface{}, error) {
-	mState, ok := state.(map[string]interface{})
+func (node *PTCToolNode) Invoke(ctx context.Context, state any) (any, error) {
+	mState, ok := state.(map[string]any)
 	if !ok {
-		return nil, fmt.Errorf("state must be a map[string]interface{}")
+		return nil, fmt.Errorf("state must be a map[string]any")
 	}
 
 	// Extract messages from state
@@ -106,7 +106,7 @@ func extractCodeFromMessage(msg llms.MessageContent) (string, error) {
 			}
 
 			// Try to parse as JSON
-			var jsonData map[string]interface{}
+			var jsonData map[string]any
 			if err := json.Unmarshal([]byte(code), &jsonData); err == nil {
 				if codeField, ok := jsonData["code"].(string); ok {
 					return codeField, nil

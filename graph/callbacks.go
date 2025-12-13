@@ -9,23 +9,23 @@ import (
 // This matches Python's LangChain callback pattern
 type CallbackHandler interface {
 	// Chain callbacks (for graph/workflow execution)
-	OnChainStart(ctx context.Context, serialized map[string]interface{}, inputs map[string]interface{}, runID string, parentRunID *string, tags []string, metadata map[string]interface{})
-	OnChainEnd(ctx context.Context, outputs map[string]interface{}, runID string)
+	OnChainStart(ctx context.Context, serialized map[string]any, inputs map[string]any, runID string, parentRunID *string, tags []string, metadata map[string]any)
+	OnChainEnd(ctx context.Context, outputs map[string]any, runID string)
 	OnChainError(ctx context.Context, err error, runID string)
 
 	// LLM callbacks (for AI model calls)
-	OnLLMStart(ctx context.Context, serialized map[string]interface{}, prompts []string, runID string, parentRunID *string, tags []string, metadata map[string]interface{})
-	OnLLMEnd(ctx context.Context, response interface{}, runID string)
+	OnLLMStart(ctx context.Context, serialized map[string]any, prompts []string, runID string, parentRunID *string, tags []string, metadata map[string]any)
+	OnLLMEnd(ctx context.Context, response any, runID string)
 	OnLLMError(ctx context.Context, err error, runID string)
 
 	// Tool callbacks (for tool/function calls)
-	OnToolStart(ctx context.Context, serialized map[string]interface{}, inputStr string, runID string, parentRunID *string, tags []string, metadata map[string]interface{})
+	OnToolStart(ctx context.Context, serialized map[string]any, inputStr string, runID string, parentRunID *string, tags []string, metadata map[string]any)
 	OnToolEnd(ctx context.Context, output string, runID string)
 	OnToolError(ctx context.Context, err error, runID string)
 
 	// Retriever callbacks (for data retrieval operations)
-	OnRetrieverStart(ctx context.Context, serialized map[string]interface{}, query string, runID string, parentRunID *string, tags []string, metadata map[string]interface{})
-	OnRetrieverEnd(ctx context.Context, documents []interface{}, runID string)
+	OnRetrieverStart(ctx context.Context, serialized map[string]any, query string, runID string, parentRunID *string, tags []string, metadata map[string]any)
+	OnRetrieverEnd(ctx context.Context, documents []any, runID string)
 	OnRetrieverError(ctx context.Context, err error, runID string)
 }
 
@@ -33,7 +33,7 @@ type CallbackHandler interface {
 type GraphCallbackHandler interface {
 	CallbackHandler
 	// OnGraphStep is called after a step (node execution + state update) is completed
-	OnGraphStep(ctx context.Context, stepNode string, state interface{})
+	OnGraphStep(ctx context.Context, stepNode string, state any)
 }
 
 // Config represents configuration for graph invocation
@@ -43,13 +43,13 @@ type Config struct {
 	Callbacks []CallbackHandler `json:"callbacks"`
 
 	// Metadata to attach to the execution
-	Metadata map[string]interface{} `json:"metadata"`
+	Metadata map[string]any `json:"metadata"`
 
 	// Tags to categorize the execution
 	Tags []string `json:"tags"`
 
 	// Configurable parameters for the execution
-	Configurable map[string]interface{} `json:"configurable"`
+	Configurable map[string]any `json:"configurable"`
 
 	// RunName for this execution
 	RunName string `json:"run_name"`
@@ -67,27 +67,27 @@ type Config struct {
 	ResumeFrom []string `json:"resume_from"`
 
 	// ResumeValue provides the value to return from an Interrupt() call when resuming
-	ResumeValue interface{} `json:"resume_value"`
+	ResumeValue any `json:"resume_value"`
 }
 
 // NoOpCallbackHandler provides a no-op implementation of CallbackHandler
 type NoOpCallbackHandler struct{}
 
-func (n *NoOpCallbackHandler) OnChainStart(ctx context.Context, serialized map[string]interface{}, inputs map[string]interface{}, runID string, parentRunID *string, tags []string, metadata map[string]interface{}) {
+func (n *NoOpCallbackHandler) OnChainStart(ctx context.Context, serialized map[string]any, inputs map[string]any, runID string, parentRunID *string, tags []string, metadata map[string]any) {
 }
-func (n *NoOpCallbackHandler) OnChainEnd(ctx context.Context, outputs map[string]interface{}, runID string) {
+func (n *NoOpCallbackHandler) OnChainEnd(ctx context.Context, outputs map[string]any, runID string) {
 }
 func (n *NoOpCallbackHandler) OnChainError(ctx context.Context, err error, runID string) {}
-func (n *NoOpCallbackHandler) OnLLMStart(ctx context.Context, serialized map[string]interface{}, prompts []string, runID string, parentRunID *string, tags []string, metadata map[string]interface{}) {
+func (n *NoOpCallbackHandler) OnLLMStart(ctx context.Context, serialized map[string]any, prompts []string, runID string, parentRunID *string, tags []string, metadata map[string]any) {
 }
-func (n *NoOpCallbackHandler) OnLLMEnd(ctx context.Context, response interface{}, runID string) {}
-func (n *NoOpCallbackHandler) OnLLMError(ctx context.Context, err error, runID string)          {}
-func (n *NoOpCallbackHandler) OnToolStart(ctx context.Context, serialized map[string]interface{}, inputStr string, runID string, parentRunID *string, tags []string, metadata map[string]interface{}) {
+func (n *NoOpCallbackHandler) OnLLMEnd(ctx context.Context, response any, runID string) {}
+func (n *NoOpCallbackHandler) OnLLMError(ctx context.Context, err error, runID string)  {}
+func (n *NoOpCallbackHandler) OnToolStart(ctx context.Context, serialized map[string]any, inputStr string, runID string, parentRunID *string, tags []string, metadata map[string]any) {
 }
 func (n *NoOpCallbackHandler) OnToolEnd(ctx context.Context, output string, runID string) {}
 func (n *NoOpCallbackHandler) OnToolError(ctx context.Context, err error, runID string)   {}
-func (n *NoOpCallbackHandler) OnRetrieverStart(ctx context.Context, serialized map[string]interface{}, query string, runID string, parentRunID *string, tags []string, metadata map[string]interface{}) {
+func (n *NoOpCallbackHandler) OnRetrieverStart(ctx context.Context, serialized map[string]any, query string, runID string, parentRunID *string, tags []string, metadata map[string]any) {
 }
-func (n *NoOpCallbackHandler) OnRetrieverEnd(ctx context.Context, documents []interface{}, runID string) {
+func (n *NoOpCallbackHandler) OnRetrieverEnd(ctx context.Context, documents []any, runID string) {
 }
 func (n *NoOpCallbackHandler) OnRetrieverError(ctx context.Context, err error, runID string) {}

@@ -72,7 +72,7 @@ const (
 )
 
 // ForumEngineNode simulates a multi-turn discussion.
-func ForumEngineNode(ctx context.Context, state interface{}) (interface{}, error) {
+func ForumEngineNode(ctx context.Context, state any) (any, error) {
 	s := state.(*schema.BettaFishState)
 	fmt.Println("ForumEngine: 正在启动智能体多轮讨论...")
 

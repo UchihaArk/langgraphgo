@@ -40,7 +40,7 @@ In `main.go`:
 
 3.  **Human Intervention**:
     ```go
-    runnable.UpdateState(ctx, config, map[string]interface{}{"count": 50}, "human")
+    runnable.UpdateState(ctx, config, map[string]any{"count": 50}, "human")
     ```
     We manually set the count to 50. The system merges this (depending on reducer, here we assume overwrite or addition logic tailored for the example).
 

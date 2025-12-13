@@ -21,11 +21,11 @@ func NewParallelNode(name string, nodes ...Node) *ParallelNode {
 }
 
 // Execute runs all nodes in parallel and collects results
-func (pn *ParallelNode) Execute(ctx context.Context, state interface{}) (interface{}, error) {
+func (pn *ParallelNode) Execute(ctx context.Context, state any) (any, error) {
 	// Create channels for results and errors
 	type result struct {
 		index int
-		value interface{}
+		value any
 		err   error
 	}
 
@@ -64,7 +64,7 @@ func (pn *ParallelNode) Execute(ctx context.Context, state interface{}) (interfa
 	}()
 
 	// Collect results
-	outputs := make([]interface{}, len(pn.nodes))
+	outputs := make([]any, len(pn.nodes))
 	var firstError error
 
 	for res := range results {
@@ -83,7 +83,7 @@ func (pn *ParallelNode) Execute(ctx context.Context, state interface{}) (interfa
 }
 
 // AddParallelNodes adds a set of nodes that execute in parallel
-func (g *StateGraph) AddParallelNodes(groupName string, nodes map[string]func(context.Context, interface{}) (interface{}, error)) {
+func (g *StateGraph) AddParallelNodes(groupName string, nodes map[string]func(context.Context, any) (any, error)) {
 	// Create parallel node group
 	parallelNodes := make([]Node, 0, len(nodes))
 	for name, fn := range nodes {
@@ -102,11 +102,11 @@ func (g *StateGraph) AddParallelNodes(groupName string, nodes map[string]func(co
 type MapReduceNode struct {
 	name     string
 	mapNodes []Node
-	reducer  func([]interface{}) (interface{}, error)
+	reducer  func([]any) (any, error)
 }
 
 // NewMapReduceNode creates a new map-reduce node
-func NewMapReduceNode(name string, reducer func([]interface{}) (interface{}, error), mapNodes ...Node) *MapReduceNode {
+func NewMapReduceNode(name string, reducer func([]any) (any, error), mapNodes ...Node) *MapReduceNode {
 	return &MapReduceNode{
 		name:     name,
 		mapNodes: mapNodes,
@@ -115,7 +115,7 @@ func NewMapReduceNode(name string, reducer func([]interface{}) (interface{}, err
 }
 
 // Execute runs map nodes in parallel and reduces results
-func (mr *MapReduceNode) Execute(ctx context.Context, state interface{}) (interface{}, error) {
+func (mr *MapReduceNode) Execute(ctx context.Context, state any) (any, error) {
 	// Execute map phase in parallel
 	pn := NewParallelNode(mr.name+"_map", mr.mapNodes...)
 	results, err := pn.Execute(ctx, state)
@@ -125,7 +125,7 @@ func (mr *MapReduceNode) Execute(ctx context.Context, state interface{}) (interf
 
 	// Execute reduce phase
 	if mr.reducer != nil {
-		return mr.reducer(results.([]interface{}))
+		return mr.reducer(results.([]any))
 	}
 
 	return results, nil
@@ -134,8 +134,8 @@ func (mr *MapReduceNode) Execute(ctx context.Context, state interface{}) (interf
 // AddMapReduceNode adds a map-reduce pattern node
 func (g *StateGraph) AddMapReduceNode(
 	name string,
-	mapFunctions map[string]func(context.Context, interface{}) (interface{}, error),
-	reducer func([]interface{}) (interface{}, error),
+	mapFunctions map[string]func(context.Context, any) (any, error),
+	reducer func([]any) (any, error),
 ) {
 	// Create map nodes
 	mapNodes := make([]Node, 0, len(mapFunctions))
@@ -156,19 +156,19 @@ func (g *StateGraph) FanOutFanIn(
 	source string,
 	_ []string, // workers parameter kept for API compatibility
 	collector string,
-	workerFuncs map[string]func(context.Context, interface{}) (interface{}, error),
-	collectFunc func([]interface{}) (interface{}, error),
+	workerFuncs map[string]func(context.Context, any) (any, error),
+	collectFunc func([]any) (any, error),
 ) {
 	// Add parallel worker nodes
 	g.AddParallelNodes(source+"_workers", workerFuncs)
 
 	// Add collector node
-	g.AddNode(collector, "Collector node: "+collector, func(_ context.Context, state interface{}) (interface{}, error) {
+	g.AddNode(collector, "Collector node: "+collector, func(_ context.Context, state any) (any, error) {
 		// State should be array of results from parallel workers
-		if results, ok := state.([]interface{}); ok {
+		if results, ok := state.([]any); ok {
 			return collectFunc(results)
 		}
-		return nil, fmt.Errorf("invalid state for collector: expected []interface{}")
+		return nil, fmt.Errorf("invalid state for collector: expected []any")
 	})
 
 	// Connect source to workers and workers to collector

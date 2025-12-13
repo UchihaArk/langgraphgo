@@ -13,7 +13,7 @@ func TestEphemeralChannel(t *testing.T) {
 	schema := NewMapSchema()
 	// "temp" is ephemeral, "count" is persistent
 	schema.RegisterChannel("temp", OverwriteReducer, true)
-	schema.RegisterReducer("count", func(curr, new interface{}) (interface{}, error) {
+	schema.RegisterReducer("count", func(curr, new any) (any, error) {
 		if curr == nil {
 			return new, nil
 		}
@@ -22,8 +22,8 @@ func TestEphemeralChannel(t *testing.T) {
 	g.SetSchema(schema)
 
 	// Node A: Sets temp=1, count=1
-	g.AddNode("A", "A", func(ctx context.Context, state interface{}) (interface{}, error) {
-		return map[string]interface{}{
+	g.AddNode("A", "A", func(ctx context.Context, state any) (any, error) {
+		return map[string]any{
 			"temp":  1,
 			"count": 1,
 		}, nil
@@ -40,13 +40,13 @@ func TestEphemeralChannel(t *testing.T) {
 	// "Ephemeral values are cleared after the step."
 	// So if A runs, then step ends. Temp is cleared. B runs. B sees no temp.
 
-	g.AddNode("B", "B", func(ctx context.Context, state interface{}) (interface{}, error) {
-		mState := state.(map[string]interface{})
+	g.AddNode("B", "B", func(ctx context.Context, state any) (any, error) {
+		mState := state.(map[string]any)
 		// temp should be missing or nil
 		if _, ok := mState["temp"]; ok {
-			return map[string]interface{}{"count": 100}, nil // Error flag
+			return map[string]any{"count": 100}, nil // Error flag
 		}
-		return map[string]interface{}{"count": 10}, nil
+		return map[string]any{"count": 10}, nil
 	})
 
 	g.SetEntryPoint("A")
@@ -56,10 +56,10 @@ func TestEphemeralChannel(t *testing.T) {
 	runnable, err := g.Compile()
 	assert.NoError(t, err)
 
-	res, err := runnable.Invoke(context.Background(), map[string]interface{}{"count": 0})
+	res, err := runnable.Invoke(context.Background(), map[string]any{"count": 0})
 	assert.NoError(t, err)
 
-	mRes, ok := res.(map[string]interface{})
+	mRes, ok := res.(map[string]any)
 	assert.True(t, ok)
 
 	// Expected:

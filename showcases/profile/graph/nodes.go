@@ -17,7 +17,7 @@ import (
 	"github.com/tmc/langchaingo/llms/openai"
 )
 
-func SearchNode(ctx context.Context, s interface{}) (interface{}, error) {
+func SearchNode(ctx context.Context, s any) (any, error) {
 	state, ok := s.(*State)
 	if !ok {
 		return nil, fmt.Errorf("无效的状态类型: %T", s)
@@ -129,7 +129,7 @@ func SearchNode(ctx context.Context, s interface{}) (interface{}, error) {
 	return state, nil
 }
 
-func ProfileNode(ctx context.Context, s interface{}) (interface{}, error) {
+func ProfileNode(ctx context.Context, s any) (any, error) {
 	state, ok := s.(*State)
 	if !ok {
 		return nil, fmt.Errorf("无效的状态类型: %T", s)
@@ -186,7 +186,7 @@ func ProfileNode(ctx context.Context, s interface{}) (interface{}, error) {
 }
 
 // AccountNode 使用 Tavily API 搜索用户 ID，并使用 LLM 提取
-func AccountNode(ctx context.Context, s interface{}) (interface{}, error) {
+func AccountNode(ctx context.Context, s any) (any, error) {
 	state, ok := s.(*State)
 	if !ok {
 		return nil, fmt.Errorf("无效的状态类型: %T", s)
@@ -206,7 +206,7 @@ func AccountNode(ctx context.Context, s interface{}) (interface{}, error) {
 	searchQuery := fmt.Sprintf("%s user id social media account", state.Username)
 
 	// 准备 Tavily API 请求
-	requestBody := map[string]interface{}{
+	requestBody := map[string]any{
 		"api_key":      apiKey,
 		"query":        searchQuery,
 		"search_depth": "basic",
@@ -299,7 +299,7 @@ func AccountNode(ctx context.Context, s interface{}) (interface{}, error) {
 	return state, nil
 }
 
-func logf(state *State, format string, a ...interface{}) {
+func logf(state *State, format string, a ...any) {
 	msg := fmt.Sprintf(format, a...)
 	fmt.Println(msg)
 	if state.LogChan != nil {

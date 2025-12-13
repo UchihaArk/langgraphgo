@@ -344,7 +344,7 @@ if err != nil {
 ### 步骤 3：准备初始状态
 
 ```go
-initialState := map[string]interface{}{
+initialState := map[string]any{
     "messages": []llms.MessageContent{
         {
             Role:  llms.ChatMessageTypeHuman,
@@ -368,7 +368,7 @@ if err != nil {
 ### 步骤 5：提取结果
 
 ```go
-finalState := result.(map[string]interface{})
+finalState := result.(map[string]any)
 messages := finalState["messages"].([]llms.MessageContent)
 
 // 获取最终 AI 响应
@@ -389,7 +389,7 @@ agent, _ := prebuilt.CreateReactAgent(model, []tools.Tool{
     WeatherTool{},
 })
 
-initialState := map[string]interface{}{
+initialState := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman,
             "旧金山的天气怎么样？"),
@@ -413,7 +413,7 @@ agent, _ := prebuilt.CreateReactAgent(model, []tools.Tool{
     SearchTool{},
 })
 
-initialState := map[string]interface{}{
+initialState := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman,
             "埃菲尔铁塔高度的 15% 是多少？"),
@@ -441,7 +441,7 @@ agent, _ := prebuilt.CreateReactAgent(model, []tools.Tool{
     SummarizerTool{},
 })
 
-initialState := map[string]interface{}{
+initialState := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman,
             "研究量子计算的最新发展"),
@@ -577,7 +577,7 @@ customWorkflow.AddNode("postprocess", postprocessNode)
 
 ```go
 // 使用流式传输进行实时更新
-streamChan := make(chan map[string]interface{})
+streamChan := make(chan map[string]any)
 
 go func() {
     defer close(streamChan)

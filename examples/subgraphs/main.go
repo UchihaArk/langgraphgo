@@ -14,8 +14,8 @@ import (
 func main() {
 	// 1. Define Child Graph
 	child := graph.NewStateGraph()
-	child.AddNode("child_process", "child_process", func(ctx context.Context, state interface{}) (interface{}, error) {
-		m := state.(map[string]interface{})
+	child.AddNode("child_process", "child_process", func(ctx context.Context, state any) (any, error) {
+		m := state.(map[string]any)
 		m["child_trace"] = "visited"
 		return m, nil
 	})
@@ -24,8 +24,8 @@ func main() {
 
 	// 2. Define Parent Graph
 	parent := graph.NewStateGraph()
-	parent.AddNode("start", "start", func(ctx context.Context, state interface{}) (interface{}, error) {
-		return map[string]interface{}{"parent_trace": "started"}, nil
+	parent.AddNode("start", "start", func(ctx context.Context, state any) (any, error) {
+		return map[string]any{"parent_trace": "started"}, nil
 	})
 
 	// Add Child Graph as a node named "nested_graph"
@@ -33,8 +33,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	parent.AddNode("end", "end", func(ctx context.Context, state interface{}) (interface{}, error) {
-		return map[string]interface{}{"parent_trace": "ended"}, nil
+	parent.AddNode("end", "end", func(ctx context.Context, state any) (any, error) {
+		return map[string]any{"parent_trace": "ended"}, nil
 	})
 
 	parent.SetEntryPoint("start")
@@ -48,7 +48,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	res, err := runnable.Invoke(context.Background(), map[string]interface{}{})
+	res, err := runnable.Invoke(context.Background(), map[string]any{})
 	if err != nil {
 		log.Fatal(err)
 	}

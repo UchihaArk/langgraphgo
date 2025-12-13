@@ -19,7 +19,7 @@ type MessageWithID interface {
 // It handles ID-based deduplication and upserts.
 // If a new message has the same ID as an existing one, it replaces the existing one.
 // Otherwise, it appends the new message.
-func AddMessages(current, new interface{}) (interface{}, error) {
+func AddMessages(current, new any) (any, error) {
 	if current == nil {
 		return new, nil
 	}
@@ -51,7 +51,7 @@ ReflectionPath:
 
 	// We expect new to be a slice of messages or a single message
 	newVal := reflect.ValueOf(new)
-	var newMessages []interface{}
+	var newMessages []any
 
 	if newVal.Kind() == reflect.Slice {
 		for i := 0; i < newVal.Len(); i++ {
@@ -62,7 +62,7 @@ ReflectionPath:
 	}
 
 	// Convert current slice to a list of interfaces for manipulation
-	result := make([]interface{}, 0, currentVal.Len()+len(newMessages))
+	result := make([]any, 0, currentVal.Len()+len(newMessages))
 	for i := 0; i < currentVal.Len(); i++ {
 		result = append(result, currentVal.Index(i).Interface())
 	}
@@ -97,9 +97,9 @@ ReflectionPath:
 		}
 	}
 
-	// Convert back to the original slice type if possible, or []interface{}
+	// Convert back to the original slice type if possible, or []any
 	// If current was []llms.MessageContent, we try to return that.
-	// But if we mixed types (e.g. wrapped messages), we might need to return []interface{}
+	// But if we mixed types (e.g. wrapped messages), we might need to return []any
 	// or fail if types are incompatible.
 
 	// For simplicity in this implementation, if the original type was []llms.MessageContent,
@@ -124,14 +124,14 @@ ReflectionPath:
 }
 
 // getMessageID tries to extract an ID from a message object.
-func getMessageID(msg interface{}) string {
+func getMessageID(msg any) string {
 	// 1. Check if it implements MessageWithID
 	if m, ok := msg.(MessageWithID); ok {
 		return m.GetID()
 	}
 
 	// 2. Check if it's a map with an "id" key
-	if m, ok := msg.(map[string]interface{}); ok {
+	if m, ok := msg.(map[string]any); ok {
 		if id, ok := m["id"].(string); ok {
 			return id
 		}

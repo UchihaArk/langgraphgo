@@ -45,7 +45,7 @@ func NewGraph() (*graph.StateRunnable, error) {
 	workflow.AddEdge("researcher", "reporter")
 
 	// Reporter -> Podcast (Conditional) or END
-	workflow.AddConditionalEdge("reporter", func(ctx context.Context, state interface{}) string {
+	workflow.AddConditionalEdge("reporter", func(ctx context.Context, state any) string {
 		s := state.(*State)
 		if s.GeneratePodcast {
 			return "podcast"

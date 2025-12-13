@@ -7,15 +7,15 @@ import (
 
 // Reducer defines how a state value should be updated.
 // It takes the current value and the new value, and returns the merged value.
-type Reducer func(current, new interface{}) (interface{}, error)
+type Reducer func(current, new any) (any, error)
 
 // StateSchema defines the structure and update logic for the graph state.
 type StateSchema interface {
 	// Init returns the initial state.
-	Init() interface{}
+	Init() any
 
 	// Update merges the new state into the current state.
-	Update(current, new interface{}) (interface{}, error)
+	Update(current, new any) (any, error)
 }
 
 // CleaningStateSchema extends StateSchema with cleanup capabilities.
@@ -23,10 +23,10 @@ type StateSchema interface {
 type CleaningStateSchema interface {
 	StateSchema
 	// Cleanup performs any necessary cleanup on the state after a step.
-	Cleanup(state interface{}) interface{}
+	Cleanup(state any) any
 }
 
-// MapSchema implements StateSchema for map[string]interface{}.
+// MapSchema implements StateSchema for map[string]any.
 // It allows defining reducers for specific keys.
 type MapSchema struct {
 	Reducers      map[string]Reducer
@@ -55,28 +55,28 @@ func (s *MapSchema) RegisterChannel(key string, reducer Reducer, isEphemeral boo
 }
 
 // Init returns an empty map.
-func (s *MapSchema) Init() interface{} {
-	return make(map[string]interface{})
+func (s *MapSchema) Init() any {
+	return make(map[string]any)
 }
 
 // Update merges the new map into the current map using registered reducers.
-func (s *MapSchema) Update(current, new interface{}) (interface{}, error) {
+func (s *MapSchema) Update(current, new any) (any, error) {
 	if current == nil {
-		current = make(map[string]interface{})
+		current = make(map[string]any)
 	}
 
-	currMap, ok := current.(map[string]interface{})
+	currMap, ok := current.(map[string]any)
 	if !ok {
-		return nil, fmt.Errorf("current state is not a map[string]interface{}")
+		return nil, fmt.Errorf("current state is not a map[string]any")
 	}
 
-	newMap, ok := new.(map[string]interface{})
+	newMap, ok := new.(map[string]any)
 	if !ok {
-		return nil, fmt.Errorf("new state is not a map[string]interface{}")
+		return nil, fmt.Errorf("new state is not a map[string]any")
 	}
 
 	// Create a copy of the current map to avoid mutating it directly
-	result := make(map[string]interface{}, len(currMap))
+	result := make(map[string]any, len(currMap))
 	for k, v := range currMap {
 		result[k] = v
 	}
@@ -100,12 +100,12 @@ func (s *MapSchema) Update(current, new interface{}) (interface{}, error) {
 }
 
 // Cleanup removes ephemeral keys from the state.
-func (s *MapSchema) Cleanup(state interface{}) interface{} {
+func (s *MapSchema) Cleanup(state any) any {
 	if len(s.EphemeralKeys) == 0 {
 		return state
 	}
 
-	mState, ok := state.(map[string]interface{})
+	mState, ok := state.(map[string]any)
 	if !ok {
 		return state
 	}
@@ -127,7 +127,7 @@ func (s *MapSchema) Cleanup(state interface{}) interface{} {
 		return state
 	}
 
-	result := make(map[string]interface{}, len(mState))
+	result := make(map[string]any, len(mState))
 	for k, v := range mState {
 		if !s.EphemeralKeys[k] {
 			result[k] = v
@@ -139,13 +139,13 @@ func (s *MapSchema) Cleanup(state interface{}) interface{} {
 // Common Reducers
 
 // OverwriteReducer replaces the old value with the new one.
-func OverwriteReducer(current, new interface{}) (interface{}, error) {
+func OverwriteReducer(current, new any) (any, error) {
 	return new, nil
 }
 
 // AppendReducer appends the new value to the current slice.
 // It supports appending a slice to a slice, or a single element to a slice.
-func AppendReducer(current, new interface{}) (interface{}, error) {
+func AppendReducer(current, new any) (any, error) {
 	if current == nil {
 		// If current is nil, start a new slice
 		// We need to know the type? We can infer from new.
@@ -170,8 +170,8 @@ func AppendReducer(current, new interface{}) (interface{}, error) {
 	if newVal.Kind() == reflect.Slice {
 		// Append slice to slice
 		if currVal.Type().Elem() != newVal.Type().Elem() {
-			// Types don't match, convert both to []interface{}
-			result := make([]interface{}, 0, currVal.Len()+newVal.Len())
+			// Types don't match, convert both to []any
+			result := make([]any, 0, currVal.Len()+newVal.Len())
 			for i := 0; i < currVal.Len(); i++ {
 				result = append(result, currVal.Index(i).Interface())
 			}

@@ -70,10 +70,10 @@ func (t *ExaSearch) Description() string {
 
 // Call executes the search.
 func (t *ExaSearch) Call(ctx context.Context, input string) (string, error) {
-	reqBody := map[string]interface{}{
+	reqBody := map[string]any{
 		"query":      input,
 		"numResults": t.NumResults,
-		"contents": map[string]interface{}{
+		"contents": map[string]any{
 			"text": true,
 		},
 	}
@@ -101,16 +101,16 @@ func (t *ExaSearch) Call(ctx context.Context, input string) (string, error) {
 		return "", fmt.Errorf("exa api returned status: %d", resp.StatusCode)
 	}
 
-	var result map[string]interface{}
+	var result map[string]any
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return "", fmt.Errorf("failed to decode response: %w", err)
 	}
 
 	// Format the output
 	var sb strings.Builder
-	if results, ok := result["results"].([]interface{}); ok {
+	if results, ok := result["results"].([]any); ok {
 		for _, r := range results {
-			if item, ok := r.(map[string]interface{}); ok {
+			if item, ok := r.(map[string]any); ok {
 				title, _ := item["title"].(string)
 				url, _ := item["url"].(string)
 				text, _ := item["text"].(string)

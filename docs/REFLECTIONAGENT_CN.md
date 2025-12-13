@@ -362,7 +362,7 @@ if err != nil {
 ### 步骤 4：准备初始状态
 
 ```go
-initialState := map[string]interface{}{
+initialState := map[string]any{
     "messages": []llms.MessageContent{
         {
             Role:  llms.ChatMessageTypeHuman,
@@ -386,7 +386,7 @@ if err != nil {
 ### 步骤 6：提取结果
 
 ```go
-finalState := result.(map[string]interface{})
+finalState := result.(map[string]any)
 
 // 获取最终草稿
 draft := finalState["draft"].(string)
@@ -482,7 +482,7 @@ config := prebuilt.ReflectionAgentConfig{
 
 agent, _ := prebuilt.CreateReflectionAgent(config)
 
-initialState := map[string]interface{}{
+initialState := map[string]any{
     "messages": []llms.MessageContent{
         {
             Role:  llms.ChatMessageTypeHuman,
@@ -521,7 +521,7 @@ config := prebuilt.ReflectionAgentConfig{
 
 agent, _ := prebuilt.CreateReflectionAgent(config)
 
-initialState := map[string]interface{}{
+initialState := map[string]any{
     "messages": []llms.MessageContent{
         {
             Role:  llms.ChatMessageTypeHuman,
@@ -642,7 +642,7 @@ if err != nil {
     return
 }
 
-finalState := result.(map[string]interface{})
+finalState := result.(map[string]any)
 
 // 检查是否在未满意的情况下达到最大迭代次数
 iteration := finalState["iteration"].(int)
@@ -719,7 +719,7 @@ stage2Config := prebuilt.ReflectionAgentConfig{
 
 ```go
 // 每次迭代后，保存状态
-finalState := result.(map[string]interface{})
+finalState := result.(map[string]any)
 saveCheckpoint(finalState["draft"].(string), finalState["iteration"].(int))
 ```
 

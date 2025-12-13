@@ -231,8 +231,8 @@ nodes := []*graph.Node{
 每个节点应遵循标准的 LangGraphGo 节点签名。
 
 ```go
-func fetchDataNode(ctx context.Context, state interface{}) (interface{}, error) {
-    mState := state.(map[string]interface{})
+func fetchDataNode(ctx context.Context, state any) (any, error) {
+    mState := state.(map[string]any)
     messages := mState["messages"].([]llms.MessageContent)
 
     // 你的业务逻辑
@@ -246,7 +246,7 @@ func fetchDataNode(ctx context.Context, state interface{}) (interface{}, error) 
         },
     }
 
-    return map[string]interface{}{
+    return map[string]any{
         "messages": append(messages, msg),
         "data":     data, // 在状态中存储数据
     }, nil
@@ -289,7 +289,7 @@ func main() {
 ```go
 query := "获取用户数据，验证它，转换为 JSON，并保存结果"
 
-initialState := map[string]interface{}{
+initialState := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman, query),
     },
@@ -301,7 +301,7 @@ if err != nil {
 }
 
 // 访问结果
-finalState := result.(map[string]interface{})
+finalState := result.(map[string]any)
 messages := finalState["messages"].([]llms.MessageContent)
 ```
 
@@ -349,7 +349,7 @@ START → fetch_data → validate_data → save_results → END
 **代码**：
 ```go
 query := "获取用户数据，验证它，并保存结果"
-initialState := map[string]interface{}{
+initialState := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman, query),
     },
@@ -423,8 +423,8 @@ LLM 使用节点描述来规划工作流。使它们具有描述性和特定性�
 在节点函数中实现适当的错误处理。
 
 ```go
-func myNode(ctx context.Context, state interface{}) (interface{}, error) {
-    mState := state.(map[string]interface{})
+func myNode(ctx context.Context, state any) (any, error) {
+    mState := state.(map[string]any)
 
     data, err := performOperation()
     if err != nil {
@@ -435,14 +435,14 @@ func myNode(ctx context.Context, state interface{}) (interface{}, error) {
                 llms.TextPart(fmt.Sprintf("错误：%v", err)),
             },
         }
-        return map[string]interface{}{
+        return map[string]any{
             "messages": append(mState["messages"].([]llms.MessageContent), msg),
             "error":    err.Error(),
         }, nil
     }
 
     // 成功情况
-    return map[string]interface{}{
+    return map[string]any{
         "messages": append(mState["messages"].([]llms.MessageContent), successMsg),
         "data":     data,
     }, nil
@@ -522,8 +522,8 @@ Planning Agent 使用基于 schema 的状态，具有以下通道：
 
 ```go
 // 节点可以访问和修改状态
-func myNode(ctx context.Context, state interface{}) (interface{}, error) {
-    mState := state.(map[string]interface{})
+func myNode(ctx context.Context, state any) (any, error) {
+    mState := state.(map[string]any)
 
     // 访问工作流计划
     plan := mState["workflow_plan"].(*prebuilt.WorkflowPlan)
@@ -532,7 +532,7 @@ func myNode(ctx context.Context, state interface{}) (interface{}, error) {
     messages := mState["messages"].([]llms.MessageContent)
 
     // 添加自定义数据
-    return map[string]interface{}{
+    return map[string]any{
         "messages": append(messages, newMsg),
         "my_data":  customData,
     }, nil
@@ -554,7 +554,7 @@ agent, err := prebuilt.CreatePlanningAgent(
 result, err := agent.Invoke(ctx, initialState)
 
 // 检查最终状态
-finalState := result.(map[string]interface{})
+finalState := result.(map[string]any)
 plan := finalState["workflow_plan"].(*prebuilt.WorkflowPlan)
 fmt.Printf("执行的计划：%+v\n", plan)
 ```

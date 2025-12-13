@@ -12,7 +12,7 @@ Successfully transplanted key features from MessageGraph to StateGraph, making S
 func NewStateGraphWithSchema() *StateGraph {
     g := &StateGraph{
         nodes:            make(map[string]Node),
-        conditionalEdges: make(map[string]func(ctx context.Context, state interface{}) string),
+        conditionalEdges: make(map[string]func(ctx context.Context, state any) string),
     }
     
     schema := NewMapSchema()
@@ -133,9 +133,9 @@ All existing tests continue to pass, confirming backward compatibility.
 g := NewStateGraphWithSchema()
 
 // Add nodes that return message updates
-g.AddNode("agent", "Agent node", func(ctx context.Context, state interface{}) (interface{}, error) {
-    return map[string]interface{}{
-        "messages": []map[string]interface{}{
+g.AddNode("agent", "Agent node", func(ctx context.Context, state any) (any, error) {
+    return map[string]any{
+        "messages": []map[string]any{
             {"role": "assistant", "content": "Hello!"},
         },
     }, nil
@@ -147,8 +147,8 @@ g.SetEntryPoint("agent")
 runnable, _ := g.Compile()
 
 // Messages will be automatically merged using AddMessages reducer
-result, _ := runnable.Invoke(ctx, map[string]interface{}{
-    "messages": []map[string]interface{}{
+result, _ := runnable.Invoke(ctx, map[string]any{
+    "messages": []map[string]any{
         {"role": "user", "content": "Hi"},
     },
 })
@@ -183,7 +183,7 @@ for id, span := range spans {
 ```go
 g := NewStateGraph()
 
-g.AddNode("human_input", "Wait for human input", func(ctx context.Context, state interface{}) (interface{}, error) {
+g.AddNode("human_input", "Wait for human input", func(ctx context.Context, state any) (any, error) {
     // Interrupt and wait for human input
     resumeValue, err := Interrupt(ctx, "Please provide input")
     if err != nil {

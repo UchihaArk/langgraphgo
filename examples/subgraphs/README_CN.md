@@ -14,7 +14,7 @@
 
 `graph/subgraph.go` 中的 `AddSubgraph` 方法将 `StateGraph`（或 `MessageGraph`，用于向后兼容）包装到 `Subgraph` 结构中。
 1.  子图被编译为 `Runnable`。
-2.  创建一个匹配 `Node` 签名 (`func(ctx, state) (interface{}, error)`) 的包装函数。
+2.  创建一个匹配 `Node` 签名 (`func(ctx, state) (any, error)`) 的包装函数。
 3.  执行时，该包装函数调用子图的 `Runnable.Invoke`。
 4.  结果作为节点的输出返回给父图。
 

@@ -42,7 +42,7 @@ agent, err := prebuilt.CreateAgent(model, inputTools,
 ### Running the Agent
 
 ```go
-inputs := map[string]interface{}{
+inputs := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman, "What is the weather in San Francisco?"),
     },

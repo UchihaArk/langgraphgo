@@ -20,7 +20,7 @@ func main() {
 
 	// Create a validation subgraph
 	validationSubgraph := graph.NewStateGraph()
-	validationSubgraph.AddNode("check_format", "check_format", func(ctx context.Context, state interface{}) (interface{}, error) {
+	validationSubgraph.AddNode("check_format", "check_format", func(ctx context.Context, state any) (any, error) {
 		doc := state.(Document)
 		fmt.Println("  [Subgraph] Checking format...")
 		// Simple validation: check if content is not empty
@@ -29,7 +29,7 @@ func main() {
 		}
 		return doc, nil
 	})
-	validationSubgraph.AddNode("sanitize", "sanitize", func(ctx context.Context, state interface{}) (interface{}, error) {
+	validationSubgraph.AddNode("sanitize", "sanitize", func(ctx context.Context, state any) (any, error) {
 		doc := state.(Document)
 		fmt.Println("  [Subgraph] Sanitizing content...")
 		doc.Content = strings.TrimSpace(doc.Content)
@@ -41,13 +41,13 @@ func main() {
 
 	// Create a processing subgraph
 	processingSubgraph := graph.NewStateGraph()
-	processingSubgraph.AddNode("transform", "transform", func(ctx context.Context, state interface{}) (interface{}, error) {
+	processingSubgraph.AddNode("transform", "transform", func(ctx context.Context, state any) (any, error) {
 		doc := state.(Document)
 		fmt.Println("  [Subgraph] Transforming content...")
 		doc.Content = strings.ToUpper(doc.Content)
 		return doc, nil
 	})
-	processingSubgraph.AddNode("enrich", "enrich", func(ctx context.Context, state interface{}) (interface{}, error) {
+	processingSubgraph.AddNode("enrich", "enrich", func(ctx context.Context, state any) (any, error) {
 		doc := state.(Document)
 		fmt.Println("  [Subgraph] Enriching content...")
 		doc.Content = fmt.Sprintf("[PROCESSED] %s [END]", doc.Content)
@@ -59,7 +59,7 @@ func main() {
 	processingSubgraph.SetEntryPoint("transform")
 
 	// Add main graph nodes
-	main.AddNode("receive", "receive", func(ctx context.Context, state interface{}) (interface{}, error) {
+	main.AddNode("receive", "receive", func(ctx context.Context, state any) (any, error) {
 		doc := state.(Document)
 		fmt.Println("[Main] Receiving document...")
 		fmt.Printf("  Initial content: %s\n", doc.Content)
@@ -77,7 +77,7 @@ func main() {
 		panic(err)
 	}
 
-	main.AddNode("finalize", "finalize", func(ctx context.Context, state interface{}) (interface{}, error) {
+	main.AddNode("finalize", "finalize", func(ctx context.Context, state any) (any, error) {
 		doc := state.(Document)
 		fmt.Println("[Main] Finalizing document...")
 		return doc, nil
@@ -88,7 +88,7 @@ func main() {
 	main.AddEdge("receive", "validation")
 
 	// Conditional edge based on validation
-	main.AddConditionalEdge("validation", func(ctx context.Context, state interface{}) string {
+	main.AddConditionalEdge("validation", func(ctx context.Context, state any) string {
 		doc := state.(Document)
 		if doc.Validated {
 			return "processing"
@@ -133,10 +133,10 @@ func main() {
 
 	main2 := graph.NewStateGraph()
 	err = main2.CreateSubgraph("simple_sub", func(sg *graph.StateGraph) {
-		sg.AddNode("step1", "step1", func(ctx context.Context, state interface{}) (interface{}, error) {
+		sg.AddNode("step1", "step1", func(ctx context.Context, state any) (any, error) {
 			return fmt.Sprintf("%v → step1", state), nil
 		})
-		sg.AddNode("step2", "step2", func(ctx context.Context, state interface{}) (interface{}, error) {
+		sg.AddNode("step2", "step2", func(ctx context.Context, state any) (any, error) {
 			return fmt.Sprintf("%v → step2", state), nil
 		})
 		sg.AddEdge("step1", "step2")

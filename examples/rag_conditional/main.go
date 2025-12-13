@@ -26,7 +26,7 @@ func main() {
 			PageContent: "LangGraph provides built-in support for checkpointing, which allows you to save and " +
 				"restore the state of your graph execution. This is crucial for long-running workflows, " +
 				"error recovery, and implementing human-in-the-loop patterns.",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"source": "langgraph_checkpointing.txt",
 				"topic":  "Checkpointing",
 			},
@@ -35,7 +35,7 @@ func main() {
 			PageContent: "The StateGraph in LangGraph allows you to define complex workflows with typed state. " +
 				"You can add nodes, edges, and conditional edges to create sophisticated control flow. " +
 				"The graph compiles into a runnable that can be invoked with initial state.",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"source": "langgraph_stategraph.txt",
 				"topic":  "StateGraph",
 			},
@@ -44,7 +44,7 @@ func main() {
 			PageContent: "Human-in-the-loop workflows allow AI systems to pause execution and request human input " +
 				"or approval before continuing. LangGraph supports this through interrupts and the Command API, " +
 				"enabling you to build interactive AI applications.",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"source": "langgraph_hitl.txt",
 				"topic":  "Human-in-the-Loop",
 			},

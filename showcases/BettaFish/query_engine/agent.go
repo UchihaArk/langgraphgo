@@ -30,7 +30,7 @@ func GetLLM(ctx context.Context) (llms.Model, error) {
 }
 
 // Helper to generate JSON from LLM
-func generateJSON(ctx context.Context, llm llms.Model, systemPrompt, userContent string, output interface{}) error {
+func generateJSON(ctx context.Context, llm llms.Model, systemPrompt, userContent string, output any) error {
 	messages := []llms.MessageContent{
 		llms.TextParts(llms.ChatMessageTypeSystem, systemPrompt),
 		llms.TextParts(llms.ChatMessageTypeHuman, userContent),
@@ -73,7 +73,7 @@ func generateJSON(ctx context.Context, llm llms.Model, systemPrompt, userContent
 }
 
 // QueryEngineNode implements the main logic.
-func QueryEngineNode(ctx context.Context, state interface{}) (interface{}, error) {
+func QueryEngineNode(ctx context.Context, state any) (any, error) {
 	s := state.(*schema.BettaFishState)
 	fmt.Printf("QueryEngine: 正在开始研究 '%s'...\n", s.Query)
 
@@ -194,7 +194,7 @@ func processParagraph(ctx context.Context, llm llms.Model, p *schema.Paragraph) 
 	}
 
 	resultsStr := formatResults(results)
-	summaryInputJSON, _ := json.Marshal(map[string]interface{}{
+	summaryInputJSON, _ := json.Marshal(map[string]any{
 		"title":          p.Title,
 		"content":        p.Content,
 		"search_query":   firstSearchOutput.SearchQuery,
@@ -249,7 +249,7 @@ func processParagraph(ctx context.Context, llm llms.Model, p *schema.Paragraph) 
 		}
 
 		newResultsStr := formatResults(newResults)
-		reflectSummaryInputJSON, _ := json.Marshal(map[string]interface{}{
+		reflectSummaryInputJSON, _ := json.Marshal(map[string]any{
 			"title":                  p.Title,
 			"content":                p.Content,
 			"search_query":           reflectionOutput.SearchQuery,

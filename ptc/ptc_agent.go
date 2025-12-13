@@ -72,12 +72,12 @@ func CreatePTCAgent(config PTCAgentConfig) (*graph.Runnable, error) {
 	workflow := graph.NewMessageGraph()
 
 	// Add agent node
-	workflow.AddNode("agent", "LLM agent that generates code for tool calling", func(ctx context.Context, state interface{}) (interface{}, error) {
+	workflow.AddNode("agent", "LLM agent that generates code for tool calling", func(ctx context.Context, state any) (any, error) {
 		return agentNode(ctx, state, config.Model, systemPrompt, config.MaxIterations)
 	})
 
 	// Add PTC execution node
-	workflow.AddNode("execute_code", "Executes generated code with tool access", func(ctx context.Context, state interface{}) (interface{}, error) {
+	workflow.AddNode("execute_code", "Executes generated code with tool access", func(ctx context.Context, state any) (any, error) {
 		return ptcNode.Invoke(ctx, state)
 	})
 
@@ -85,8 +85,8 @@ func CreatePTCAgent(config PTCAgentConfig) (*graph.Runnable, error) {
 	workflow.SetEntryPoint("agent")
 
 	// Add conditional routing
-	workflow.AddConditionalEdge("agent", func(ctx context.Context, state interface{}) string {
-		mState := state.(map[string]interface{})
+	workflow.AddConditionalEdge("agent", func(ctx context.Context, state any) string {
+		mState := state.(map[string]any)
 		messages := mState["messages"].([]llms.MessageContent)
 
 		if len(messages) == 0 {
@@ -117,8 +117,8 @@ func CreatePTCAgent(config PTCAgentConfig) (*graph.Runnable, error) {
 }
 
 // agentNode is the main agent logic node
-func agentNode(ctx context.Context, state interface{}, model llms.Model, systemPrompt string, maxIterations int) (interface{}, error) {
-	mState := state.(map[string]interface{})
+func agentNode(ctx context.Context, state any, model llms.Model, systemPrompt string, maxIterations int) (any, error) {
+	mState := state.(map[string]any)
 	messages := mState["messages"].([]llms.MessageContent)
 
 	// Check iteration count

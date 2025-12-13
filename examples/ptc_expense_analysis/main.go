@@ -61,7 +61,7 @@ Only count approved expenses.`,
 		startTime := time.Now()
 
 		// Create initial state
-		initialState := map[string]interface{}{
+		initialState := map[string]any{
 			"messages": []llms.MessageContent{
 				{
 					Role: llms.ChatMessageTypeHuman,
@@ -82,7 +82,7 @@ Only count approved expenses.`,
 		elapsed := time.Since(startTime)
 
 		// Extract final answer
-		resultState := result.(map[string]interface{})
+		resultState := result.(map[string]any)
 		messages := resultState["messages"].([]llms.MessageContent)
 
 		fmt.Println("\n--- Conversation Flow ---")

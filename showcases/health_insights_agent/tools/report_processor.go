@@ -217,8 +217,8 @@ func (p *ReportProcessor) ValidateReport(text string) error {
 }
 
 // ExtractMetadata 提取报告元数据
-func (p *ReportProcessor) ExtractMetadata(text string) map[string]interface{} {
-	metadata := make(map[string]interface{})
+func (p *ReportProcessor) ExtractMetadata(text string) map[string]any {
+	metadata := make(map[string]any)
 
 	lines := strings.Split(text, "\n")
 	metadata["line_count"] = len(lines)

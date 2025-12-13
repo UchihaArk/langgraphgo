@@ -2,7 +2,7 @@
 
 ## 问题描述
 
-在重构MessageGraph后，`NewMessageGraph()`现在默认包含messages schema，期待状态类型为`map[string]interface{}`并包含"messages"键。但是很多examples使用的是：
+在重构MessageGraph后，`NewMessageGraph()`现在默认包含messages schema，期待状态类型为`map[string]any`并包含"messages"键。但是很多examples使用的是：
 - 简单字符串状态
 - 自定义结构体（如Task, Document, MarketState等）
 - LangChain的`[]llms.MessageContent`类型
@@ -62,7 +62,7 @@
 9. **examples/basic_llm/main.go**
    - 状态类型：`[]llms.MessageContent`
    - 修改：`NewMessageGraph()` → `NewStateGraph()`
-   - 原因：状态是消息数组，不是map[string]interface{}
+   - 原因：状态是消息数组，不是map[string]any
    - 结果：✓ 编译通过
 
 10. **examples/langchain_example/main.go**
@@ -146,11 +146,11 @@ g := graph.NewStateGraph() // 状态是 []llms.MessageContent
 
 ### 何时使用NewMessageGraph()
 ```go
-// 仅当状态是 map[string]interface{} 并且需要"messages"键时
+// 仅当状态是 map[string]any 并且需要"messages"键时
 g := graph.NewMessageGraph()
 // 状态示例：
-state := map[string]interface{}{
-    "messages": []map[string]interface{}{
+state := map[string]any{
+    "messages": []map[string]any{
         {"role": "user", "content": "Hello"},
     },
 }

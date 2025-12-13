@@ -24,10 +24,10 @@ func TestSqliteCheckpointStore(t *testing.T) {
 	cp := &graph.Checkpoint{
 		ID:        "cp-1",
 		NodeName:  "node-a",
-		State:     map[string]interface{}{"foo": "bar"},
+		State:     map[string]any{"foo": "bar"},
 		Timestamp: time.Now(),
 		Version:   1,
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"execution_id": execID,
 		},
 	}
@@ -42,7 +42,7 @@ func TestSqliteCheckpointStore(t *testing.T) {
 	assert.Equal(t, cp.ID, loaded.ID)
 	assert.Equal(t, cp.NodeName, loaded.NodeName)
 
-	state, ok := loaded.State.(map[string]interface{})
+	state, ok := loaded.State.(map[string]any)
 	assert.True(t, ok)
 	assert.Equal(t, "bar", state["foo"])
 
@@ -64,8 +64,8 @@ func TestSqliteCheckpointStore(t *testing.T) {
 	assert.Len(t, list, 0)
 
 	// Test Clear
-	cp2 := &graph.Checkpoint{ID: "cp-2", Metadata: map[string]interface{}{"execution_id": execID}}
-	cp3 := &graph.Checkpoint{ID: "cp-3", Metadata: map[string]interface{}{"execution_id": execID}}
+	cp2 := &graph.Checkpoint{ID: "cp-2", Metadata: map[string]any{"execution_id": execID}}
+	cp3 := &graph.Checkpoint{ID: "cp-3", Metadata: map[string]any{"execution_id": execID}}
 	store.Save(ctx, cp2)
 	store.Save(ctx, cp3)
 

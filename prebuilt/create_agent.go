@@ -82,8 +82,8 @@ func CreateAgent(model llms.Model, inputTools []tools.Tool, opts ...CreateAgentO
 
 	// Define the skill selection node if skillDir is provided
 	if options.skillDir != "" {
-		workflow.AddNode("skill", "Skill discovery and selection node", func(ctx context.Context, state interface{}) (interface{}, error) {
-			mState, ok := state.(map[string]interface{})
+		workflow.AddNode("skill", "Skill discovery and selection node", func(ctx context.Context, state any) (any, error) {
+			mState, ok := state.(map[string]any)
 			if !ok {
 				return nil, fmt.Errorf("invalid state type: %T", state)
 			}
@@ -165,15 +165,15 @@ func CreateAgent(model llms.Model, inputTools []tools.Tool, opts ...CreateAgentO
 				return nil, fmt.Errorf("failed to convert skill to tools: %w", err)
 			}
 
-			return map[string]interface{}{
+			return map[string]any{
 				"extra_tools": skillTools,
 			}, nil
 		})
 	}
 
 	// Define the agent node
-	workflow.AddNode("agent", "Agent decision node with LLM", func(ctx context.Context, state interface{}) (interface{}, error) {
-		mState, ok := state.(map[string]interface{})
+	workflow.AddNode("agent", "Agent decision node with LLM", func(ctx context.Context, state any) (any, error) {
+		mState, ok := state.(map[string]any)
 		if !ok {
 			return nil, fmt.Errorf("invalid state type: %T", state)
 		}
@@ -191,10 +191,10 @@ func CreateAgent(model llms.Model, inputTools []tools.Tool, opts ...CreateAgentO
 
 		if extra, ok := mState["extra_tools"].([]tools.Tool); ok {
 			allTools = append(allTools, extra...)
-		} else if extra, ok := mState["extra_tools"].([]interface{}); ok {
-			// Handle case where AppendReducer might return []interface{} if types were mixed or initial append
-			// But since we append []tools.Tool, reflect might keep it as []tools.Tool or []interface{} depending on implementation.
-			// Graph schema AppendReducer returns interface{}.
+		} else if extra, ok := mState["extra_tools"].([]any); ok {
+			// Handle case where AppendReducer might return []any if types were mixed or initial append
+			// But since we append []tools.Tool, reflect might keep it as []tools.Tool or []any depending on implementation.
+			// Graph schema AppendReducer returns any.
 			// If we appended a slice to nil, it returns the slice.
 			// If we appended slice to slice, it returns slice.
 			// We need to be careful about type assertion.
@@ -213,10 +213,10 @@ func CreateAgent(model llms.Model, inputTools []tools.Tool, opts ...CreateAgentO
 				Function: &llms.FunctionDefinition{
 					Name:        t.Name(),
 					Description: t.Description(),
-					Parameters: map[string]interface{}{
+					Parameters: map[string]any{
 						"type": "object",
-						"properties": map[string]interface{}{
-							"input": map[string]interface{}{
+						"properties": map[string]any{
+							"input": map[string]any{
 								"type":        "string",
 								"description": "The input query for the tool",
 							},
@@ -290,14 +290,14 @@ func CreateAgent(model llms.Model, inputTools []tools.Tool, opts ...CreateAgentO
 			}
 		}
 
-		return map[string]interface{}{
+		return map[string]any{
 			"messages": []llms.MessageContent{aiMsg},
 		}, nil
 	})
 
 	// Define the tools node
-	workflow.AddNode("tools", "Tool execution node", func(ctx context.Context, state interface{}) (interface{}, error) {
-		mState, ok := state.(map[string]interface{})
+	workflow.AddNode("tools", "Tool execution node", func(ctx context.Context, state any) (any, error) {
+		mState, ok := state.(map[string]any)
 		if !ok {
 			return nil, fmt.Errorf("invalid state")
 		}
@@ -314,7 +314,7 @@ func CreateAgent(model llms.Model, inputTools []tools.Tool, opts ...CreateAgentO
 		for _, part := range lastMsg.Parts {
 			if tc, ok := part.(llms.ToolCall); ok {
 				// Parse arguments to get input
-				var args map[string]interface{}
+				var args map[string]any
 				if err := json.Unmarshal([]byte(tc.FunctionCall.Arguments), &args); err != nil {
 					// If unmarshal fails, try to use the raw string if it's not JSON object
 				}
@@ -331,7 +331,7 @@ func CreateAgent(model llms.Model, inputTools []tools.Tool, opts ...CreateAgentO
 				allTools = append(allTools, inputTools...)
 				if extra, ok := mState["extra_tools"].([]tools.Tool); ok {
 					allTools = append(allTools, extra...)
-				} else if extra, ok := mState["extra_tools"].([]interface{}); ok {
+				} else if extra, ok := mState["extra_tools"].([]any); ok {
 					for _, t := range extra {
 						if tool, ok := t.(tools.Tool); ok {
 							allTools = append(allTools, tool)
@@ -367,7 +367,7 @@ func CreateAgent(model llms.Model, inputTools []tools.Tool, opts ...CreateAgentO
 			}
 		}
 
-		return map[string]interface{}{
+		return map[string]any{
 			"messages": toolMessages,
 		}, nil
 	})
@@ -380,8 +380,8 @@ func CreateAgent(model llms.Model, inputTools []tools.Tool, opts ...CreateAgentO
 		workflow.SetEntryPoint("agent")
 	}
 
-	workflow.AddConditionalEdge("agent", func(ctx context.Context, state interface{}) string {
-		mState := state.(map[string]interface{})
+	workflow.AddConditionalEdge("agent", func(ctx context.Context, state any) string {
+		mState := state.(map[string]any)
 		messages := mState["messages"].([]llms.MessageContent)
 		lastMsg := messages[len(messages)-1]
 

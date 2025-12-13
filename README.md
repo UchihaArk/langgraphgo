@@ -74,7 +74,7 @@ func main() {
 	g := graph.NewMessageGraph()
 
 	// 2. Add Nodes
-	g.AddNode("generate", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("generate", func(ctx context.Context, state any) (any, error) {
 		messages := state.([]llms.MessageContent)
 		response, _ := model.GenerateContent(ctx, messages)
 		return append(messages, llms.TextParts("ai", response.Choices[0].Content)), nil

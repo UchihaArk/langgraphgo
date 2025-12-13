@@ -29,23 +29,23 @@ func main() {
 	createGraph := func() *graph.CheckpointableStateGraph {
 		g := graph.NewCheckpointableStateGraph()
 
-		g.AddNode("step1", "step1", func(ctx context.Context, state interface{}) (interface{}, error) {
+		g.AddNode("step1", "step1", func(ctx context.Context, state any) (any, error) {
 			fmt.Println("  [EXEC] Running Step 1")
-			m := state.(map[string]interface{})
+			m := state.(map[string]any)
 			m["step1"] = "done"
 			return m, nil
 		})
 
-		g.AddNode("step2", "step2", func(ctx context.Context, state interface{}) (interface{}, error) {
+		g.AddNode("step2", "step2", func(ctx context.Context, state any) (any, error) {
 			fmt.Println("  [EXEC] Running Step 2")
-			m := state.(map[string]interface{})
+			m := state.(map[string]any)
 			m["step2"] = "done"
 			return m, nil
 		})
 
-		g.AddNode("step3", "step3", func(ctx context.Context, state interface{}) (interface{}, error) {
+		g.AddNode("step3", "step3", func(ctx context.Context, state any) (any, error) {
 			fmt.Println("  [EXEC] Running Step 3")
-			m := state.(map[string]interface{})
+			m := state.(map[string]any)
 			m["step3"] = "done"
 			return m, nil
 		})
@@ -77,13 +77,13 @@ func main() {
 	}
 
 	ctx := context.Background()
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"input": "start",
 	}
 
 	// Config with interrupt
 	config1 := &graph.Config{
-		Configurable: map[string]interface{}{"thread_id": threadID},
+		Configurable: map[string]any{"thread_id": threadID},
 		// We interrupt AFTER step 2 runs.
 		// The graph will stop before executing step 3.
 		InterruptAfter: []string{"step2"},
@@ -146,7 +146,7 @@ func main() {
 	}
 
 	config2 := &graph.Config{
-		Configurable: map[string]interface{}{"thread_id": threadID},
+		Configurable: map[string]any{"thread_id": threadID},
 		ResumeFrom:   []string{"step3"}, // Start directly at step 3
 	}
 
@@ -162,7 +162,7 @@ func main() {
 	fmt.Printf("  [INFO] Final Result: %v\n", res2)
 
 	// Verify complete execution state
-	finalMap := res2.(map[string]interface{})
+	finalMap := res2.(map[string]any)
 	if finalMap["step1"] == "done" && finalMap["step2"] == "done" && finalMap["step3"] == "done" {
 		fmt.Println("  [SUCCESS] Graph successfully resumed and completed all steps.")
 	} else {

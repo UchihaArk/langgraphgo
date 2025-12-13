@@ -133,9 +133,9 @@ func (lm *LangManus) buildGraph() error {
 	return nil
 }
 
-// Node functions - these convert between interface{} and *State
+// Node functions - these convert between any and *State
 
-func (lm *LangManus) coordinatorNode(ctx context.Context, stateInterface interface{}) (interface{}, error) {
+func (lm *LangManus) coordinatorNode(ctx context.Context, stateInterface any) (any, error) {
 	state := lm.interfaceToState(stateInterface)
 	updatedState, err := lm.Coordinator.Execute(ctx, state)
 	if err != nil {
@@ -144,7 +144,7 @@ func (lm *LangManus) coordinatorNode(ctx context.Context, stateInterface interfa
 	return lm.stateToInterface(updatedState), nil
 }
 
-func (lm *LangManus) plannerNode(ctx context.Context, stateInterface interface{}) (interface{}, error) {
+func (lm *LangManus) plannerNode(ctx context.Context, stateInterface any) (any, error) {
 	state := lm.interfaceToState(stateInterface)
 	updatedState, err := lm.Planner.Execute(ctx, state)
 	if err != nil {
@@ -153,7 +153,7 @@ func (lm *LangManus) plannerNode(ctx context.Context, stateInterface interface{}
 	return lm.stateToInterface(updatedState), nil
 }
 
-func (lm *LangManus) supervisorNode(ctx context.Context, stateInterface interface{}) (interface{}, error) {
+func (lm *LangManus) supervisorNode(ctx context.Context, stateInterface any) (any, error) {
 	state := lm.interfaceToState(stateInterface)
 	updatedState, err := lm.Supervisor.Execute(ctx, state)
 	if err != nil {
@@ -162,7 +162,7 @@ func (lm *LangManus) supervisorNode(ctx context.Context, stateInterface interfac
 	return lm.stateToInterface(updatedState), nil
 }
 
-func (lm *LangManus) researcherNode(ctx context.Context, stateInterface interface{}) (interface{}, error) {
+func (lm *LangManus) researcherNode(ctx context.Context, stateInterface any) (any, error) {
 	state := lm.interfaceToState(stateInterface)
 	updatedState, err := lm.Researcher.Execute(ctx, state)
 	if err != nil {
@@ -171,7 +171,7 @@ func (lm *LangManus) researcherNode(ctx context.Context, stateInterface interfac
 	return lm.stateToInterface(updatedState), nil
 }
 
-func (lm *LangManus) coderNode(ctx context.Context, stateInterface interface{}) (interface{}, error) {
+func (lm *LangManus) coderNode(ctx context.Context, stateInterface any) (any, error) {
 	state := lm.interfaceToState(stateInterface)
 	updatedState, err := lm.Coder.Execute(ctx, state)
 	if err != nil {
@@ -180,7 +180,7 @@ func (lm *LangManus) coderNode(ctx context.Context, stateInterface interface{}) 
 	return lm.stateToInterface(updatedState), nil
 }
 
-func (lm *LangManus) browserNode(ctx context.Context, stateInterface interface{}) (interface{}, error) {
+func (lm *LangManus) browserNode(ctx context.Context, stateInterface any) (any, error) {
 	state := lm.interfaceToState(stateInterface)
 	updatedState, err := lm.Browser.Execute(ctx, state)
 	if err != nil {
@@ -189,7 +189,7 @@ func (lm *LangManus) browserNode(ctx context.Context, stateInterface interface{}
 	return lm.stateToInterface(updatedState), nil
 }
 
-func (lm *LangManus) reporterNode(ctx context.Context, stateInterface interface{}) (interface{}, error) {
+func (lm *LangManus) reporterNode(ctx context.Context, stateInterface any) (any, error) {
 	state := lm.interfaceToState(stateInterface)
 	updatedState, err := lm.Reporter.Execute(ctx, state)
 	if err != nil {
@@ -200,7 +200,7 @@ func (lm *LangManus) reporterNode(ctx context.Context, stateInterface interface{
 
 // Routing functions
 
-func (lm *LangManus) routeFromCoordinator(ctx context.Context, stateInterface interface{}) string {
+func (lm *LangManus) routeFromCoordinator(ctx context.Context, stateInterface any) string {
 	state := lm.interfaceToState(stateInterface)
 	if state.NextAgent != nil {
 		return string(state.NextAgent.Agent)
@@ -208,11 +208,11 @@ func (lm *LangManus) routeFromCoordinator(ctx context.Context, stateInterface in
 	return "planner" // Default to planner
 }
 
-func (lm *LangManus) routeFromPlanner(ctx context.Context, stateInterface interface{}) string {
+func (lm *LangManus) routeFromPlanner(ctx context.Context, stateInterface any) string {
 	return "supervisor" // Always go to supervisor after planning
 }
 
-func (lm *LangManus) routeFromSupervisor(ctx context.Context, stateInterface interface{}) string {
+func (lm *LangManus) routeFromSupervisor(ctx context.Context, stateInterface any) string {
 	state := lm.interfaceToState(stateInterface)
 
 	if state.NextAgent != nil {
@@ -255,15 +255,15 @@ func (lm *LangManus) routeFromSupervisor(ctx context.Context, stateInterface int
 	return "reporter"
 }
 
-func (lm *LangManus) routeFromWorker(ctx context.Context, stateInterface interface{}) string {
+func (lm *LangManus) routeFromWorker(ctx context.Context, stateInterface any) string {
 	// Workers always return to supervisor
 	return "supervisor"
 }
 
 // State conversion helpers
 
-func (lm *LangManus) interfaceToState(stateInterface interface{}) *State {
-	stateMap, ok := stateInterface.(map[string]interface{})
+func (lm *LangManus) interfaceToState(stateInterface any) *State {
+	stateMap, ok := stateInterface.(map[string]any)
 	if !ok {
 		return NewState("")
 	}
@@ -319,15 +319,15 @@ func (lm *LangManus) interfaceToState(stateInterface interface{}) *State {
 		state.Status = status
 	}
 
-	if metadata, ok := stateMap["metadata"].(map[string]interface{}); ok {
+	if metadata, ok := stateMap["metadata"].(map[string]any); ok {
 		state.Metadata = metadata
 	}
 
 	return state
 }
 
-func (lm *LangManus) stateToInterface(state *State) interface{} {
-	return map[string]interface{}{
+func (lm *LangManus) stateToInterface(state *State) any {
+	return map[string]any{
 		"query":            state.Query,
 		"messages":         state.Messages,
 		"plan":             state.Plan,
@@ -374,4 +374,3 @@ func (lm *LangManus) Run(ctx context.Context, query string) (*State, error) {
 
 	return finalState, nil
 }
-

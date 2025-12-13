@@ -221,7 +221,7 @@ func main() {
 	fmt.Println("Processing... (The LLM will generate code to call tools)")
 	fmt.Println(strings.Repeat("-", 60))
 
-	result, err := agent.Invoke(context.Background(), map[string]interface{}{
+	result, err := agent.Invoke(context.Background(), map[string]any{
 		"messages": []llms.MessageContent{
 			{
 				Role:  llms.ChatMessageTypeHuman,
@@ -234,7 +234,7 @@ func main() {
 	}
 
 	// Print result
-	messages := result.(map[string]interface{})["messages"].([]llms.MessageContent)
+	messages := result.(map[string]any)["messages"].([]llms.MessageContent)
 
 	fmt.Println("\n" + strings.Repeat("-", 60))
 	fmt.Println("Execution Complete!")

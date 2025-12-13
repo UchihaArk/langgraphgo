@@ -63,8 +63,8 @@ func TestCreateSupervisor(t *testing.T) {
 
 	// Setup Mock Agents
 	agent1Graph := graph.NewStateGraph()
-	agent1Graph.AddNode("run", "run", func(ctx context.Context, state interface{}) (interface{}, error) {
-		return map[string]interface{}{
+	agent1Graph.AddNode("run", "run", func(ctx context.Context, state any) (any, error) {
+		return map[string]any{
 			"messages": []llms.MessageContent{
 				llms.TextParts(llms.ChatMessageTypeAI, "Agent1 done"),
 			},
@@ -76,8 +76,8 @@ func TestCreateSupervisor(t *testing.T) {
 	assert.NoError(t, err)
 
 	agent2Graph := graph.NewStateGraph()
-	agent2Graph.AddNode("run", "run", func(ctx context.Context, state interface{}) (interface{}, error) {
-		return map[string]interface{}{
+	agent2Graph.AddNode("run", "run", func(ctx context.Context, state any) (any, error) {
+		return map[string]any{
 			"messages": []llms.MessageContent{
 				llms.TextParts(llms.ChatMessageTypeAI, "Agent2 done"),
 			},
@@ -97,7 +97,7 @@ func TestCreateSupervisor(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Initial State
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			llms.TextParts(llms.ChatMessageTypeHuman, "Start"),
 		},
@@ -108,7 +108,7 @@ func TestCreateSupervisor(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Verify Result
-	mState := res.(map[string]interface{})
+	mState := res.(map[string]any)
 	messages := mState["messages"].([]llms.MessageContent)
 
 	// Expected messages:

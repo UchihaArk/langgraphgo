@@ -21,14 +21,14 @@ func main() {
 	g := graph.NewStateGraph()
 
 	// Define nodes
-	g.AddNode("process_request", "process_request", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("process_request", "process_request", func(ctx context.Context, state any) (any, error) {
 		s := state.(State)
 		fmt.Printf("[Process] Processing request: %s\n", s.Input)
 		s.Output = "Processed: " + s.Input
 		return s, nil
 	})
 
-	g.AddNode("human_approval", "human_approval", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("human_approval", "human_approval", func(ctx context.Context, state any) (any, error) {
 		s := state.(State)
 		if s.Approved {
 			fmt.Println("[Human] Request APPROVED.")
@@ -40,7 +40,7 @@ func main() {
 		return s, nil
 	})
 
-	g.AddNode("finalize", "finalize", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("finalize", "finalize", func(ctx context.Context, state any) (any, error) {
 		s := state.(State)
 		fmt.Printf("[Finalize] Final output: %s\n", s.Output)
 		return s, nil

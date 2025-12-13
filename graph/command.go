@@ -5,10 +5,10 @@ package graph
 type Command struct {
 	// Update is the value to update the state with.
 	// It will be processed by the schema's reducers.
-	Update interface{}
+	Update any
 
 	// Goto specifies the next node(s) to execute.
 	// If set, it overrides the graph's edges.
 	// Can be a single string (node name) or []string.
-	Goto interface{}
+	Goto any
 }

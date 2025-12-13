@@ -345,7 +345,7 @@ func getLLM() (llms.Model, error) {
 
 1. 在 `nodes.go` 中定义节点函数：
 ```go
-func MyCustomNode(ctx context.Context, state interface{}) (interface{}, error) {
+func MyCustomNode(ctx context.Context, state any) (any, error) {
     s := state.(*State)
     // 您的逻辑在此处
     return s, nil

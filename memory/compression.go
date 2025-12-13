@@ -27,13 +27,13 @@ type CompressionMemory struct {
 
 // CompressedBlock represents a compressed group of messages
 type CompressedBlock struct {
-	ID            string    // Unique block ID
-	Summary       string    // Compressed summary
-	OriginalCount int       // Number of original messages
-	OriginalTokens int      // Original token count
-	CompressedTokens int    // Compressed token count
-	TimeRange     TimeRange // Time range of messages
-	Topics        []string  // Main topics covered
+	ID               string    // Unique block ID
+	Summary          string    // Compressed summary
+	OriginalCount    int       // Number of original messages
+	OriginalTokens   int       // Original token count
+	CompressedTokens int       // Compressed token count
+	TimeRange        TimeRange // Time range of messages
+	Topics           []string  // Main topics covered
 }
 
 // TimeRange represents a time period
@@ -44,8 +44,8 @@ type TimeRange struct {
 
 // CompressionConfig holds configuration for compression memory
 type CompressionConfig struct {
-	CompressionTrigger int                                                          // Messages before compression
-	ConsolidateAfter   time.Duration                                                // Duration before consolidation
+	CompressionTrigger int           // Messages before compression
+	ConsolidateAfter   time.Duration // Duration before consolidation
 	Compressor         func(ctx context.Context, messages []*Message) (*CompressedBlock, error)
 	Consolidator       func(ctx context.Context, blocks []*CompressedBlock) (*CompressedBlock, error)
 }
@@ -171,7 +171,7 @@ func (c *CompressionMemory) GetContext(ctx context.Context, query string) ([]*Me
 			ID:      fmt.Sprintf("block_%d", i),
 			Role:    "system",
 			Content: fmt.Sprintf("[Compressed Memory Block %d]: %s", i+1, block.Summary),
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"block_id":       block.ID,
 				"original_count": block.OriginalCount,
 				"topics":         block.Topics,

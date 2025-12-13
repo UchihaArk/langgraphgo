@@ -32,7 +32,7 @@ func (s *SimpleTextSplitter) SplitDocuments(documents []Document) ([]Document, e
 		for i, chunk := range chunks {
 			newDoc := Document{
 				PageContent: chunk,
-				Metadata:    make(map[string]interface{}),
+				Metadata:    make(map[string]any),
 			}
 
 			// Copy metadata

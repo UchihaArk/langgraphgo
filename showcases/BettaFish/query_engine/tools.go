@@ -31,7 +31,7 @@ func ExecuteSearch(ctx context.Context, query string, toolName string, startDate
 		return nil, fmt.Errorf("TAVILY_API_KEY not set")
 	}
 
-	reqBody := map[string]interface{}{
+	reqBody := map[string]any{
 		"api_key": apiKey,
 		"query":   query,
 	}

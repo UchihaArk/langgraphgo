@@ -30,7 +30,7 @@ func TestToolNode(t *testing.T) {
 		},
 	}
 
-	state := map[string]interface{}{
+	state := map[string]any{
 		"messages": []llms.MessageContent{aiMsg},
 	}
 
@@ -39,7 +39,7 @@ func TestToolNode(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Verify result
-	resMap, ok := res.(map[string]interface{})
+	resMap, ok := res.(map[string]any)
 	assert.True(t, ok)
 
 	messages, ok := resMap["messages"].([]llms.MessageContent)

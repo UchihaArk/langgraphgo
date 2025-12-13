@@ -10,8 +10,8 @@ import (
 func TestSubgraph(t *testing.T) {
 	// 1. Define Child Graph
 	child := NewStateGraph()
-	child.AddNode("child_A", "child_A", func(ctx context.Context, state interface{}) (interface{}, error) {
-		m := state.(map[string]interface{})
+	child.AddNode("child_A", "child_A", func(ctx context.Context, state any) (any, error) {
+		m := state.(map[string]any)
 		m["child_visited"] = true
 		return m, nil
 	})
@@ -20,8 +20,8 @@ func TestSubgraph(t *testing.T) {
 
 	// 2. Define Parent Graph
 	parent := NewStateGraph()
-	parent.AddNode("parent_A", "parent_A", func(ctx context.Context, state interface{}) (interface{}, error) {
-		m := state.(map[string]interface{})
+	parent.AddNode("parent_A", "parent_A", func(ctx context.Context, state any) (any, error) {
+		m := state.(map[string]any)
 		m["parent_visited"] = true
 		return m, nil
 	})
@@ -38,10 +38,10 @@ func TestSubgraph(t *testing.T) {
 	runnable, err := parent.Compile()
 	assert.NoError(t, err)
 
-	res, err := runnable.Invoke(context.Background(), map[string]interface{}{})
+	res, err := runnable.Invoke(context.Background(), map[string]any{})
 	assert.NoError(t, err)
 
-	mRes := res.(map[string]interface{})
+	mRes := res.(map[string]any)
 	assert.True(t, mRes["parent_visited"].(bool))
 	assert.True(t, mRes["child_visited"].(bool))
 }

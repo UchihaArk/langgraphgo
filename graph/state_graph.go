@@ -17,7 +17,7 @@ type StateGraph struct {
 	edges []Edge
 
 	// conditionalEdges contains a map between "From" node, while "To" node is derived based on the condition
-	conditionalEdges map[string]func(ctx context.Context, state interface{}) string
+	conditionalEdges map[string]func(ctx context.Context, state any) string
 
 	// entryPoint is the name of the entry point node in the graph
 	entryPoint string
@@ -53,12 +53,12 @@ const (
 func NewStateGraph() *StateGraph {
 	return &StateGraph{
 		nodes:            make(map[string]Node),
-		conditionalEdges: make(map[string]func(ctx context.Context, state interface{}) string),
+		conditionalEdges: make(map[string]func(ctx context.Context, state any) string),
 	}
 }
 
 // AddNode adds a new node to the state graph with the given name, description and function
-func (g *StateGraph) AddNode(name string, description string, fn func(ctx context.Context, state interface{}) (interface{}, error)) {
+func (g *StateGraph) AddNode(name string, description string, fn func(ctx context.Context, state any) (any, error)) {
 	g.nodes[name] = Node{
 		Name:        name,
 		Description: description,
@@ -75,7 +75,7 @@ func (g *StateGraph) AddEdge(from, to string) {
 }
 
 // AddConditionalEdge adds a conditional edge where the target node is determined at runtime
-func (g *StateGraph) AddConditionalEdge(from string, condition func(ctx context.Context, state interface{}) string) {
+func (g *StateGraph) AddConditionalEdge(from string, condition func(ctx context.Context, state any) string) {
 	g.conditionalEdges[from] = condition
 }
 
@@ -104,7 +104,7 @@ func (g *StateGraph) SetSchema(schema StateSchema) {
 type StateRunnable struct {
 	graph      *StateGraph
 	tracer     *Tracer
-	nodeRunner func(ctx context.Context, nodeName string, state interface{}) (interface{}, error)
+	nodeRunner func(ctx context.Context, nodeName string, state any) (any, error)
 }
 
 // Compile compiles the state graph and returns a StateRunnable instance
@@ -133,12 +133,12 @@ func (r *StateRunnable) WithTracer(tracer *Tracer) *StateRunnable {
 }
 
 // Invoke executes the compiled state graph with the given input state
-func (r *StateRunnable) Invoke(ctx context.Context, initialState interface{}) (interface{}, error) {
+func (r *StateRunnable) Invoke(ctx context.Context, initialState any) (any, error) {
 	return r.InvokeWithConfig(ctx, initialState, nil)
 }
 
 // InvokeWithConfig executes the compiled state graph with the given input state and config
-func (r *StateRunnable) InvokeWithConfig(ctx context.Context, initialState interface{}, config *Config) (interface{}, error) {
+func (r *StateRunnable) InvokeWithConfig(ctx context.Context, initialState any, config *Config) (any, error) {
 	state := initialState
 	currentNodes := []string{r.graph.entryPoint}
 
@@ -161,7 +161,7 @@ func (r *StateRunnable) InvokeWithConfig(ctx context.Context, initialState inter
 		}
 
 		if len(config.Callbacks) > 0 {
-			serialized := map[string]interface{}{
+			serialized := map[string]any{
 				"name": "graph",
 				"type": "chain",
 			}
@@ -308,7 +308,7 @@ func (r *StateRunnable) InvokeWithConfig(ctx context.Context, initialState inter
 }
 
 // executeNodeWithRetry executes a node with retry logic based on the retry policy
-func (r *StateRunnable) executeNodeWithRetry(ctx context.Context, node Node, state interface{}) (interface{}, error) {
+func (r *StateRunnable) executeNodeWithRetry(ctx context.Context, node Node, state any) (any, error) {
 	var lastErr error
 
 	maxRetries := 1 // Default: no retries
@@ -317,7 +317,7 @@ func (r *StateRunnable) executeNodeWithRetry(ctx context.Context, node Node, sta
 	}
 
 	for attempt := 0; attempt < maxRetries; attempt++ {
-		var result interface{}
+		var result any
 		var err error
 
 		if r.nodeRunner != nil {
@@ -414,9 +414,9 @@ func (r *StateRunnable) calculateBackoffDelay(attempt int) time.Duration {
 }
 
 // executeNodesParallel executes valid nodes in parallel and returns their results or errors
-func (r *StateRunnable) executeNodesParallel(ctx context.Context, nodes []string, state interface{}, config *Config, runID string) ([]interface{}, []error) {
+func (r *StateRunnable) executeNodesParallel(ctx context.Context, nodes []string, state any, config *Config, runID string) ([]any, []error) {
 	var wg sync.WaitGroup
-	results := make([]interface{}, len(nodes))
+	results := make([]any, len(nodes))
 	errorsList := make([]error, len(nodes))
 
 	for i, nodeName := range nodes {
@@ -440,7 +440,7 @@ func (r *StateRunnable) executeNodesParallel(ctx context.Context, nodes []string
 			}
 
 			var err error
-			var res interface{}
+			var res any
 
 			// Execute node with retry logic
 			res, err = r.executeNodeWithRetry(ctx, n, state)
@@ -473,7 +473,7 @@ func (r *StateRunnable) executeNodesParallel(ctx context.Context, nodes []string
 			// Notify callbacks of node execution (as tool)
 			if config != nil && len(config.Callbacks) > 0 {
 				nodeRunID := generateRunID()
-				serialized := map[string]interface{}{
+				serialized := map[string]any{
 					"name": name,
 					"type": "tool",
 				}
@@ -482,7 +482,7 @@ func (r *StateRunnable) executeNodesParallel(ctx context.Context, nodes []string
 					cb.OnToolEnd(ctx, convertStateToString(res), nodeRunID)
 				}
 			}
-		}, func(panicVal interface{}) {
+		}, func(panicVal any) {
 			errorsList[idx] = fmt.Errorf("panic in node %s: %v", name, panicVal)
 		})
 	}
@@ -491,9 +491,9 @@ func (r *StateRunnable) executeNodesParallel(ctx context.Context, nodes []string
 }
 
 // processNodeResults processes the raw results from nodes, handling Commands
-func (r *StateRunnable) processNodeResults(results []interface{}) ([]interface{}, []string) {
+func (r *StateRunnable) processNodeResults(results []any) ([]any, []string) {
 	var nextNodesFromCommands []string
-	processedResults := make([]interface{}, len(results))
+	processedResults := make([]any, len(results))
 
 	for i, res := range results {
 		if cmd, ok := res.(*Command); ok {
@@ -517,7 +517,7 @@ func (r *StateRunnable) processNodeResults(results []interface{}) ([]interface{}
 }
 
 // mergeState merges the processed results into the current state
-func (r *StateRunnable) mergeState(ctx context.Context, currentState interface{}, results []interface{}) (interface{}, error) {
+func (r *StateRunnable) mergeState(ctx context.Context, currentState any, results []any) (any, error) {
 	state := currentState
 	if r.graph.Schema != nil {
 		// If Schema is defined, use it to update state with results
@@ -543,7 +543,7 @@ func (r *StateRunnable) mergeState(ctx context.Context, currentState interface{}
 }
 
 // determineNextNodes determines the next nodes to execute based on static edges, conditional edges, or commands
-func (r *StateRunnable) determineNextNodes(ctx context.Context, currentNodes []string, state interface{}, nextNodesFromCommands []string) ([]string, error) {
+func (r *StateRunnable) determineNextNodes(ctx context.Context, currentNodes []string, state any, nextNodesFromCommands []string) ([]string, error) {
 	var nextNodesList []string
 
 	if len(nextNodesFromCommands) > 0 {

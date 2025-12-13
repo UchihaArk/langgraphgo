@@ -30,7 +30,7 @@ func OpenAIExample() {
 	// Create a graph that uses the LLM
 	g := graph.NewStateGraph()
 
-	g.AddNode("chat", "chat", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("chat", "chat", func(ctx context.Context, state any) (any, error) {
 		messages := state.([]llms.MessageContent)
 
 		// Use LangChain's GenerateContent method
@@ -90,7 +90,7 @@ func GoogleAIExample() {
 	// Create a streaming graph with Google AI
 	g := graph.NewListenableMessageGraph()
 
-	node := g.AddNode("gemini", "gemini", func(ctx context.Context, state interface{}) (interface{}, error) {
+	node := g.AddNode("gemini", "gemini", func(ctx context.Context, state any) (any, error) {
 		messages := state.([]llms.MessageContent)
 
 		// Use LangChain's GenerateContent with Google AI
@@ -165,8 +165,8 @@ func MultiStepReasoningExample() {
 	g := graph.NewCheckpointableStateGraph()
 
 	// Step 1: Analyze the problem
-	g.AddNode("analyze", "analyze", func(ctx context.Context, state interface{}) (interface{}, error) {
-		data := state.(map[string]interface{})
+	g.AddNode("analyze", "analyze", func(ctx context.Context, state any) (any, error) {
+		data := state.(map[string]any)
 		messages := []llms.MessageContent{
 			llms.TextParts("system", "You are a helpful assistant that breaks down problems step by step."),
 			llms.TextParts("human", data["problem"].(string)),
@@ -184,8 +184,8 @@ func MultiStepReasoningExample() {
 	})
 
 	// Step 2: Generate solution
-	g.AddNode("solve", "solve", func(ctx context.Context, state interface{}) (interface{}, error) {
-		data := state.(map[string]interface{})
+	g.AddNode("solve", "solve", func(ctx context.Context, state any) (any, error) {
+		data := state.(map[string]any)
 		messages := []llms.MessageContent{
 			llms.TextParts("system", "Based on the analysis, provide a clear solution."),
 			llms.TextParts("human", fmt.Sprintf(
@@ -206,8 +206,8 @@ func MultiStepReasoningExample() {
 	})
 
 	// Step 3: Verify solution
-	g.AddNode("verify", "verify", func(ctx context.Context, state interface{}) (interface{}, error) {
-		data := state.(map[string]interface{})
+	g.AddNode("verify", "verify", func(ctx context.Context, state any) (any, error) {
+		data := state.(map[string]any)
 		messages := []llms.MessageContent{
 			llms.TextParts("system", "Verify if the solution is correct and complete."),
 			llms.TextParts("human", fmt.Sprintf(
@@ -245,7 +245,7 @@ func MultiStepReasoningExample() {
 	}
 
 	// Execute with a problem
-	problem := map[string]interface{}{
+	problem := map[string]any{
 		"problem": "How can I optimize a Go web server that's handling 10,000 concurrent connections?",
 	}
 
@@ -255,7 +255,7 @@ func MultiStepReasoningExample() {
 	}
 
 	// Display results
-	data := result.(map[string]interface{})
+	data := result.(map[string]any)
 	fmt.Printf("\n📊 Analysis:\n%s\n", data["analysis"])
 	fmt.Printf("\n💡 Solution:\n%s\n", data["solution"])
 	fmt.Printf("\n✅ Verification:\n%s\n", data["verification"])

@@ -178,7 +178,7 @@ func runExample1(model llms.Model) {
 	query := "Calculate the result of 15 multiplied by 8"
 	fmt.Printf("Query: %s\n\n", query)
 
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			{
 				Role:  llms.ChatMessageTypeHuman,
@@ -217,7 +217,7 @@ func runExample2(model llms.Model) {
 	query := "What's the weather like in Tokyo?"
 	fmt.Printf("Query: %s\n\n", query)
 
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			{
 				Role:  llms.ChatMessageTypeHuman,
@@ -258,7 +258,7 @@ func runExample3(model llms.Model) {
 	query := "First, calculate 25 times 4. Then, check the weather in Paris."
 	fmt.Printf("Query: %s\n\n", query)
 
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			{
 				Role:  llms.ChatMessageTypeHuman,
@@ -276,8 +276,8 @@ func runExample3(model llms.Model) {
 	printResult(result)
 }
 
-func printResult(result interface{}) {
-	finalState := result.(map[string]interface{})
+func printResult(result any) {
+	finalState := result.(map[string]any)
 
 	// Print final answer
 	if finalAnswer, ok := finalState["final_answer"].(string); ok {

@@ -75,7 +75,7 @@ func TestCreateAgent(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Initial State
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			llms.TextParts(llms.ChatMessageTypeHuman, "Run tool"),
 		},
@@ -86,7 +86,7 @@ func TestCreateAgent(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Verify Result
-	mState := res.(map[string]interface{})
+	mState := res.(map[string]any)
 	messages := mState["messages"].([]llms.MessageContent)
 
 	// Expected messages:
@@ -117,7 +117,7 @@ func TestCreateAgent_SystemMessage(t *testing.T) {
 	agent, err := CreateAgent(mockLLM, []tools.Tool{mockTool}, WithSystemMessage(systemMsg))
 	assert.NoError(t, err)
 
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			llms.TextParts(llms.ChatMessageTypeHuman, "Hello"),
 		},
@@ -164,7 +164,7 @@ func TestCreateAgent_StateModifier(t *testing.T) {
 	agent, err := CreateAgent(mockLLM, []tools.Tool{mockTool}, WithStateModifier(modifier))
 	assert.NoError(t, err)
 
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			llms.TextParts(llms.ChatMessageTypeHuman, "Hello"),
 		},

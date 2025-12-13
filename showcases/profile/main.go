@@ -192,7 +192,7 @@ func streamHandler(w http.ResponseWriter, r *http.Request) {
 			Username    string
 			Profile     string
 			ProfileHTML template.HTML
-			Results     interface{}
+			Results     any
 		}{
 			Username:    username,
 			Profile:     finalState.ProfileText,

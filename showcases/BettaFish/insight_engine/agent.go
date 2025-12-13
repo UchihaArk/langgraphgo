@@ -15,7 +15,7 @@ import (
 )
 
 // InsightEngineNode simulates a private database mining agent.
-func InsightEngineNode(ctx context.Context, state interface{}) (interface{}, error) {
+func InsightEngineNode(ctx context.Context, state any) (any, error) {
 	s := state.(*schema.BettaFishState)
 	fmt.Printf("InsightEngine: 正在挖掘内部洞察 '%s'...\n", s.Query)
 
@@ -121,7 +121,7 @@ func InsightEngineNode(ctx context.Context, state interface{}) (interface{}, err
 		}
 
 		// Generate Summary
-		summaryInput := map[string]interface{}{
+		summaryInput := map[string]any{
 			"title":          p.Title,
 			"content":        p.Content,
 			"search_query":   searchQuery,

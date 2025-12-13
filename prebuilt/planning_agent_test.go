@@ -58,8 +58,8 @@ func TestCreatePlanningAgent_SimpleWorkflow(t *testing.T) {
 		{
 			Name:        "research",
 			Description: "Research and gather information",
-			Function: func(ctx context.Context, state interface{}) (interface{}, error) {
-				mState := state.(map[string]interface{})
+			Function: func(ctx context.Context, state any) (any, error) {
+				mState := state.(map[string]any)
 				messages := mState["messages"].([]llms.MessageContent)
 
 				researchMsg := llms.MessageContent{
@@ -67,7 +67,7 @@ func TestCreatePlanningAgent_SimpleWorkflow(t *testing.T) {
 					Parts: []llms.ContentPart{llms.TextPart("Research completed")},
 				}
 
-				return map[string]interface{}{
+				return map[string]any{
 					"messages": append(messages, researchMsg),
 				}, nil
 			},
@@ -75,8 +75,8 @@ func TestCreatePlanningAgent_SimpleWorkflow(t *testing.T) {
 		{
 			Name:        "analyze",
 			Description: "Analyze the gathered information",
-			Function: func(ctx context.Context, state interface{}) (interface{}, error) {
-				mState := state.(map[string]interface{})
+			Function: func(ctx context.Context, state any) (any, error) {
+				mState := state.(map[string]any)
 				messages := mState["messages"].([]llms.MessageContent)
 
 				analyzeMsg := llms.MessageContent{
@@ -84,7 +84,7 @@ func TestCreatePlanningAgent_SimpleWorkflow(t *testing.T) {
 					Parts: []llms.ContentPart{llms.TextPart("Analysis completed")},
 				}
 
-				return map[string]interface{}{
+				return map[string]any{
 					"messages": append(messages, analyzeMsg),
 				}, nil
 			},
@@ -92,8 +92,8 @@ func TestCreatePlanningAgent_SimpleWorkflow(t *testing.T) {
 		{
 			Name:        "report",
 			Description: "Generate a report from the analysis",
-			Function: func(ctx context.Context, state interface{}) (interface{}, error) {
-				mState := state.(map[string]interface{})
+			Function: func(ctx context.Context, state any) (any, error) {
+				mState := state.(map[string]any)
 				messages := mState["messages"].([]llms.MessageContent)
 
 				reportMsg := llms.MessageContent{
@@ -101,7 +101,7 @@ func TestCreatePlanningAgent_SimpleWorkflow(t *testing.T) {
 					Parts: []llms.ContentPart{llms.TextPart("Report generated")},
 				}
 
-				return map[string]interface{}{
+				return map[string]any{
 					"messages": append(messages, reportMsg),
 				}, nil
 			},
@@ -135,7 +135,7 @@ func TestCreatePlanningAgent_SimpleWorkflow(t *testing.T) {
 	assert.NotNil(t, agent)
 
 	// Initial State
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			llms.TextParts(llms.ChatMessageTypeHuman, "Please research, analyze, and create a report"),
 		},
@@ -147,7 +147,7 @@ func TestCreatePlanningAgent_SimpleWorkflow(t *testing.T) {
 	assert.NotNil(t, res)
 
 	// Verify Result
-	mState := res.(map[string]interface{})
+	mState := res.(map[string]any)
 	messages := mState["messages"].([]llms.MessageContent)
 
 	// Expected messages:
@@ -196,7 +196,7 @@ func TestCreatePlanningAgent_WithVerbose(t *testing.T) {
 		{
 			Name:        "simple_task",
 			Description: "A simple task",
-			Function: func(ctx context.Context, state interface{}) (interface{}, error) {
+			Function: func(ctx context.Context, state any) (any, error) {
 				return state, nil
 			},
 		},
@@ -223,7 +223,7 @@ func TestCreatePlanningAgent_WithVerbose(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Initial State
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			llms.TextParts(llms.ChatMessageTypeHuman, "Execute simple task"),
 		},
@@ -351,7 +351,7 @@ func TestCreatePlanningAgent_NodeNotFound(t *testing.T) {
 		{
 			Name:        "existing_node",
 			Description: "An existing node",
-			Function: func(ctx context.Context, state interface{}) (interface{}, error) {
+			Function: func(ctx context.Context, state any) (any, error) {
 				return state, nil
 			},
 		},
@@ -375,7 +375,7 @@ func TestCreatePlanningAgent_NodeNotFound(t *testing.T) {
 	agent, err := CreatePlanningAgent(mockLLM, testNodes, []tools.Tool{})
 	assert.NoError(t, err)
 
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			llms.TextParts(llms.ChatMessageTypeHuman, "Execute task"),
 		},
@@ -395,9 +395,9 @@ func TestCreatePlanningAgent_ComplexWorkflow(t *testing.T) {
 		{
 			Name:        "validate",
 			Description: "Validate input data",
-			Function: func(ctx context.Context, state interface{}) (interface{}, error) {
+			Function: func(ctx context.Context, state any) (any, error) {
 				callOrder = append(callOrder, "validate")
-				mState := state.(map[string]interface{})
+				mState := state.(map[string]any)
 				messages := mState["messages"].([]llms.MessageContent)
 
 				msg := llms.MessageContent{
@@ -405,7 +405,7 @@ func TestCreatePlanningAgent_ComplexWorkflow(t *testing.T) {
 					Parts: []llms.ContentPart{llms.TextPart("Validation completed")},
 				}
 
-				return map[string]interface{}{
+				return map[string]any{
 					"messages": append(messages, msg),
 				}, nil
 			},
@@ -413,9 +413,9 @@ func TestCreatePlanningAgent_ComplexWorkflow(t *testing.T) {
 		{
 			Name:        "process",
 			Description: "Process the data",
-			Function: func(ctx context.Context, state interface{}) (interface{}, error) {
+			Function: func(ctx context.Context, state any) (any, error) {
 				callOrder = append(callOrder, "process")
-				mState := state.(map[string]interface{})
+				mState := state.(map[string]any)
 				messages := mState["messages"].([]llms.MessageContent)
 
 				msg := llms.MessageContent{
@@ -423,7 +423,7 @@ func TestCreatePlanningAgent_ComplexWorkflow(t *testing.T) {
 					Parts: []llms.ContentPart{llms.TextPart("Processing completed")},
 				}
 
-				return map[string]interface{}{
+				return map[string]any{
 					"messages": append(messages, msg),
 				}, nil
 			},
@@ -431,9 +431,9 @@ func TestCreatePlanningAgent_ComplexWorkflow(t *testing.T) {
 		{
 			Name:        "save",
 			Description: "Save the results",
-			Function: func(ctx context.Context, state interface{}) (interface{}, error) {
+			Function: func(ctx context.Context, state any) (any, error) {
 				callOrder = append(callOrder, "save")
-				mState := state.(map[string]interface{})
+				mState := state.(map[string]any)
 				messages := mState["messages"].([]llms.MessageContent)
 
 				msg := llms.MessageContent{
@@ -441,7 +441,7 @@ func TestCreatePlanningAgent_ComplexWorkflow(t *testing.T) {
 					Parts: []llms.ContentPart{llms.TextPart("Results saved")},
 				}
 
-				return map[string]interface{}{
+				return map[string]any{
 					"messages": append(messages, msg),
 				}, nil
 			},
@@ -469,7 +469,7 @@ func TestCreatePlanningAgent_ComplexWorkflow(t *testing.T) {
 	agent, err := CreatePlanningAgent(mockLLM, testNodes, []tools.Tool{})
 	assert.NoError(t, err)
 
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			llms.TextParts(llms.ChatMessageTypeHuman, "Validate, process, and save the data"),
 		},
@@ -483,7 +483,7 @@ func TestCreatePlanningAgent_ComplexWorkflow(t *testing.T) {
 	assert.Equal(t, []string{"validate", "process", "save"}, callOrder)
 
 	// Verify messages
-	mState := res.(map[string]interface{})
+	mState := res.(map[string]any)
 	messages := mState["messages"].([]llms.MessageContent)
 	assert.GreaterOrEqual(t, len(messages), 5)
 }
@@ -495,7 +495,7 @@ func ExampleCreatePlanningAgent() {
 		{
 			Name:        "fetch_data",
 			Description: "Fetch data from API",
-			Function: func(ctx context.Context, state interface{}) (interface{}, error) {
+			Function: func(ctx context.Context, state any) (any, error) {
 				// Your implementation
 				fmt.Println("Fetching data...")
 				return state, nil
@@ -504,7 +504,7 @@ func ExampleCreatePlanningAgent() {
 		{
 			Name:        "transform_data",
 			Description: "Transform the fetched data",
-			Function: func(ctx context.Context, state interface{}) (interface{}, error) {
+			Function: func(ctx context.Context, state any) (any, error) {
 				// Your implementation
 				fmt.Println("Transforming data...")
 				return state, nil
@@ -524,7 +524,7 @@ func ExampleCreatePlanningAgent() {
 	)
 
 	// Use the agent
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			llms.TextParts(llms.ChatMessageTypeHuman, "Fetch and transform the data"),
 		},

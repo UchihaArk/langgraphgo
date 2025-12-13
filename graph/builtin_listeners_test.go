@@ -349,11 +349,11 @@ func TestBuiltinListeners_Integration(t *testing.T) {
 	// Create graph
 	g := graph.NewListenableStateGraph()
 
-	node1 := g.AddNode("step1", "step1", func(_ context.Context, _ interface{}) (interface{}, error) {
+	node1 := g.AddNode("step1", "step1", func(_ context.Context, _ any) (any, error) {
 		return "step1_result", nil
 	})
 
-	node2 := g.AddNode("step2", "step2", func(_ context.Context, _ interface{}) (interface{}, error) {
+	node2 := g.AddNode("step2", "step2", func(_ context.Context, _ any) (any, error) {
 		return step2Result, nil
 	})
 

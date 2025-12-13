@@ -13,7 +13,7 @@ RAG (Retrieval-Augmented Generation，检索增强生成) 是一种将信息检�
 ```go
 type Document struct {
     PageContent string                 // 文档内容
-    Metadata    map[string]interface{} // 元数据
+    Metadata    map[string]any // 元数据
 }
 ```
 
@@ -237,7 +237,7 @@ type RAGState struct {
     Context            string                // 为 LLM 格式化的上下文
     Answer             string                // 生成的答案
     Citations          []string              // 来源引用
-    Metadata           map[string]interface{} // 附加元数据
+    Metadata           map[string]any // 附加元数据
 }
 ```
 
@@ -311,7 +311,7 @@ chunk.Metadata["parent_id"] = parentDoc.ID
 
 ```go
 // 在流水线中实现自定义节点
-func compressContext(ctx context.Context, state interface{}) (interface{}, error) {
+func compressContext(ctx context.Context, state any) (any, error) {
     // 使用 LLM 提取相关部分
 }
 ```

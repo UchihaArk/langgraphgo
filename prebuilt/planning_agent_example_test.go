@@ -16,8 +16,8 @@ func Example_planningAgent() {
 		{
 			Name:        "fetch_data",
 			Description: "Fetch data from external API or database",
-			Function: func(ctx context.Context, state interface{}) (interface{}, error) {
-				mState := state.(map[string]interface{})
+			Function: func(ctx context.Context, state any) (any, error) {
+				mState := state.(map[string]any)
 				messages := mState["messages"].([]llms.MessageContent)
 
 				// Simulate fetching data
@@ -28,7 +28,7 @@ func Example_planningAgent() {
 					Parts: []llms.ContentPart{llms.TextPart("Data fetched successfully: [item1, item2, item3]")},
 				}
 
-				return map[string]interface{}{
+				return map[string]any{
 					"messages": append(messages, msg),
 				}, nil
 			},
@@ -36,8 +36,8 @@ func Example_planningAgent() {
 		{
 			Name:        "validate_data",
 			Description: "Validate the integrity and format of data",
-			Function: func(ctx context.Context, state interface{}) (interface{}, error) {
-				mState := state.(map[string]interface{})
+			Function: func(ctx context.Context, state any) (any, error) {
+				mState := state.(map[string]any)
 				messages := mState["messages"].([]llms.MessageContent)
 
 				// Simulate validation
@@ -48,7 +48,7 @@ func Example_planningAgent() {
 					Parts: []llms.ContentPart{llms.TextPart("Data validation passed")},
 				}
 
-				return map[string]interface{}{
+				return map[string]any{
 					"messages": append(messages, msg),
 				}, nil
 			},
@@ -56,8 +56,8 @@ func Example_planningAgent() {
 		{
 			Name:        "transform_data",
 			Description: "Transform and normalize data into required format",
-			Function: func(ctx context.Context, state interface{}) (interface{}, error) {
-				mState := state.(map[string]interface{})
+			Function: func(ctx context.Context, state any) (any, error) {
+				mState := state.(map[string]any)
 				messages := mState["messages"].([]llms.MessageContent)
 
 				// Simulate transformation
@@ -68,7 +68,7 @@ func Example_planningAgent() {
 					Parts: []llms.ContentPart{llms.TextPart("Data transformed to JSON format")},
 				}
 
-				return map[string]interface{}{
+				return map[string]any{
 					"messages": append(messages, msg),
 				}, nil
 			},
@@ -76,8 +76,8 @@ func Example_planningAgent() {
 		{
 			Name:        "analyze_data",
 			Description: "Perform statistical analysis on the data",
-			Function: func(ctx context.Context, state interface{}) (interface{}, error) {
-				mState := state.(map[string]interface{})
+			Function: func(ctx context.Context, state any) (any, error) {
+				mState := state.(map[string]any)
 				messages := mState["messages"].([]llms.MessageContent)
 
 				// Simulate analysis
@@ -88,7 +88,7 @@ func Example_planningAgent() {
 					Parts: []llms.ContentPart{llms.TextPart("Analysis complete: mean=42, median=40, std=5.2")},
 				}
 
-				return map[string]interface{}{
+				return map[string]any{
 					"messages": append(messages, msg),
 				}, nil
 			},
@@ -96,8 +96,8 @@ func Example_planningAgent() {
 		{
 			Name:        "save_results",
 			Description: "Save processed results to storage",
-			Function: func(ctx context.Context, state interface{}) (interface{}, error) {
-				mState := state.(map[string]interface{})
+			Function: func(ctx context.Context, state any) (any, error) {
+				mState := state.(map[string]any)
 				messages := mState["messages"].([]llms.MessageContent)
 
 				// Simulate saving
@@ -108,7 +108,7 @@ func Example_planningAgent() {
 					Parts: []llms.ContentPart{llms.TextPart("Results saved to database")},
 				}
 
-				return map[string]interface{}{
+				return map[string]any{
 					"messages": append(messages, msg),
 				}, nil
 			},
@@ -227,7 +227,7 @@ func Example_planningAgentRealUsage() {
 	fmt.Println(")")
 	fmt.Println()
 	fmt.Println("// 4. Prepare initial state with user request")
-	fmt.Println("initialState := map[string]interface{}{")
+	fmt.Println("initialState := map[string]any{")
 	fmt.Println("    \"messages\": []llms.MessageContent{")
 	fmt.Println("        llms.TextParts(llms.ChatMessageTypeHuman,")
 	fmt.Println("            \"Fetch, validate, and save the customer data\"),")
@@ -238,7 +238,7 @@ func Example_planningAgentRealUsage() {
 	fmt.Println("result, err := agent.Invoke(context.Background(), initialState)")
 	fmt.Println()
 	fmt.Println("// 6. Access results")
-	fmt.Println("mState := result.(map[string]interface{})")
+	fmt.Println("mState := result.(map[string]any)")
 	fmt.Println("messages := mState[\"messages\"].([]llms.MessageContent)")
 
 	// Output:
@@ -259,7 +259,7 @@ func Example_planningAgentRealUsage() {
 	// )
 	//
 	// // 4. Prepare initial state with user request
-	// initialState := map[string]interface{}{
+	// initialState := map[string]any{
 	//     "messages": []llms.MessageContent{
 	//         llms.TextParts(llms.ChatMessageTypeHuman,
 	//             "Fetch, validate, and save the customer data"),
@@ -270,7 +270,7 @@ func Example_planningAgentRealUsage() {
 	// result, err := agent.Invoke(context.Background(), initialState)
 	//
 	// // 6. Access results
-	// mState := result.(map[string]interface{})
+	// mState := result.(map[string]any)
 	// messages := mState["messages"].([]llms.MessageContent)
 }
 

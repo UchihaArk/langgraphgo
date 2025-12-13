@@ -51,7 +51,7 @@ agent, err := prebuilt.CreateReactAgent(model, inputTools)
 
 ### Running the Agent
 ```go
-initialState := map[string]interface{}{
+initialState := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman, "What is 25 * 4?"),
     },

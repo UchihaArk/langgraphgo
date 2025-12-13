@@ -56,7 +56,7 @@ func TestCreateReflectionAgent(t *testing.T) {
 	}
 
 	// Test invocation
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			{
 				Role:  llms.ChatMessageTypeHuman,
@@ -70,7 +70,7 @@ func TestCreateReflectionAgent(t *testing.T) {
 		t.Fatalf("Failed to invoke agent: %v", err)
 	}
 
-	finalState := result.(map[string]interface{})
+	finalState := result.(map[string]any)
 
 	// Verify final state has messages
 	messages, ok := finalState["messages"].([]llms.MessageContent)
@@ -132,7 +132,7 @@ func TestReflectionAgentMaxIterations(t *testing.T) {
 		t.Fatalf("Failed to create reflection agent: %v", err)
 	}
 
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			{
 				Role:  llms.ChatMessageTypeHuman,
@@ -146,7 +146,7 @@ func TestReflectionAgentMaxIterations(t *testing.T) {
 		t.Fatalf("Failed to invoke agent: %v", err)
 	}
 
-	finalState := result.(map[string]interface{})
+	finalState := result.(map[string]any)
 	iteration := finalState["iteration"].(int)
 
 	// Should stop at max iterations

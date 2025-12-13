@@ -24,10 +24,10 @@ var HandoffTool = llms.Tool{
 	Function: &llms.FunctionDefinition{
 		Name:        "handoff",
 		Description: "Hand off control to another agent.",
-		Parameters: map[string]interface{}{
+		Parameters: map[string]any{
 			"type": "object",
-			"properties": map[string]interface{}{
-				"to": map[string]interface{}{
+			"properties": map[string]any{
+				"to": map[string]any{
 					"type": "string",
 					"enum": []string{"Researcher", "Writer"},
 				},
@@ -64,8 +64,8 @@ func main() {
 	workflow.SetSchema(schema)
 
 	// Researcher Agent Node
-	workflow.AddNode("Researcher", "Researcher", func(ctx context.Context, state interface{}) (interface{}, error) {
-		mState := state.(map[string]interface{})
+	workflow.AddNode("Researcher", "Researcher", func(ctx context.Context, state any) (any, error) {
+		mState := state.(map[string]any)
 		messages := mState["messages"].([]llms.MessageContent)
 
 		systemPrompt := "You are a researcher. You can search for information. If you need to write a report, hand off to the Writer. If you are done, just say 'I am done'."
@@ -94,7 +94,7 @@ func main() {
 				// Or maybe just the handoff event.
 				// For Swarm, usually we transfer control.
 
-				return map[string]interface{}{
+				return map[string]any{
 					"messages": []llms.MessageContent{
 						{
 							Role:  llms.ChatMessageTypeAI,
@@ -120,7 +120,7 @@ func main() {
 		}
 
 		// Normal response
-		return map[string]interface{}{
+		return map[string]any{
 			"messages": []llms.MessageContent{
 				{
 					Role:  llms.ChatMessageTypeAI,
@@ -132,8 +132,8 @@ func main() {
 	})
 
 	// Writer Agent Node
-	workflow.AddNode("Writer", "Writer", func(ctx context.Context, state interface{}) (interface{}, error) {
-		mState := state.(map[string]interface{})
+	workflow.AddNode("Writer", "Writer", func(ctx context.Context, state any) (any, error) {
+		mState := state.(map[string]any)
 		messages := mState["messages"].([]llms.MessageContent)
 
 		systemPrompt := "You are a writer. You write reports based on information. If you need more information, hand off to the Researcher. If you are done, just say 'I am done'."
@@ -156,7 +156,7 @@ func main() {
 				}
 				json.Unmarshal([]byte(tc.FunctionCall.Arguments), &args)
 
-				return map[string]interface{}{
+				return map[string]any{
 					"messages": []llms.MessageContent{
 						{
 							Role:  llms.ChatMessageTypeAI,
@@ -178,7 +178,7 @@ func main() {
 			}
 		}
 
-		return map[string]interface{}{
+		return map[string]any{
 			"messages": []llms.MessageContent{
 				{
 					Role:  llms.ChatMessageTypeAI,
@@ -190,8 +190,8 @@ func main() {
 	})
 
 	// Define Edge Logic
-	router := func(ctx context.Context, state interface{}) string {
-		mState := state.(map[string]interface{})
+	router := func(ctx context.Context, state any) string {
+		mState := state.(map[string]any)
 		next, ok := mState["next"].(string)
 		if !ok || next == "" || next == "END" {
 			return graph.END
@@ -210,7 +210,7 @@ func main() {
 	}
 
 	// Run
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			llms.TextParts(llms.ChatMessageTypeHuman, "I need a report on the latest AI trends."),
 		},
@@ -221,7 +221,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	mState := res.(map[string]interface{})
+	mState := res.(map[string]any)
 	messages := mState["messages"].([]llms.MessageContent)
 	for _, msg := range messages {
 		role := msg.Role

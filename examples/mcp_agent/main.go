@@ -63,7 +63,7 @@ func main() {
 	fmt.Printf("\nQuery: %s\n", query)
 
 	// Prepare initial state with messages
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			llms.TextParts(llms.ChatMessageTypeHuman, query),
 		},
@@ -75,7 +75,7 @@ func main() {
 	}
 
 	// 6. Print the result
-	if mState, ok := result.(map[string]interface{}); ok {
+	if mState, ok := result.(map[string]any); ok {
 		if messages, ok := mState["messages"]; ok {
 			fmt.Printf("\nAgent messages:\n%+v\n", messages)
 		}

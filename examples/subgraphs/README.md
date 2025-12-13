@@ -14,7 +14,7 @@ As Agent systems grow in complexity, managing a single monolithic graph becomes 
 
 The `AddSubgraph` method in `graph/subgraph.go` wraps a `StateGraph` (or `MessageGraph` for backward compatibility) into a `Subgraph` struct.
 1.  The subgraph is compiled into a `Runnable`.
-2.  A wrapper function is created that matches the `Node` signature (`func(ctx, state) (interface{}, error)`).
+2.  A wrapper function is created that matches the `Node` signature (`func(ctx, state) (any, error)`).
 3.  When executed, this wrapper invokes the subgraph's `Runnable.Invoke`.
 4.  The result is returned to the parent graph as the node's output.
 

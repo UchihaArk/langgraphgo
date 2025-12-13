@@ -10,16 +10,16 @@ import (
 
 // CLIConfig CLI配置
 type CLIConfig struct {
-	Command      string
-	InputFile    string
-	InputText    string
-	OutputFile   string
-	Verbose      bool
-	DetailLevel  string
-	UseSample    bool
-	Model        string
-	Temperature  float64
-	MaxTokens    int
+	Command     string
+	InputFile   string
+	InputText   string
+	OutputFile  string
+	Verbose     bool
+	DetailLevel string
+	UseSample   bool
+	Model       string
+	Temperature float64
+	MaxTokens   int
 }
 
 // ParseFlags 解析命令行参数
@@ -104,13 +104,13 @@ func PrintHelp() {
 }
 
 // FormatOutput 格式化输出
-func FormatOutput(result map[string]interface{}, verbose bool) {
+func FormatOutput(result map[string]any, verbose bool) {
 	fmt.Println("\n" + strings.Repeat("=", 80))
 	fmt.Println("🩺 健康洞察分析报告")
 	fmt.Println(strings.Repeat("=", 80))
 
 	// 提取分析结果
-	analysis, ok := result["analysis"].(map[string]interface{})
+	analysis, ok := result["analysis"].(map[string]any)
 	if !ok {
 		fmt.Println("\n❌ 无法解析分析结果")
 		if verbose {
@@ -135,11 +135,11 @@ func FormatOutput(result map[string]interface{}, verbose bool) {
 	}
 
 	// 潜在风险
-	if risks, ok := analysis["potential_risks"].([]interface{}); ok && len(risks) > 0 {
+	if risks, ok := analysis["potential_risks"].([]any); ok && len(risks) > 0 {
 		fmt.Println("\n⚠️  潜在健康风险")
 		fmt.Println(strings.Repeat("-", 80))
 		for i, risk := range risks {
-			if riskMap, ok := risk.(map[string]interface{}); ok {
+			if riskMap, ok := risk.(map[string]any); ok {
 				fmt.Printf("\n%d. %s", i+1, riskMap["condition"])
 				if level, ok := riskMap["risk_level"].(string); ok {
 					fmt.Printf(" [风险等级: %s]", getRiskLevelEmoji(level))
@@ -147,7 +147,7 @@ func FormatOutput(result map[string]interface{}, verbose bool) {
 				if desc, ok := riskMap["description"].(string); ok {
 					fmt.Printf("\n   %s", desc)
 				}
-				if evidence, ok := riskMap["supporting_evidence"].([]interface{}); ok && len(evidence) > 0 {
+				if evidence, ok := riskMap["supporting_evidence"].([]any); ok && len(evidence) > 0 {
 					fmt.Print("\n   支持证据: ")
 					for j, ev := range evidence {
 						if j > 0 {
@@ -162,11 +162,11 @@ func FormatOutput(result map[string]interface{}, verbose bool) {
 	}
 
 	// 详细发现
-	if findings, ok := analysis["detailed_findings"].([]interface{}); ok && len(findings) > 0 {
+	if findings, ok := analysis["detailed_findings"].([]any); ok && len(findings) > 0 {
 		fmt.Println("\n🔬 详细检查发现")
 		fmt.Println(strings.Repeat("-", 80))
 		for i, finding := range findings {
-			if findingMap, ok := finding.(map[string]interface{}); ok {
+			if findingMap, ok := finding.(map[string]any); ok {
 				param := findingMap["parameter"]
 				value := findingMap["value"]
 				normalRange := findingMap["normal_range"]
@@ -184,11 +184,11 @@ func FormatOutput(result map[string]interface{}, verbose bool) {
 	}
 
 	// 建议
-	if recommendations, ok := analysis["recommendations"].([]interface{}); ok && len(recommendations) > 0 {
+	if recommendations, ok := analysis["recommendations"].([]any); ok && len(recommendations) > 0 {
 		fmt.Println("\n💡 健康建议")
 		fmt.Println(strings.Repeat("-", 80))
 
-		categories := map[string][]interface{}{
+		categories := map[string][]any{
 			"Lifestyle": {},
 			"Diet":      {},
 			"Medical":   {},
@@ -196,7 +196,7 @@ func FormatOutput(result map[string]interface{}, verbose bool) {
 		}
 
 		for _, rec := range recommendations {
-			if recMap, ok := rec.(map[string]interface{}); ok {
+			if recMap, ok := rec.(map[string]any); ok {
 				if cat, ok := recMap["category"].(string); ok {
 					categories[cat] = append(categories[cat], rec)
 				}
@@ -208,7 +208,7 @@ func FormatOutput(result map[string]interface{}, verbose bool) {
 			if len(recs) > 0 {
 				fmt.Printf("\n%s：\n", getCategoryName(cat))
 				for i, rec := range recs {
-					if recMap, ok := rec.(map[string]interface{}); ok {
+					if recMap, ok := rec.(map[string]any); ok {
 						title := recMap["title"]
 						desc := recMap["description"]
 						priority := recMap["priority"]
@@ -230,7 +230,7 @@ func FormatOutput(result map[string]interface{}, verbose bool) {
 }
 
 // SaveToFile 保存结果到文件
-func SaveToFile(result map[string]interface{}, filePath string) error {
+func SaveToFile(result map[string]any, filePath string) error {
 	data, err := json.MarshalIndent(result, "", "  ")
 	if err != nil {
 		return fmt.Errorf("序列化结果失败: %w", err)

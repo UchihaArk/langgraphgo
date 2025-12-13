@@ -37,7 +37,7 @@ go run -tags="" main.go
 ### 1. Intent-Based Routing
 ```go
 // Conditional routing based on user intent
-g.AddConditionalEdge("analyze_intent", func(ctx context.Context, state interface{}) string {
+g.AddConditionalEdge("analyze_intent", func(ctx context.Context, state any) string {
     messages := state.([]llms.MessageContent)
     text := strings.ToLower(messages[0].Parts[0].(llms.TextContent).Text)
     
@@ -55,8 +55,8 @@ g.AddConditionalEdge("analyze_intent", func(ctx context.Context, state interface
 ### 2. Multi-Step Workflow
 ```go
 // Validation-based routing
-g.AddConditionalEdge("validate", func(ctx context.Context, state interface{}) string {
-    data := state.(map[string]interface{})
+g.AddConditionalEdge("validate", func(ctx context.Context, state any) string {
+    data := state.(map[string]any)
     if valid, ok := data["valid"].(bool); ok && valid {
         return "process"  // Continue processing
     }
@@ -67,7 +67,7 @@ g.AddConditionalEdge("validate", func(ctx context.Context, state interface{}) st
 ### 3. Dynamic Tool Selection
 ```go
 // Task-based tool selection
-g.AddConditionalEdge("analyze_task", func(ctx context.Context, state interface{}) string {
+g.AddConditionalEdge("analyze_task", func(ctx context.Context, state any) string {
     task := strings.ToLower(state.(string))
     
     if strings.Contains(task, "calculate") {

@@ -267,14 +267,14 @@ func main() {
 
 	// Run search
 	fmt.Println("🔍 Starting tree search...")
-	result, err := agent.Invoke(context.Background(), map[string]interface{}{})
+	result, err := agent.Invoke(context.Background(), map[string]any{})
 	if err != nil {
 		log.Fatalf("Search failed: %v", err)
 	}
 
 	// Print solution
 	fmt.Println()
-	finalState := result.(map[string]interface{})
+	finalState := result.(map[string]any)
 	solution := finalState["solution"]
 
 	prebuilt.PrintSolution(solution)

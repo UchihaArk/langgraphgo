@@ -9,9 +9,9 @@ import (
 func TestStateGraph_Interrupt(t *testing.T) {
 	// Create a StateGraph
 	g := NewStateGraph()
-	
+
 	// Add node that uses Interrupt
-	g.AddNode("node1", "Node with interrupt", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("node1", "Node with interrupt", func(ctx context.Context, state any) (any, error) {
 		// Use the Interrupt function
 		resumeValue, err := Interrupt(ctx, "waiting for input")
 		if err != nil {
@@ -23,24 +23,24 @@ func TestStateGraph_Interrupt(t *testing.T) {
 		}
 		return "default", nil
 	})
-	
+
 	g.AddEdge("node1", END)
 	g.SetEntryPoint("node1")
-	
+
 	runnable, err := g.Compile()
 	if err != nil {
 		t.Fatalf("Failed to compile: %v", err)
 	}
-	
+
 	// First execution should interrupt
 	_, err = runnable.Invoke(context.Background(), "initial")
-	
+
 	// Verify we got an interrupt error
 	var graphInterrupt *GraphInterrupt
 	if err == nil {
 		t.Fatal("Expected interrupt error, got nil")
 	}
-	
+
 	// Check if it's a NodeInterrupt wrapped in error or GraphInterrupt
 	var nodeInterrupt *NodeInterrupt
 	if !errors.As(err, &nodeInterrupt) {
@@ -49,7 +49,7 @@ func TestStateGraph_Interrupt(t *testing.T) {
 			t.Fatalf("Expected NodeInterrupt or GraphInterrupt error, got: %v", err)
 		}
 	}
-	
+
 	if graphInterrupt != nil {
 		if graphInterrupt.InterruptValue != "waiting for input" {
 			t.Errorf("Expected interrupt value 'waiting for input', got: %v", graphInterrupt.InterruptValue)
@@ -61,6 +61,6 @@ func TestStateGraph_Interrupt(t *testing.T) {
 		}
 		t.Logf("Successfully interrupted with NodeInterrupt, value: %v", nodeInterrupt.Value)
 	}
-	
+
 	t.Log("StateGraph Interrupt test passed!")
 }

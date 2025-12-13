@@ -16,8 +16,8 @@ import (
 
 // TavilySearchTool implements web search using Tavily API
 type TavilySearchTool struct {
-	APIKey      string
-	MaxResults  int
+	APIKey     string
+	MaxResults int
 }
 
 func NewTavilySearchTool(apiKey string, maxResults int) *TavilySearchTool {
@@ -41,12 +41,12 @@ func (t *TavilySearchTool) Call(ctx context.Context, input string) (string, erro
 	}
 
 	// Prepare Tavily API request
-	requestBody := map[string]interface{}{
-		"api_key":      t.APIKey,
-		"query":        input,
-		"max_results":  t.MaxResults,
-		"search_depth": "advanced",
-		"include_answer": false,
+	requestBody := map[string]any{
+		"api_key":             t.APIKey,
+		"query":               input,
+		"max_results":         t.MaxResults,
+		"search_depth":        "advanced",
+		"include_answer":      false,
 		"include_raw_content": true,
 	}
 
@@ -205,16 +205,16 @@ Summary:`, input)
 
 // ToolRegistry holds all available tools
 type ToolRegistry struct {
-	SearchTool   *TavilySearchTool
-	ScraperTool  *WebScraperTool
+	SearchTool     *TavilySearchTool
+	ScraperTool    *WebScraperTool
 	SummarizerTool *SummarizerTool
 }
 
 // NewToolRegistry creates a new tool registry
 func NewToolRegistry(config *Config, model llms.Model) *ToolRegistry {
 	return &ToolRegistry{
-		SearchTool:    NewTavilySearchTool(config.TavilyAPIKey, config.MaxSearchResults),
-		ScraperTool:   NewWebScraperTool(),
+		SearchTool:     NewTavilySearchTool(config.TavilyAPIKey, config.MaxSearchResults),
+		ScraperTool:    NewWebScraperTool(),
 		SummarizerTool: NewSummarizerTool(model),
 	}
 }

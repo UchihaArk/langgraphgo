@@ -210,7 +210,7 @@ Integration,LangGraph integrates with LangChain components,Guide`
 	testDocs := []prebuilt.Document{
 		{
 			PageContent: textContent,
-			Metadata:    map[string]interface{}{"source": "test.txt"},
+			Metadata:    map[string]any{"source": "test.txt"},
 		},
 	}
 

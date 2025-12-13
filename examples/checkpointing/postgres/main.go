@@ -55,7 +55,7 @@ func main() {
 	g.SetCheckpointConfig(config)
 
 	// Add processing nodes
-	g.AddNode("step1", "step1", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("step1", "step1", func(ctx context.Context, state any) (any, error) {
 		s := state.(ProcessState)
 		s.Step = 1
 		s.Data = s.Data + " → Step1"
@@ -65,7 +65,7 @@ func main() {
 		return s, nil
 	})
 
-	g.AddNode("step2", "step2", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("step2", "step2", func(ctx context.Context, state any) (any, error) {
 		s := state.(ProcessState)
 		s.Step = 2
 		s.Data = s.Data + " → Step2"
@@ -75,7 +75,7 @@ func main() {
 		return s, nil
 	})
 
-	g.AddNode("step3", "step3", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("step3", "step3", func(ctx context.Context, state any) (any, error) {
 		s := state.(ProcessState)
 		s.Step = 3
 		s.Data = s.Data + " → Step3"
@@ -136,7 +136,7 @@ func main() {
 		if err != nil {
 			fmt.Printf("Error resuming: %v\n", err)
 		} else {
-			// Since data is loaded from JSON, it comes back as map[string]interface{}
+			// Since data is loaded from JSON, it comes back as map[string]any
 			// We need to convert it back to ProcessState
 			var resumed ProcessState
 

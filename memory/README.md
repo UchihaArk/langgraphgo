@@ -319,7 +319,7 @@ type Message struct {
     Role       string                 // "user", "assistant", "system"
     Content    string                 // Message content
     Timestamp  time.Time              // Creation time
-    Metadata   map[string]interface{} // Additional metadata
+    Metadata   map[string]any // Additional metadata
     TokenCount int                    // Estimated tokens
 }
 ```

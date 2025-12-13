@@ -51,7 +51,7 @@ type StreamResult struct {
 	Events <-chan StreamEvent
 
 	// Result channel receives the final result when execution completes
-	Result <-chan interface{}
+	Result <-chan any
 
 	// Errors channel receives any errors that occur during execution
 	Errors <-chan error
@@ -133,21 +133,21 @@ func (sl *StreamingListener) shouldEmit(event StreamEvent) bool {
 }
 
 // OnNodeEvent implements the NodeListener interface
-func (sl *StreamingListener) OnNodeEvent(_ context.Context, event NodeEvent, nodeName string, state interface{}, err error) {
+func (sl *StreamingListener) OnNodeEvent(_ context.Context, event NodeEvent, nodeName string, state any, err error) {
 	streamEvent := StreamEvent{
 		Timestamp: time.Now(),
 		NodeName:  nodeName,
 		Event:     event,
 		State:     state,
 		Error:     err,
-		Metadata:  make(map[string]interface{}),
+		Metadata:  make(map[string]any),
 	}
 	sl.emitEvent(streamEvent)
 }
 
 // CallbackHandler implementation
 
-func (sl *StreamingListener) OnChainStart(ctx context.Context, serialized map[string]interface{}, inputs map[string]interface{}, runID string, parentRunID *string, tags []string, metadata map[string]interface{}) {
+func (sl *StreamingListener) OnChainStart(ctx context.Context, serialized map[string]any, inputs map[string]any, runID string, parentRunID *string, tags []string, metadata map[string]any) {
 	sl.emitEvent(StreamEvent{
 		Timestamp: time.Now(),
 		Event:     EventChainStart,
@@ -156,7 +156,7 @@ func (sl *StreamingListener) OnChainStart(ctx context.Context, serialized map[st
 	})
 }
 
-func (sl *StreamingListener) OnChainEnd(ctx context.Context, outputs map[string]interface{}, runID string) {
+func (sl *StreamingListener) OnChainEnd(ctx context.Context, outputs map[string]any, runID string) {
 	sl.emitEvent(StreamEvent{
 		Timestamp: time.Now(),
 		Event:     EventChainEnd,
@@ -172,7 +172,7 @@ func (sl *StreamingListener) OnChainError(ctx context.Context, err error, runID 
 	})
 }
 
-func (sl *StreamingListener) OnLLMStart(ctx context.Context, serialized map[string]interface{}, prompts []string, runID string, parentRunID *string, tags []string, metadata map[string]interface{}) {
+func (sl *StreamingListener) OnLLMStart(ctx context.Context, serialized map[string]any, prompts []string, runID string, parentRunID *string, tags []string, metadata map[string]any) {
 	sl.emitEvent(StreamEvent{
 		Timestamp: time.Now(),
 		Event:     EventLLMStart,
@@ -181,7 +181,7 @@ func (sl *StreamingListener) OnLLMStart(ctx context.Context, serialized map[stri
 	})
 }
 
-func (sl *StreamingListener) OnLLMEnd(ctx context.Context, response interface{}, runID string) {
+func (sl *StreamingListener) OnLLMEnd(ctx context.Context, response any, runID string) {
 	sl.emitEvent(StreamEvent{
 		Timestamp: time.Now(),
 		Event:     EventLLMEnd,
@@ -197,7 +197,7 @@ func (sl *StreamingListener) OnLLMError(ctx context.Context, err error, runID st
 	})
 }
 
-func (sl *StreamingListener) OnToolStart(ctx context.Context, serialized map[string]interface{}, inputStr string, runID string, parentRunID *string, tags []string, metadata map[string]interface{}) {
+func (sl *StreamingListener) OnToolStart(ctx context.Context, serialized map[string]any, inputStr string, runID string, parentRunID *string, tags []string, metadata map[string]any) {
 	sl.emitEvent(StreamEvent{
 		Timestamp: time.Now(),
 		Event:     EventToolStart,
@@ -222,18 +222,18 @@ func (sl *StreamingListener) OnToolError(ctx context.Context, err error, runID s
 	})
 }
 
-func (sl *StreamingListener) OnRetrieverStart(ctx context.Context, serialized map[string]interface{}, query string, runID string, parentRunID *string, tags []string, metadata map[string]interface{}) {
+func (sl *StreamingListener) OnRetrieverStart(ctx context.Context, serialized map[string]any, query string, runID string, parentRunID *string, tags []string, metadata map[string]any) {
 	// Map to custom or tool event?
 }
 
-func (sl *StreamingListener) OnRetrieverEnd(ctx context.Context, documents []interface{}, runID string) {
+func (sl *StreamingListener) OnRetrieverEnd(ctx context.Context, documents []any, runID string) {
 }
 
 func (sl *StreamingListener) OnRetrieverError(ctx context.Context, err error, runID string) {
 }
 
 // OnGraphStep implements GraphCallbackHandler
-func (sl *StreamingListener) OnGraphStep(ctx context.Context, stepNode string, state interface{}) {
+func (sl *StreamingListener) OnGraphStep(ctx context.Context, stepNode string, state any) {
 	sl.emitEvent(StreamEvent{
 		Timestamp: time.Now(),
 		Event:     "graph_step", // Custom event type
@@ -287,10 +287,10 @@ func NewStreamingRunnableWithDefaults(runnable *ListenableRunnable) *StreamingRu
 }
 
 // Stream executes the graph with real-time event streaming
-func (sr *StreamingRunnable) Stream(ctx context.Context, initialState interface{}) *StreamResult {
+func (sr *StreamingRunnable) Stream(ctx context.Context, initialState any) *StreamResult {
 	// Create channels
 	eventChan := make(chan StreamEvent, sr.config.BufferSize)
-	resultChan := make(chan interface{}, 1)
+	resultChan := make(chan any, 1)
 	errorChan := make(chan error, 1)
 	doneChan := make(chan struct{})
 
@@ -416,15 +416,15 @@ func NewStreamingExecutor(runnable *StreamingRunnable) *StreamingExecutor {
 //nolint:cyclop // Complex streaming logic requires multiple conditional paths
 func (se *StreamingExecutor) ExecuteWithCallback(
 	ctx context.Context,
-	initialState interface{},
+	initialState any,
 	eventCallback func(event StreamEvent),
-	resultCallback func(result interface{}, err error),
+	resultCallback func(result any, err error),
 ) error {
 
 	streamResult := se.runnable.Stream(ctx, initialState)
 	defer streamResult.Cancel()
 
-	var finalResult interface{}
+	var finalResult any
 	var finalError error
 	resultReceived := false
 
@@ -465,7 +465,7 @@ func (se *StreamingExecutor) ExecuteWithCallback(
 }
 
 // ExecuteAsync executes the graph asynchronously and returns immediately
-func (se *StreamingExecutor) ExecuteAsync(ctx context.Context, initialState interface{}) *StreamResult {
+func (se *StreamingExecutor) ExecuteAsync(ctx context.Context, initialState any) *StreamResult {
 	return se.runnable.Stream(ctx, initialState)
 }
 

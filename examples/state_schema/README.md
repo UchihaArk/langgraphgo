@@ -32,7 +32,7 @@ For example:
 
 ### Defining Custom Reducer
 ```go
-func SumReducer(current, new interface{}) (interface{}, error) {
+func SumReducer(current, new any) (any, error) {
     // ... logic to add integers ...
     return c + n, nil
 }

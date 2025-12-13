@@ -41,10 +41,10 @@ func (t GetTeamMembersTool) Description() string {
 }
 
 func (t GetTeamMembersTool) Call(ctx context.Context, input string) (string, error) {
-	var inputData map[string]interface{}
+	var inputData map[string]any
 	if err := json.Unmarshal([]byte(input), &inputData); err != nil {
 		// Try direct string input
-		inputData = map[string]interface{}{"department": input}
+		inputData = map[string]any{"department": input}
 	}
 
 	department, ok := inputData["department"].(string)
@@ -92,7 +92,7 @@ func (t GetExpensesTool) Description() string {
 }
 
 func (t GetExpensesTool) Call(ctx context.Context, input string) (string, error) {
-	var inputData map[string]interface{}
+	var inputData map[string]any
 	if err := json.Unmarshal([]byte(input), &inputData); err != nil {
 		return "", fmt.Errorf("invalid input: %v", err)
 	}
@@ -126,7 +126,7 @@ func (t GetCustomBudgetTool) Description() string {
 }
 
 func (t GetCustomBudgetTool) Call(ctx context.Context, input string) (string, error) {
-	var inputData map[string]interface{}
+	var inputData map[string]any
 	if err := json.Unmarshal([]byte(input), &inputData); err != nil {
 		return "", fmt.Errorf("invalid input: %v", err)
 	}
@@ -143,7 +143,7 @@ func (t GetCustomBudgetTool) Call(ctx context.Context, input string) (string, er
 	}
 
 	if budget, exists := customBudgets[userID]; exists {
-		result := map[string]interface{}{
+		result := map[string]any{
 			"user_id": userID,
 			"budget":  budget,
 		}

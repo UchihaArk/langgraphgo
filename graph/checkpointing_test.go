@@ -27,7 +27,7 @@ func TestMemoryCheckpointStore_SaveAndLoad(t *testing.T) {
 		State:     "test_state",
 		Timestamp: time.Now(),
 		Version:   1,
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"execution_id": "exec_123",
 		},
 	}
@@ -84,19 +84,19 @@ func TestMemoryCheckpointStore_List(t *testing.T) {
 	checkpoints := []*graph.Checkpoint{
 		{
 			ID: "checkpoint_1",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"execution_id": executionID,
 			},
 		},
 		{
 			ID: "checkpoint_2",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"execution_id": executionID,
 			},
 		},
 		{
 			ID: "checkpoint_3",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"execution_id": "different_exec",
 			},
 		},
@@ -175,19 +175,19 @@ func TestMemoryCheckpointStore_Clear(t *testing.T) {
 	checkpoints := []*graph.Checkpoint{
 		{
 			ID: "checkpoint_1",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"execution_id": executionID,
 			},
 		},
 		{
 			ID: "checkpoint_2",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"execution_id": executionID,
 			},
 		},
 		{
 			ID: "checkpoint_3",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"execution_id": "different_exec",
 			},
 		},
@@ -276,21 +276,21 @@ func TestFileCheckpointStore_List(t *testing.T) {
 	checkpoints := []*graph.Checkpoint{
 		{
 			ID: "checkpoint_1",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"execution_id": executionID,
 			},
 			Version: 1,
 		},
 		{
 			ID: "checkpoint_2",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"execution_id": executionID,
 			},
 			Version: 2,
 		},
 		{
 			ID: "checkpoint_3",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"execution_id": "different_exec",
 			},
 			Version: 1,
@@ -383,19 +383,19 @@ func TestFileCheckpointStore_Clear(t *testing.T) {
 	checkpoints := []*graph.Checkpoint{
 		{
 			ID: "checkpoint_1",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"execution_id": executionID,
 			},
 		},
 		{
 			ID: "checkpoint_2",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"execution_id": executionID,
 			},
 		},
 		{
 			ID: "checkpoint_3",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"execution_id": "different_exec",
 			},
 		},
@@ -441,11 +441,11 @@ func TestCheckpointableRunnable_Basic(t *testing.T) {
 	// Create graph
 	g := graph.NewListenableStateGraph()
 
-	g.AddNode("step1", "step1", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("step1", "step1", func(ctx context.Context, state any) (any, error) {
 		return "step1_result", nil
 	})
 
-	g.AddNode("step2", "step2", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("step2", "step2", func(ctx context.Context, state any) (any, error) {
 		return "step2_result", nil
 	})
 
@@ -507,7 +507,7 @@ func TestCheckpointableRunnable_ManualCheckpoint(t *testing.T) {
 	t.Parallel()
 
 	g := graph.NewListenableStateGraph()
-	g.AddNode(testNode, testNode, func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode(testNode, testNode, func(ctx context.Context, state any) (any, error) {
 		return testResult, nil
 	})
 	g.AddEdge(testNode, graph.END)
@@ -552,7 +552,7 @@ func TestCheckpointableRunnable_LoadCheckpoint(t *testing.T) {
 	t.Parallel()
 
 	g := graph.NewListenableStateGraph()
-	g.AddNode(testNode, testNode, func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode(testNode, testNode, func(ctx context.Context, state any) (any, error) {
 		return testResult, nil
 	})
 	g.AddEdge(testNode, graph.END)
@@ -600,7 +600,7 @@ func TestCheckpointableRunnable_ClearCheckpoints(t *testing.T) {
 	t.Parallel()
 
 	g := graph.NewListenableStateGraph()
-	g.AddNode(testNode, testNode, func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode(testNode, testNode, func(ctx context.Context, state any) (any, error) {
 		return testResult, nil
 	})
 	g.AddEdge(testNode, graph.END)
@@ -659,7 +659,7 @@ func TestCheckpointableStateGraph_CompileCheckpointable(t *testing.T) {
 
 	g := graph.NewCheckpointableStateGraph()
 
-	g.AddNode(testNode, testNode, func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode(testNode, testNode, func(ctx context.Context, state any) (any, error) {
 		return testResult, nil
 	})
 	g.AddEdge(testNode, graph.END)
@@ -719,20 +719,20 @@ func TestCheckpointing_Integration(t *testing.T) {
 	g := graph.NewCheckpointableStateGraph()
 
 	// Build a multi-step pipeline
-	g.AddNode("analyze", "analyze", func(ctx context.Context, state interface{}) (interface{}, error) {
-		data := state.(map[string]interface{})
+	g.AddNode("analyze", "analyze", func(ctx context.Context, state any) (any, error) {
+		data := state.(map[string]any)
 		data["analyzed"] = true
 		return data, nil
 	})
 
-	g.AddNode("process", "process", func(ctx context.Context, state interface{}) (interface{}, error) {
-		data := state.(map[string]interface{})
+	g.AddNode("process", "process", func(ctx context.Context, state any) (any, error) {
+		data := state.(map[string]any)
 		data["processed"] = true
 		return data, nil
 	})
 
-	g.AddNode("finalize", "finalize", func(ctx context.Context, state interface{}) (interface{}, error) {
-		data := state.(map[string]interface{})
+	g.AddNode("finalize", "finalize", func(ctx context.Context, state any) (any, error) {
+		data := state.(map[string]any)
 		data["finalized"] = true
 		return data, nil
 	})
@@ -749,7 +749,7 @@ func TestCheckpointing_Integration(t *testing.T) {
 	}
 
 	// Execute with initial state
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"input": "test_data",
 	}
 
@@ -760,7 +760,7 @@ func TestCheckpointing_Integration(t *testing.T) {
 	}
 
 	// Verify final result
-	finalState := result.(map[string]interface{})
+	finalState := result.(map[string]any)
 	if !finalState["analyzed"].(bool) {
 		t.Error("Expected analyzed to be true")
 	}
@@ -794,7 +794,7 @@ func TestCheckpointing_Integration(t *testing.T) {
 
 	// Check analyze checkpoint
 	if analyzeCP, exists := checkpointsByNode["analyze"]; exists {
-		state := analyzeCP.State.(map[string]interface{})
+		state := analyzeCP.State.(map[string]any)
 		if !state["analyzed"].(bool) {
 			t.Error("Analyze checkpoint should have analyzed=true")
 		}
@@ -804,7 +804,7 @@ func TestCheckpointing_Integration(t *testing.T) {
 
 	// Check process checkpoint
 	if processCP, exists := checkpointsByNode["process"]; exists {
-		state := processCP.State.(map[string]interface{})
+		state := processCP.State.(map[string]any)
 		if !state["processed"].(bool) {
 			t.Error("Process checkpoint should have processed=true")
 		}
@@ -814,7 +814,7 @@ func TestCheckpointing_Integration(t *testing.T) {
 
 	// Check finalize checkpoint
 	if finalizeCP, exists := checkpointsByNode["finalize"]; exists {
-		state := finalizeCP.State.(map[string]interface{})
+		state := finalizeCP.State.(map[string]any)
 		if !state["finalized"].(bool) {
 			t.Error("Finalize checkpoint should have finalized=true")
 		}
@@ -829,7 +829,7 @@ func TestCheckpointListener_ErrorHandling(t *testing.T) {
 	g := graph.NewListenableStateGraph()
 
 	// Node that will fail
-	g.AddNode("failing_node", "failing_node", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("failing_node", "failing_node", func(ctx context.Context, state any) (any, error) {
 		return nil, fmt.Errorf("simulated failure")
 	})
 

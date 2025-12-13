@@ -15,14 +15,14 @@ import (
 
 // MarketState represents the state of the stock market
 type MarketState struct {
-	Price       float64
-	Trend       string // "bullish", "bearish", "neutral"
-	NewsEvent   string
-	DayNumber   int
-	AvgVolume   int
-	Volatility  float64
-	Shares      int
-	Cash        float64
+	Price      float64
+	Trend      string // "bullish", "bearish", "neutral"
+	NewsEvent  string
+	DayNumber  int
+	AvgVolume  int
+	Volatility float64
+	Shares     int
+	Cash       float64
 }
 
 // NewMarketState creates a new market state
@@ -109,16 +109,16 @@ type AgentState struct {
 
 // SimulationResult stores the outcome of one simulation
 type SimulationResult struct {
-	Action       string
-	Amount       int
-	FinalPrice   float64
-	FinalValue   float64
-	ProfitLoss   float64
+	Action     string
+	Amount     int
+	FinalPrice float64
+	FinalValue float64
+	ProfitLoss float64
 }
 
 // AnalystNode observes the market and proposes a trading strategy
-func AnalystNode(ctx context.Context, state interface{}) (interface{}, error) {
-	stateMap := state.(map[string]interface{})
+func AnalystNode(ctx context.Context, state any) (any, error) {
+	stateMap := state.(map[string]any)
 	agentState := stateMap["agent_state"].(*AgentState)
 	market := agentState.RealMarket
 
@@ -160,8 +160,8 @@ Provide a clear reasoning based on the market trend and news.`,
 }
 
 // SimulatorNode runs multiple simulations to test the proposed strategy
-func SimulatorNode(ctx context.Context, state interface{}) (interface{}, error) {
-	stateMap := state.(map[string]interface{})
+func SimulatorNode(ctx context.Context, state any) (any, error) {
+	stateMap := state.(map[string]any)
 	agentState := stateMap["agent_state"].(*AgentState)
 	numSimulations := 5
 	horizon := 10 // Simulate 10 days ahead
@@ -207,8 +207,8 @@ func SimulatorNode(ctx context.Context, state interface{}) (interface{}, error) 
 }
 
 // RiskManagerNode analyzes simulations and makes the final decision
-func RiskManagerNode(ctx context.Context, state interface{}) (interface{}, error) {
-	stateMap := state.(map[string]interface{})
+func RiskManagerNode(ctx context.Context, state any) (any, error) {
+	stateMap := state.(map[string]any)
 	agentState := stateMap["agent_state"].(*AgentState)
 
 	// Calculate simulation statistics
@@ -290,8 +290,8 @@ Amount should reflect your risk-adjusted position size.`,
 }
 
 // ExecuteNode executes the final decision in the real market
-func ExecuteNode(ctx context.Context, state interface{}) (interface{}, error) {
-	stateMap := state.(map[string]interface{})
+func ExecuteNode(ctx context.Context, state any) (any, error) {
+	stateMap := state.(map[string]any)
 	agentState := stateMap["agent_state"].(*AgentState)
 
 	fmt.Println("\n💼 EXECUTING IN REAL MARKET:")
@@ -463,7 +463,7 @@ func main() {
 		fmt.Println(strings.Repeat("=", 80))
 
 		// Prepare input state
-		input := map[string]interface{}{
+		input := map[string]any{
 			"llm":         llm,
 			"agent_state": agentState,
 		}
@@ -475,7 +475,7 @@ func main() {
 		}
 
 		// Extract updated state
-		resultMap := result.(map[string]interface{})
+		resultMap := result.(map[string]any)
 		agentState = resultMap["agent_state"].(*AgentState)
 
 		// Update market conditions for next day (simulate external events)

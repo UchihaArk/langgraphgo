@@ -72,7 +72,7 @@ func TestCreateReactAgent(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Initial State
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			llms.TextParts(llms.ChatMessageTypeHuman, "Run tool"),
 		},
@@ -83,7 +83,7 @@ func TestCreateReactAgent(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Verify Result
-	mState := res.(map[string]interface{})
+	mState := res.(map[string]any)
 	messages := mState["messages"].([]llms.MessageContent)
 
 	// Expected messages:

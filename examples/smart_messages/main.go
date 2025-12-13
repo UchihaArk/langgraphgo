@@ -19,8 +19,8 @@ func main() {
 
 	// 2. Define nodes
 	// Node A: Simulates a user message
-	g.AddNode("user_input", "user_input", func(ctx context.Context, state interface{}) (interface{}, error) {
-		return map[string]interface{}{
+	g.AddNode("user_input", "user_input", func(ctx context.Context, state any) (any, error) {
+		return map[string]any{
 			"messages": []llms.MessageContent{
 				{Role: llms.ChatMessageTypeHuman, Parts: []llms.ContentPart{llms.TextPart("Hello, AI!")}},
 			},
@@ -28,10 +28,10 @@ func main() {
 	})
 
 	// Node B: Simulates an AI response (initially a placeholder)
-	g.AddNode("ai_response", "ai_response", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("ai_response", "ai_response", func(ctx context.Context, state any) (any, error) {
 		// We use a map with "id" to demonstrate upsert capability
-		return map[string]interface{}{
-			"messages": []map[string]interface{}{
+		return map[string]any{
+			"messages": []map[string]any{
 				{
 					"id":      "msg_123",
 					"role":    "ai",
@@ -42,10 +42,10 @@ func main() {
 	})
 
 	// Node C: Simulates updating the previous AI response (Upsert)
-	g.AddNode("ai_update", "ai_update", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("ai_update", "ai_update", func(ctx context.Context, state any) (any, error) {
 		// Same ID "msg_123", different content. This should REPLACE the previous message.
-		return map[string]interface{}{
-			"messages": []map[string]interface{}{
+		return map[string]any{
+			"messages": []map[string]any{
 				{
 					"id":      "msg_123",
 					"role":    "ai",
@@ -68,16 +68,16 @@ func main() {
 	}
 
 	ctx := context.Background()
-	// Use []interface{} for messages to allow mixed types (structs and maps)
-	// This is necessary because we are mixing llms.MessageContent and map[string]interface{} (for IDs)
-	res, err := runnable.Invoke(ctx, map[string]interface{}{"messages": []interface{}{}})
+	// Use []any for messages to allow mixed types (structs and maps)
+	// This is necessary because we are mixing llms.MessageContent and map[string]any (for IDs)
+	res, err := runnable.Invoke(ctx, map[string]any{"messages": []any{}})
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// 5. Inspect Result
-	mRes := res.(map[string]interface{})
-	messages := mRes["messages"].([]interface{}) // Note: Type might be mixed due to map input
+	mRes := res.(map[string]any)
+	messages := mRes["messages"].([]any) // Note: Type might be mixed due to map input
 
 	fmt.Printf("Total Messages: %d\n", len(messages))
 	for i, msg := range messages {

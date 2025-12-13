@@ -13,7 +13,7 @@ RAG (Retrieval-Augmented Generation) is a technique that combines information re
 ```go
 type Document struct {
     PageContent string
-    Metadata    map[string]interface{}
+    Metadata    map[string]any
 }
 ```
 
@@ -237,7 +237,7 @@ type RAGState struct {
     Context            string                // Formatted context for LLM
     Answer             string                // Generated answer
     Citations          []string              // Source citations
-    Metadata           map[string]interface{} // Additional metadata
+    Metadata           map[string]any // Additional metadata
 }
 ```
 
@@ -311,7 +311,7 @@ Compress retrieved documents to extract only relevant parts:
 
 ```go
 // Implement custom node in pipeline
-func compressContext(ctx context.Context, state interface{}) (interface{}, error) {
+func compressContext(ctx context.Context, state any) (any, error) {
     // Use LLM to extract relevant parts
 }
 ```

@@ -59,7 +59,7 @@ func main() {
 	}
 
 	// Initial input
-	inputs := map[string]interface{}{
+	inputs := map[string]any{
 		"messages": []llms.MessageContent{
 			llms.TextParts(llms.ChatMessageTypeHuman, "What is the weather in San Francisco?"),
 		},
@@ -73,7 +73,7 @@ func main() {
 	}
 
 	// Print result
-	mState := result.(map[string]interface{})
+	mState := result.(map[string]any)
 	messages := mState["messages"].([]llms.MessageContent)
 	lastMsg := messages[len(messages)-1]
 

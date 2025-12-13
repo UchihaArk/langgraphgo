@@ -20,7 +20,7 @@ func main() {
 	g := graph.NewStateGraph()
 
 	// Define a node that uses the configuration
-	g.AddNode("process", "process", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("process", "process", func(ctx context.Context, state any) (any, error) {
 		// Retrieve config from context
 		config := graph.GetConfig(ctx)
 
@@ -51,10 +51,10 @@ func main() {
 
 	// Prepare runtime configuration
 	config := &graph.Config{
-		Configurable: map[string]interface{}{
+		Configurable: map[string]any{
 			"thread_id": "thread-123",
 		},
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"user_id":    "alice",
 			"request_id": "req-456",
 			"verbose":    true,

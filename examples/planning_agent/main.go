@@ -94,7 +94,7 @@ func main() {
 func runAgent(agent *graph.StateRunnable, query string) {
 	fmt.Printf("\nUser Query: %s\n\n", query)
 
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			llms.TextParts(llms.ChatMessageTypeHuman, query),
 		},
@@ -107,7 +107,7 @@ func runAgent(agent *graph.StateRunnable, query string) {
 	}
 
 	// Print final result
-	mState := res.(map[string]interface{})
+	mState := res.(map[string]any)
 	messages := mState["messages"].([]llms.MessageContent)
 
 	fmt.Println("\n--- Execution Result ---")
@@ -126,8 +126,8 @@ func runAgent(agent *graph.StateRunnable, query string) {
 
 // Node implementations
 
-func fetchDataNode(ctx context.Context, state interface{}) (interface{}, error) {
-	mState := state.(map[string]interface{})
+func fetchDataNode(ctx context.Context, state any) (any, error) {
+	mState := state.(map[string]any)
 	messages := mState["messages"].([]llms.MessageContent)
 
 	fmt.Println("📥 Fetching data from database...")
@@ -138,13 +138,13 @@ func fetchDataNode(ctx context.Context, state interface{}) (interface{}, error) 
 		Parts: []llms.ContentPart{llms.TextPart("Data fetched: 1000 user records retrieved")},
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"messages": append(messages, msg),
 	}, nil
 }
 
-func validateDataNode(ctx context.Context, state interface{}) (interface{}, error) {
-	mState := state.(map[string]interface{})
+func validateDataNode(ctx context.Context, state any) (any, error) {
+	mState := state.(map[string]any)
 	messages := mState["messages"].([]llms.MessageContent)
 
 	fmt.Println("✅ Validating data...")
@@ -154,13 +154,13 @@ func validateDataNode(ctx context.Context, state interface{}) (interface{}, erro
 		Parts: []llms.ContentPart{llms.TextPart("Data validation passed: all records valid")},
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"messages": append(messages, msg),
 	}, nil
 }
 
-func transformDataNode(ctx context.Context, state interface{}) (interface{}, error) {
-	mState := state.(map[string]interface{})
+func transformDataNode(ctx context.Context, state any) (any, error) {
+	mState := state.(map[string]any)
 	messages := mState["messages"].([]llms.MessageContent)
 
 	fmt.Println("🔄 Transforming data...")
@@ -170,13 +170,13 @@ func transformDataNode(ctx context.Context, state interface{}) (interface{}, err
 		Parts: []llms.ContentPart{llms.TextPart("Data transformed to JSON format successfully")},
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"messages": append(messages, msg),
 	}, nil
 }
 
-func analyzeDataNode(ctx context.Context, state interface{}) (interface{}, error) {
-	mState := state.(map[string]interface{})
+func analyzeDataNode(ctx context.Context, state any) (any, error) {
+	mState := state.(map[string]any)
 	messages := mState["messages"].([]llms.MessageContent)
 
 	fmt.Println("📊 Analyzing data...")
@@ -186,13 +186,13 @@ func analyzeDataNode(ctx context.Context, state interface{}) (interface{}, error
 		Parts: []llms.ContentPart{llms.TextPart("Analysis complete: avg_age=32.5, total_users=1000, active_rate=78%")},
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"messages": append(messages, msg),
 	}, nil
 }
 
-func saveResultsNode(ctx context.Context, state interface{}) (interface{}, error) {
-	mState := state.(map[string]interface{})
+func saveResultsNode(ctx context.Context, state any) (any, error) {
+	mState := state.(map[string]any)
 	messages := mState["messages"].([]llms.MessageContent)
 
 	fmt.Println("💾 Saving results...")
@@ -202,13 +202,13 @@ func saveResultsNode(ctx context.Context, state interface{}) (interface{}, error
 		Parts: []llms.ContentPart{llms.TextPart("Results saved to database successfully")},
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"messages": append(messages, msg),
 	}, nil
 }
 
-func generateReportNode(ctx context.Context, state interface{}) (interface{}, error) {
-	mState := state.(map[string]interface{})
+func generateReportNode(ctx context.Context, state any) (any, error) {
+	mState := state.(map[string]any)
 	messages := mState["messages"].([]llms.MessageContent)
 
 	fmt.Println("📝 Generating report...")
@@ -218,7 +218,7 @@ func generateReportNode(ctx context.Context, state interface{}) (interface{}, er
 		Parts: []llms.ContentPart{llms.TextPart("Report generated: summary.pdf created with all analysis results")},
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"messages": append(messages, msg),
 	}, nil
 }

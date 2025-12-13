@@ -405,12 +405,12 @@ func (a *Agent) renderPrompt(promptTemplate string, state *State) string {
 	}
 
 	var buf bytes.Buffer
-	data := map[string]interface{}{
-		"Query":    state.Query,
-		"Messages": state.FormatMessages(),
-		"Plan":     state.Plan,
-		"Tasks":    state.Tasks,
-		"CurrentTask": state.CurrentTask,
+	data := map[string]any{
+		"Query":           state.Query,
+		"Messages":        state.FormatMessages(),
+		"Plan":            state.Plan,
+		"Tasks":           state.Tasks,
+		"CurrentTask":     state.CurrentTask,
 		"ResearchResults": state.ResearchResults,
 		"CodeResults":     state.CodeResults,
 	}

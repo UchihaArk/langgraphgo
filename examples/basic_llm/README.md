@@ -54,7 +54,7 @@ go run main.go
 model, err := openai.New()
 
 // Graph node with LLM processing
-g.AddNode("generate", func(ctx context.Context, state interface{}) (interface{}, error) {
+g.AddNode("generate", func(ctx context.Context, state any) (any, error) {
     messages := state.([]llms.MessageContent)
     
     // Generate response with LangChain

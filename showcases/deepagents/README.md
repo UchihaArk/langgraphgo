@@ -118,7 +118,7 @@ func main() {
     }
 
     // Run the agent
-    inputs := map[string]interface{}{
+    inputs := map[string]any{
         "messages": []llms.MessageContent{
             llms.TextParts(llms.ChatMessageTypeHuman,
                 "Create a file named 'hello.txt' with content 'Hello, DeepAgents!', then read it back."),
@@ -302,7 +302,7 @@ When the agent encounters a complex task:
 ### 1. File Organization
 
 ```go
-inputs := map[string]interface{}{
+inputs := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman,
             "Organize all .txt files into a 'docs' directory"),
@@ -319,7 +319,7 @@ inputs := map[string]interface{}{
 ### 2. Task Management
 
 ```go
-inputs := map[string]interface{}{
+inputs := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman,
             "Create a todo list for setting up a new Go project"),
@@ -340,7 +340,7 @@ subAgentHandler := func(ctx context.Context, task string) (string, error) {
     return processFile(task)
 }
 
-inputs := map[string]interface{}{
+inputs := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman,
             "Process all JSON files in the data directory"),
@@ -356,7 +356,7 @@ inputs := map[string]interface{}{
 ### 4. Code Generation
 
 ```go
-inputs := map[string]interface{}{
+inputs := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman,
             "Create a simple Go HTTP server in server.go"),

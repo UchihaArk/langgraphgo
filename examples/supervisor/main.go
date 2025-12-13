@@ -95,7 +95,7 @@ func main() {
 	query := "Calculate 10 * 5 and then tell me a joke about the result."
 	fmt.Printf("User: %s\n", query)
 
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			llms.TextParts(llms.ChatMessageTypeHuman, query),
 		},
@@ -116,7 +116,7 @@ func main() {
 	}
 
 	// Print Result
-	mState := res.(map[string]interface{})
+	mState := res.(map[string]any)
 	messages := mState["messages"].([]llms.MessageContent)
 
 	fmt.Println("\n=== Conversation History ===")

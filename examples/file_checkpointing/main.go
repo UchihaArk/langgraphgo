@@ -30,16 +30,16 @@ func main() {
 	g := graph.NewCheckpointableStateGraph()
 
 	// Add nodes that update state
-	g.AddNode("first", "first", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("first", "first", func(ctx context.Context, state any) (any, error) {
 		fmt.Println("Executing 'first' node")
-		m := state.(map[string]interface{})
+		m := state.(map[string]any)
 		m["step1"] = "completed"
 		return m, nil
 	})
 
-	g.AddNode("second", "second", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("second", "second", func(ctx context.Context, state any) (any, error) {
 		fmt.Println("Executing 'second' node")
-		m := state.(map[string]interface{})
+		m := state.(map[string]any)
 		m["step2"] = "completed"
 		return m, nil
 	})
@@ -62,13 +62,13 @@ func main() {
 
 	// Run the graph
 	ctx := context.Background()
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"input": "start",
 	}
 
 	// Thread ID helps group checkpoints for a specific conversation/execution
 	config := &graph.Config{
-		Configurable: map[string]interface{}{
+		Configurable: map[string]any{
 			"thread_id": "thread_1",
 		},
 	}

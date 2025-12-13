@@ -500,7 +500,7 @@ func main() {
     }
 
     // 4. 准备初始状态
-    initialState := map[string]interface{}{
+    initialState := map[string]any{
         "messages": []llms.MessageContent{
             llms.TextParts(llms.ChatMessageTypeHuman,
                 "伦敦的天气怎么样？"),
@@ -514,7 +514,7 @@ func main() {
     }
 
     // 6. 提取结果
-    finalState := result.(map[string]interface{})
+    finalState := result.(map[string]any)
     messages := finalState["messages"].([]llms.MessageContent)
     lastMessage := messages[len(messages)-1]
 
@@ -554,7 +554,7 @@ func main() {
         log.Fatal(err)
     }
 
-    initialState := map[string]interface{}{
+    initialState := map[string]any{
         "messages": []llms.MessageContent{
             llms.TextParts(llms.ChatMessageTypeHuman,
                 "查找关于 AI 的最新新闻并总结"),
@@ -621,7 +621,7 @@ agent, _ := prebuilt.CreateAgent(model, tools,
     prebuilt.WithSystemMessage("你是一位数学导师。清楚地解释每一步。"),
 )
 
-initialState := map[string]interface{}{
+initialState := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman,
             "求解：2x + 5 = 13"),
@@ -642,7 +642,7 @@ agent, _ := prebuilt.CreateAgent(model, []tools.Tool{},
     prebuilt.WithVerbose(true),
 )
 
-initialState := map[string]interface{}{
+initialState := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman,
             "量子计算的最新发展是什么？"),
@@ -850,7 +850,7 @@ analysis := analysisAgent.Invoke(ctx, buildAnalysisQuery(research))
 ### 使用 CreateAgent 进行流式传输
 
 ```go
-streamChan := make(chan map[string]interface{})
+streamChan := make(chan map[string]any)
 
 go func() {
     defer close(streamChan)

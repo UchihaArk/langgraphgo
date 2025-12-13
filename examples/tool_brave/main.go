@@ -54,7 +54,7 @@ func main() {
 	fmt.Printf("User: %s\n\n", query)
 	fmt.Println("Agent is thinking and searching...")
 
-	inputs := map[string]interface{}{
+	inputs := map[string]any{
 		"messages": []llms.MessageContent{
 			llms.TextParts(llms.ChatMessageTypeHuman, query),
 		},
@@ -67,7 +67,7 @@ func main() {
 
 	// 5. Print the Result
 	// The response contains the final state, which includes the conversation history
-	if state, ok := response.(map[string]interface{}); ok {
+	if state, ok := response.(map[string]any); ok {
 		if messages, ok := state["messages"].([]llms.MessageContent); ok {
 			// The last message should be the AI's final answer
 			lastMsg := messages[len(messages)-1]

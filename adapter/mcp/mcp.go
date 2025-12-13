@@ -30,7 +30,7 @@ func (t *MCPTool) Description() string {
 
 func (t *MCPTool) Call(ctx context.Context, input string) (string, error) {
 	// Parse input JSON into a map
-	var args map[string]interface{}
+	var args map[string]any
 	if input != "" {
 		if err := json.Unmarshal([]byte(input), &args); err != nil {
 			return "", fmt.Errorf("failed to unmarshal MCP tool arguments: %w", err)

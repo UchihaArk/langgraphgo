@@ -227,7 +227,7 @@ func ExampleExecutionLanguage() {
 
 // Example of tool server request/response format
 func ExampleToolServer_requestFormat() {
-	request := map[string]interface{}{
+	request := map[string]any{
 		"tool_name": "calculator",
 		"input":     "2 + 2",
 	}
@@ -235,7 +235,7 @@ func ExampleToolServer_requestFormat() {
 	requestJSON, _ := json.MarshalIndent(request, "", "  ")
 	fmt.Printf("Tool Request:\n%s\n", string(requestJSON))
 
-	response := map[string]interface{}{
+	response := map[string]any{
 		"success": true,
 		"result":  "4",
 		"tool":    "calculator",

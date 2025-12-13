@@ -109,14 +109,14 @@ func main() {
 	})
 
 	// Step 1
-	g.AddNode("step_1", "step_1", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("step_1", "step_1", func(ctx context.Context, state any) (any, error) {
 		fmt.Println("Executing Step 1...")
 		time.Sleep(500 * time.Millisecond)
-		return map[string]interface{}{"steps": []string{"Step 1 Completed"}}, nil
+		return map[string]any{"steps": []string{"Step 1 Completed"}}, nil
 	})
 
 	// Step 2 (Simulate Crash)
-	g.AddNode("step_2", "step_2", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("step_2", "step_2", func(ctx context.Context, state any) (any, error) {
 		fmt.Println("Executing Step 2...")
 		time.Sleep(500 * time.Millisecond)
 
@@ -127,14 +127,14 @@ func main() {
 			os.Exit(1)
 		}
 
-		return map[string]interface{}{"steps": []string{"Step 2 Completed"}}, nil
+		return map[string]any{"steps": []string{"Step 2 Completed"}}, nil
 	})
 
 	// Step 3
-	g.AddNode("step_3", "step_3", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("step_3", "step_3", func(ctx context.Context, state any) (any, error) {
 		fmt.Println("Executing Step 3...")
 		time.Sleep(500 * time.Millisecond)
-		return map[string]interface{}{"steps": []string{"Step 3 Completed"}}, nil
+		return map[string]any{"steps": []string{"Step 3 Completed"}}, nil
 	})
 
 	g.SetEntryPoint("step_1")
@@ -204,7 +204,7 @@ func main() {
 		}
 
 		config = &graph.Config{
-			Configurable: map[string]interface{}{
+			Configurable: map[string]any{
 				"thread_id":     threadID,
 				"checkpoint_id": latest.ID,
 			},
@@ -227,11 +227,11 @@ func main() {
 	} else {
 		fmt.Println("Starting new execution...")
 		config = &graph.Config{
-			Configurable: map[string]interface{}{
+			Configurable: map[string]any{
 				"thread_id": threadID,
 			},
 		}
-		initialState := map[string]interface{}{"steps": []string{"Start"}}
+		initialState := map[string]any{"steps": []string{"Start"}}
 		res, err := runnable.InvokeWithConfig(ctx, initialState, config)
 		if err != nil {
 			log.Fatal(err)

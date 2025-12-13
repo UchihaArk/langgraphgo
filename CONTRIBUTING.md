@@ -211,8 +211,8 @@ Example:
 func TestGraphExecution(t *testing.T) {
     tests := []struct {
         name    string
-        input   interface{}
-        want    interface{}
+        input   any
+        want    any
         wantErr bool
     }{
         {

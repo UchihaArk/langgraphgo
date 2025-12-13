@@ -24,10 +24,10 @@ func TestMCPTool_NameAndDescription(t *testing.T) {
 }
 
 func TestGetToolSchema(t *testing.T) {
-	schema := map[string]interface{}{
+	schema := map[string]any{
 		"type": "object",
-		"properties": map[string]interface{}{
-			"query": map[string]interface{}{
+		"properties": map[string]any{
+			"query": map[string]any{
 				"type":        "string",
 				"description": "Search query",
 			},
@@ -66,7 +66,7 @@ func TestMCPToTools_EmptyConversion(t *testing.T) {
 	_ = ctx
 
 	// Type check
-	var fn func(context.Context, interface{}) ([]tools.Tool, error)
+	var fn func(context.Context, any) ([]tools.Tool, error)
 	_ = fn
 }
 

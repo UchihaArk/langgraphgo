@@ -97,7 +97,7 @@ func main() {
 	query := "What is 25 * 4?"
 	fmt.Printf("User: %s\n", query)
 
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			llms.TextParts(llms.ChatMessageTypeHuman, query),
 		},
@@ -109,7 +109,7 @@ func main() {
 	}
 
 	// Print Result
-	mState := res.(map[string]interface{})
+	mState := res.(map[string]any)
 	messages := mState["messages"].([]llms.MessageContent)
 	lastMsg := messages[len(messages)-1]
 

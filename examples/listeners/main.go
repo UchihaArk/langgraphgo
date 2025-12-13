@@ -29,19 +29,19 @@ func main() {
 		WithState(true)
 
 	// Add nodes with different processing times
-	processNode := g.AddNode("process", "process", func(ctx context.Context, state interface{}) (interface{}, error) {
+	processNode := g.AddNode("process", "process", func(ctx context.Context, state any) (any, error) {
 		fmt.Println("  [Node] Starting data processing...")
 		time.Sleep(300 * time.Millisecond) // Simulate work
 		return fmt.Sprintf("%v → processed", state), nil
 	})
 
-	analyzeNode := g.AddNode("analyze", "analyze", func(ctx context.Context, state interface{}) (interface{}, error) {
+	analyzeNode := g.AddNode("analyze", "analyze", func(ctx context.Context, state any) (any, error) {
 		fmt.Println("  [Node] Analyzing data...")
 		time.Sleep(200 * time.Millisecond) // Simulate work
 		return fmt.Sprintf("%v → analyzed", state), nil
 	})
 
-	reportNode := g.AddNode("report", "report", func(ctx context.Context, state interface{}) (interface{}, error) {
+	reportNode := g.AddNode("report", "report", func(ctx context.Context, state any) (any, error) {
 		fmt.Println("  [Node] Creating report...")
 		time.Sleep(100 * time.Millisecond) // Simulate work
 		return fmt.Sprintf("%v → reported", state), nil

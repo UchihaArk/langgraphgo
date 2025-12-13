@@ -10,7 +10,7 @@ import (
 )
 
 // ToolNode is a reusable node that executes tool calls from the last AI message.
-// It expects the state to be a map[string]interface{} with a "messages" key containing []llms.MessageContent.
+// It expects the state to be a map[string]any with a "messages" key containing []llms.MessageContent.
 type ToolNode struct {
 	Executor *ToolExecutor
 }
@@ -23,10 +23,10 @@ func NewToolNode(inputTools []tools.Tool) *ToolNode {
 }
 
 // Invoke executes the tool calls found in the last message.
-func (tn *ToolNode) Invoke(ctx context.Context, state interface{}) (interface{}, error) {
-	mState, ok := state.(map[string]interface{})
+func (tn *ToolNode) Invoke(ctx context.Context, state any) (any, error) {
+	mState, ok := state.(map[string]any)
 	if !ok {
-		return nil, fmt.Errorf("ToolNode expects state to be map[string]interface{}, got %T", state)
+		return nil, fmt.Errorf("ToolNode expects state to be map[string]any, got %T", state)
 	}
 
 	messages, ok := mState["messages"].([]llms.MessageContent)
@@ -54,7 +54,7 @@ func (tn *ToolNode) Invoke(ctx context.Context, state interface{}) (interface{},
 	for _, part := range lastMsg.Parts {
 		if tc, ok := part.(llms.ToolCall); ok {
 			// Parse arguments to get input
-			var args map[string]interface{}
+			var args map[string]any
 			// Arguments is a JSON string
 			if err := json.Unmarshal([]byte(tc.FunctionCall.Arguments), &args); err != nil {
 				// If unmarshal fails, it might be a simple string or malformed.
@@ -98,10 +98,10 @@ func (tn *ToolNode) Invoke(ctx context.Context, state interface{}) (interface{},
 
 	if len(toolMessages) == 0 {
 		// No tool calls found
-		return map[string]interface{}{}, nil
+		return map[string]any{}, nil
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"messages": toolMessages,
 	}, nil
 }

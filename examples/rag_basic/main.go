@@ -26,7 +26,7 @@ func main() {
 			PageContent: "LangGraph is a library for building stateful, multi-actor applications with LLMs. " +
 				"It extends LangChain Expression Language with the ability to coordinate multiple chains " +
 				"(or actors) across multiple steps of computation in a cyclic manner.",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"source": "langgraph_intro.txt",
 				"topic":  "LangGraph",
 			},
@@ -35,7 +35,7 @@ func main() {
 			PageContent: "RAG (Retrieval-Augmented Generation) is a technique that combines information retrieval " +
 				"with text generation. It retrieves relevant documents from a knowledge base and uses them " +
 				"to augment the context provided to a language model for generation.",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"source": "rag_overview.txt",
 				"topic":  "RAG",
 			},
@@ -44,7 +44,7 @@ func main() {
 			PageContent: "Vector databases store embeddings, which are numerical representations of text. " +
 				"They enable efficient similarity search by comparing vector distances. " +
 				"Popular vector databases include Pinecone, Weaviate, and Chroma.",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"source": "vector_db.txt",
 				"topic":  "Vector Databases",
 			},
@@ -53,7 +53,7 @@ func main() {
 			PageContent: "Text embeddings are dense vector representations of text that capture semantic meaning. " +
 				"Models like OpenAI's text-embedding-ada-002 or sentence transformers can generate these embeddings. " +
 				"Similar texts have similar embeddings in the vector space.",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"source": "embeddings.txt",
 				"topic":  "Embeddings",
 			},

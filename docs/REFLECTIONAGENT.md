@@ -362,7 +362,7 @@ if err != nil {
 ### Step 4: Prepare Initial State
 
 ```go
-initialState := map[string]interface{}{
+initialState := map[string]any{
     "messages": []llms.MessageContent{
         {
             Role:  llms.ChatMessageTypeHuman,
@@ -386,7 +386,7 @@ if err != nil {
 ### Step 6: Extract Results
 
 ```go
-finalState := result.(map[string]interface{})
+finalState := result.(map[string]any)
 
 // Get final draft
 draft := finalState["draft"].(string)
@@ -482,7 +482,7 @@ config := prebuilt.ReflectionAgentConfig{
 
 agent, _ := prebuilt.CreateReflectionAgent(config)
 
-initialState := map[string]interface{}{
+initialState := map[string]any{
     "messages": []llms.MessageContent{
         {
             Role:  llms.ChatMessageTypeHuman,
@@ -521,7 +521,7 @@ config := prebuilt.ReflectionAgentConfig{
 
 agent, _ := prebuilt.CreateReflectionAgent(config)
 
-initialState := map[string]interface{}{
+initialState := map[string]any{
     "messages": []llms.MessageContent{
         {
             Role:  llms.ChatMessageTypeHuman,
@@ -642,7 +642,7 @@ if err != nil {
     return
 }
 
-finalState := result.(map[string]interface{})
+finalState := result.(map[string]any)
 
 // Check if max iterations reached without satisfaction
 iteration := finalState["iteration"].(int)
@@ -719,7 +719,7 @@ Save intermediate drafts for recovery:
 
 ```go
 // After each iteration, save state
-finalState := result.(map[string]interface{})
+finalState := result.(map[string]any)
 saveCheckpoint(finalState["draft"].(string), finalState["iteration"].(int))
 ```
 

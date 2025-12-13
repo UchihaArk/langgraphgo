@@ -26,7 +26,7 @@ func ExampleStateGraph() {
 
 	g := graph.NewStateGraph()
 
-	g.AddNode("oracle", "oracle", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("oracle", "oracle", func(ctx context.Context, state any) (any, error) {
 		messages := state.([]llms.MessageContent)
 		r, err := model.GenerateContent(ctx, messages, llms.WithTemperature(0.0))
 		if err != nil {
@@ -36,7 +36,7 @@ func ExampleStateGraph() {
 			llms.TextParts("ai", r.Choices[0].Content),
 		), nil
 	})
-	g.AddNode(graph.END, graph.END, func(_ context.Context, state interface{}) (interface{}, error) {
+	g.AddNode(graph.END, graph.END, func(_ context.Context, state any) (any, error) {
 		return state, nil
 	})
 
@@ -73,11 +73,11 @@ func TestStateGraph(t *testing.T) {
 			name: "Simple graph",
 			buildGraph: func() *graph.StateGraph {
 				g := graph.NewStateGraph()
-				g.AddNode("node1", "node1", func(_ context.Context, state interface{}) (interface{}, error) {
+				g.AddNode("node1", "node1", func(_ context.Context, state any) (any, error) {
 					messages := state.([]llms.MessageContent)
 					return append(messages, llms.TextParts("ai", "Node 1")), nil
 				})
-				g.AddNode("node2", "node2", func(_ context.Context, state interface{}) (interface{}, error) {
+				g.AddNode("node2", "node2", func(_ context.Context, state any) (any, error) {
 					messages := state.([]llms.MessageContent)
 					return append(messages, llms.TextParts("ai", "Node 2")), nil
 				})
@@ -98,7 +98,7 @@ func TestStateGraph(t *testing.T) {
 			name: "Entry point not set",
 			buildGraph: func() *graph.StateGraph {
 				g := graph.NewStateGraph()
-				g.AddNode("node1", "node1", func(_ context.Context, state interface{}) (interface{}, error) {
+				g.AddNode("node1", "node1", func(_ context.Context, state any) (any, error) {
 					return state, nil
 				})
 				return g
@@ -109,7 +109,7 @@ func TestStateGraph(t *testing.T) {
 			name: "Node not found",
 			buildGraph: func() *graph.StateGraph {
 				g := graph.NewStateGraph()
-				g.AddNode("node1", "node1", func(_ context.Context, state interface{}) (interface{}, error) {
+				g.AddNode("node1", "node1", func(_ context.Context, state any) (any, error) {
 					return state, nil
 				})
 				g.AddEdge("node1", "node2")
@@ -122,7 +122,7 @@ func TestStateGraph(t *testing.T) {
 			name: "No outgoing edge",
 			buildGraph: func() *graph.StateGraph {
 				g := graph.NewStateGraph()
-				g.AddNode("node1", "node1", func(_ context.Context, state interface{}) (interface{}, error) {
+				g.AddNode("node1", "node1", func(_ context.Context, state any) (any, error) {
 					return state, nil
 				})
 				g.SetEntryPoint("node1")
@@ -134,7 +134,7 @@ func TestStateGraph(t *testing.T) {
 			name: "Error in node function",
 			buildGraph: func() *graph.StateGraph {
 				g := graph.NewStateGraph()
-				g.AddNode("node1", "node1", func(_ context.Context, _ interface{}) (interface{}, error) {
+				g.AddNode("node1", "node1", func(_ context.Context, _ any) (any, error) {
 					return nil, errors.New("node error")
 				})
 				g.AddEdge("node1", graph.END)

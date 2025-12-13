@@ -9,7 +9,7 @@ import (
 )
 
 // SumReducer adds the new integer value to the current one.
-func SumReducer(current, new interface{}) (interface{}, error) {
+func SumReducer(current, new any) (any, error) {
 	if current == nil {
 		return new, nil
 	}
@@ -41,28 +41,28 @@ func main() {
 	g.SetSchema(schema)
 
 	// 3. Define Nodes
-	g.AddNode("node_a", "node_a", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("node_a", "node_a", func(ctx context.Context, state any) (any, error) {
 		fmt.Println("Executing Node A")
 		// Return partial state update
-		return map[string]interface{}{
+		return map[string]any{
 			"count":  1,
 			"logs":   []string{"Processed by A"},
 			"status": "In Progress (A)",
 		}, nil
 	})
 
-	g.AddNode("node_b", "node_b", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("node_b", "node_b", func(ctx context.Context, state any) (any, error) {
 		fmt.Println("Executing Node B")
-		return map[string]interface{}{
+		return map[string]any{
 			"count":  2,
 			"logs":   []string{"Processed by B"},
 			"status": "In Progress (B)",
 		}, nil
 	})
 
-	g.AddNode("node_c", "node_c", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("node_c", "node_c", func(ctx context.Context, state any) (any, error) {
 		fmt.Println("Executing Node C")
-		return map[string]interface{}{
+		return map[string]any{
 			"count":  3,
 			"logs":   []string{"Processed by C"},
 			"status": "Completed",
@@ -83,7 +83,7 @@ func main() {
 
 	// 6. Invoke
 	// Initial state
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"count":  0,
 		"logs":   []string{"Start"},
 		"status": "Init",
@@ -97,7 +97,7 @@ func main() {
 
 	// 7. Inspect Result
 	fmt.Println("\n--- Final State ---")
-	mState := result.(map[string]interface{})
+	mState := result.(map[string]any)
 	fmt.Printf("Count (Sum): %v\n", mState["count"])         // Should be 0 + 1 + 2 + 3 = 6
 	fmt.Printf("Logs (Append): %v\n", mState["logs"])        // Should be ["Start", "Processed by A", "Processed by B", "Processed by C"]
 	fmt.Printf("Status (Overwrite): %v\n", mState["status"]) // Should be "Completed"

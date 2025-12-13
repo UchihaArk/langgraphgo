@@ -13,12 +13,12 @@ func main() {
 	g := graph.NewStreamingStateGraph()
 
 	// Add nodes with listeners
-	analyze := g.AddNode("analyze", "analyze", func(ctx context.Context, state interface{}) (interface{}, error) {
+	analyze := g.AddNode("analyze", "analyze", func(ctx context.Context, state any) (any, error) {
 		time.Sleep(100 * time.Millisecond) // Simulate processing
 		return fmt.Sprintf("analyzed_%v", state), nil
 	})
 
-	enhance := g.AddNode("enhance", "enhance", func(ctx context.Context, state interface{}) (interface{}, error) {
+	enhance := g.AddNode("enhance", "enhance", func(ctx context.Context, state any) (any, error) {
 		time.Sleep(200 * time.Millisecond) // Simulate processing
 		return fmt.Sprintf("enhanced_%v", state), nil
 	})
@@ -60,7 +60,7 @@ func main() {
 				event.NodeName)
 		},
 		// Result callback - receives final result
-		func(result interface{}, err error) {
+		func(result any, err error) {
 			if err != nil {
 				fmt.Printf("Error: %v\n", err)
 			} else {

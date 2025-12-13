@@ -81,7 +81,7 @@ func main() {
     }
 
     // Prepare query
-    initialState := map[string]interface{}{
+    initialState := map[string]any{
         "messages": []llms.MessageContent{
             {
                 Role:  llms.ChatMessageTypeHuman,
@@ -99,7 +99,7 @@ func main() {
     }
 
     // Extract final response
-    finalState := result.(map[string]interface{})
+    finalState := result.(map[string]any)
     draft := finalState["draft"].(string)
     fmt.Println(draft)
 }

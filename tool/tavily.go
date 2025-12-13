@@ -71,7 +71,7 @@ func (t *TavilySearch) Description() string {
 
 // Call executes the search.
 func (t *TavilySearch) Call(ctx context.Context, input string) (string, error) {
-	reqBody := map[string]interface{}{
+	reqBody := map[string]any{
 		"query":        input,
 		"api_key":      t.APIKey,
 		"search_depth": t.SearchDepth,
@@ -99,16 +99,16 @@ func (t *TavilySearch) Call(ctx context.Context, input string) (string, error) {
 		return "", fmt.Errorf("tavily api returned status: %d", resp.StatusCode)
 	}
 
-	var result map[string]interface{}
+	var result map[string]any
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return "", fmt.Errorf("failed to decode response: %w", err)
 	}
 
 	// Format the output
 	var sb strings.Builder
-	if results, ok := result["results"].([]interface{}); ok {
+	if results, ok := result["results"].([]any); ok {
 		for _, r := range results {
-			if item, ok := r.(map[string]interface{}); ok {
+			if item, ok := r.(map[string]any); ok {
 				title, _ := item["title"].(string)
 				url, _ := item["url"].(string)
 				content, _ := item["content"].(string)
@@ -128,7 +128,7 @@ type SearchResult struct {
 
 // CallWithImages executes the search and returns both text and images.
 func (t *TavilySearch) CallWithImages(ctx context.Context, input string) (*SearchResult, error) {
-	reqBody := map[string]interface{}{
+	reqBody := map[string]any{
 		"query":          input,
 		"api_key":        t.APIKey,
 		"search_depth":   t.SearchDepth,
@@ -157,7 +157,7 @@ func (t *TavilySearch) CallWithImages(ctx context.Context, input string) (*Searc
 		return nil, fmt.Errorf("tavily api returned status: %d", resp.StatusCode)
 	}
 
-	var result map[string]interface{}
+	var result map[string]any
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
@@ -168,9 +168,9 @@ func (t *TavilySearch) CallWithImages(ctx context.Context, input string) (*Searc
 
 	// Format the text output
 	var sb strings.Builder
-	if results, ok := result["results"].([]interface{}); ok {
+	if results, ok := result["results"].([]any); ok {
 		for _, r := range results {
-			if item, ok := r.(map[string]interface{}); ok {
+			if item, ok := r.(map[string]any); ok {
 				title, _ := item["title"].(string)
 				url, _ := item["url"].(string)
 				content, _ := item["content"].(string)
@@ -181,7 +181,7 @@ func (t *TavilySearch) CallWithImages(ctx context.Context, input string) (*Searc
 	searchResult.Text = sb.String()
 
 	// Extract images
-	if images, ok := result["images"].([]interface{}); ok {
+	if images, ok := result["images"].([]any); ok {
 		for _, img := range images {
 			if imgURL, ok := img.(string); ok {
 				searchResult.Images = append(searchResult.Images, imgURL)

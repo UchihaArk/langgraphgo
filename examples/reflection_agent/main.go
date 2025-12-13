@@ -58,7 +58,7 @@ func runBasicReflection(model llms.Model) {
 	query := "Explain the CAP theorem in distributed systems"
 	fmt.Printf("Query: %s\n\n", query)
 
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			{
 				Role:  llms.ChatMessageTypeHuman,
@@ -101,7 +101,7 @@ Provide specific, actionable feedback.`,
 	query := "Write documentation for a REST API endpoint that creates a new user account"
 	fmt.Printf("Query: %s\n\n", query)
 
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			{
 				Role:  llms.ChatMessageTypeHuman,
@@ -152,7 +152,7 @@ func getUserById(id int) (*User, error) {
 	query := fmt.Sprintf("Review this Go function and provide feedback:\n%s", codeSnippet)
 	fmt.Printf("Query: Code review for getUserById function\n\n")
 
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			{
 				Role:  llms.ChatMessageTypeHuman,
@@ -169,8 +169,8 @@ func getUserById(id int) (*User, error) {
 	printResults(result)
 }
 
-func printResults(result interface{}) {
-	finalState := result.(map[string]interface{})
+func printResults(result any) {
+	finalState := result.(map[string]any)
 
 	// Print iteration count
 	iteration, _ := finalState["iteration"].(int)

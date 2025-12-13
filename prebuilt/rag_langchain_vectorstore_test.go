@@ -62,11 +62,11 @@ func TestLangChainVectorStore_AddDocuments(t *testing.T) {
 	docs := []Document{
 		{
 			PageContent: "Test document 1",
-			Metadata:    map[string]interface{}{"source": "test1.txt"},
+			Metadata:    map[string]any{"source": "test1.txt"},
 		},
 		{
 			PageContent: "Test document 2",
-			Metadata:    map[string]interface{}{"source": "test2.txt"},
+			Metadata:    map[string]any{"source": "test2.txt"},
 		},
 	}
 
@@ -92,9 +92,9 @@ func TestLangChainVectorStore_SimilaritySearch(t *testing.T) {
 	// Create mock store with documents
 	mockStore := &MockLangChainVectorStore{
 		documents: []Document{
-			{PageContent: "Doc 1", Metadata: map[string]interface{}{"id": 1}},
-			{PageContent: "Doc 2", Metadata: map[string]interface{}{"id": 2}},
-			{PageContent: "Doc 3", Metadata: map[string]interface{}{"id": 3}},
+			{PageContent: "Doc 1", Metadata: map[string]any{"id": 1}},
+			{PageContent: "Doc 2", Metadata: map[string]any{"id": 2}},
+			{PageContent: "Doc 3", Metadata: map[string]any{"id": 3}},
 		},
 	}
 
@@ -117,9 +117,9 @@ func TestLangChainVectorStore_SimilaritySearchWithScore(t *testing.T) {
 	// Create mock store with documents
 	mockStore := &MockLangChainVectorStore{
 		documents: []Document{
-			{PageContent: "Doc 1", Metadata: map[string]interface{}{"id": 1}},
-			{PageContent: "Doc 2", Metadata: map[string]interface{}{"id": 2}},
-			{PageContent: "Doc 3", Metadata: map[string]interface{}{"id": 3}},
+			{PageContent: "Doc 1", Metadata: map[string]any{"id": 1}},
+			{PageContent: "Doc 2", Metadata: map[string]any{"id": 2}},
+			{PageContent: "Doc 3", Metadata: map[string]any{"id": 3}},
 		},
 	}
 
@@ -155,9 +155,9 @@ func TestLangChainVectorStore_Integration(t *testing.T) {
 
 	// Add documents
 	docs := []Document{
-		{PageContent: "LangGraph is a library for building stateful applications", Metadata: map[string]interface{}{"topic": "langgraph"}},
-		{PageContent: "Go is a programming language", Metadata: map[string]interface{}{"topic": "golang"}},
-		{PageContent: "RAG combines retrieval and generation", Metadata: map[string]interface{}{"topic": "rag"}},
+		{PageContent: "LangGraph is a library for building stateful applications", Metadata: map[string]any{"topic": "langgraph"}},
+		{PageContent: "Go is a programming language", Metadata: map[string]any{"topic": "golang"}},
+		{PageContent: "RAG combines retrieval and generation", Metadata: map[string]any{"topic": "rag"}},
 	}
 
 	embeddings := [][]float64{

@@ -32,7 +32,7 @@
 
 ### 定义自定义 Reducer
 ```go
-func SumReducer(current, new interface{}) (interface{}, error) {
+func SumReducer(current, new any) (any, error) {
     // ... 累加整数的逻辑 ...
     return c + n, nil
 }

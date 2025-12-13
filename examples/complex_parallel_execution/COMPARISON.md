@@ -15,8 +15,8 @@
 // 在聚合器内部使用局部变量和条件判断
 var aggregationDone bool
 
-g.AddNode("aggregator", "aggregator", func(ctx context.Context, state interface{}) (interface{}, error) {
-    mState := state.(map[string]interface{})
+g.AddNode("aggregator", "aggregator", func(ctx context.Context, state any) (any, error) {
+    mState := state.(map[string]any)
     results := mState["results"].([]string)
 
     // 只在所有分支完成时输出一次
@@ -24,14 +24,14 @@ g.AddNode("aggregator", "aggregator", func(ctx context.Context, state interface{
         aggregationDone = true
         fmt.Println("\n=== Aggregation Point ===")
         // ... 输出结果
-        return map[string]interface{}{
+        return map[string]any{
             "status": "all_branches_completed",
             // ...
         }, nil
     }
 
     // 还未完成，不输出
-    return map[string]interface{}{}, nil
+    return map[string]any{}, nil
 })
 ```
 
@@ -65,15 +65,15 @@ schema.RegisterReducer("completed_branches", graph.AppendReducer)
 // 2. 每个分支完成时标记
 g.AddNode("short_branch", "short_branch", func(...) {
     // ...
-    return map[string]interface{}{
+    return map[string]any{
         "results": []string{"Short branch result"},
         "completed_branches": []string{"short"},  // 标记此分支已完成
     }, nil
 })
 
 // 3. 添加同步屏障节点
-g.AddNode("sync_barrier", "sync_barrier", func(ctx context.Context, state interface{}) (interface{}, error) {
-    mState := state.(map[string]interface{})
+g.AddNode("sync_barrier", "sync_barrier", func(ctx context.Context, state any) (any, error) {
+    mState := state.(map[string]any)
     completed := mState["completed_branches"].([]string)
     totalBranches := mState["total_branches"].(int)
 
@@ -83,7 +83,7 @@ g.AddNode("sync_barrier", "sync_barrier", func(ctx context.Context, state interf
         fmt.Printf("[Sync Barrier] All %d branches completed!\n", totalBranches)
     }
 
-    return map[string]interface{}{}, nil
+    return map[string]any{}, nil
 })
 
 // 4. 图结构：branches -> sync_barrier -> aggregator

@@ -32,7 +32,7 @@ func ExampleCreateReflectionAgent() {
 	}
 
 	// Prepare initial state
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			{
 				Role:  llms.ChatMessageTypeHuman,
@@ -48,7 +48,7 @@ func ExampleCreateReflectionAgent() {
 	}
 
 	// Extract final response
-	finalState := result.(map[string]interface{})
+	finalState := result.(map[string]any)
 	messages := finalState["messages"].([]llms.MessageContent)
 
 	fmt.Println("=== Final Response ===")
@@ -98,7 +98,7 @@ Be specific in your feedback.`,
 		log.Fatal(err)
 	}
 
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			{
 				Role:  llms.ChatMessageTypeHuman,
@@ -112,7 +112,7 @@ Be specific in your feedback.`,
 		log.Fatal(err)
 	}
 
-	finalState := result.(map[string]interface{})
+	finalState := result.(map[string]any)
 	draft := finalState["draft"].(string)
 	iteration := finalState["iteration"].(int)
 
@@ -145,7 +145,7 @@ Provide specific, actionable feedback.`,
 		log.Fatal(err)
 	}
 
-	initialState := map[string]interface{}{
+	initialState := map[string]any{
 		"messages": []llms.MessageContent{
 			{
 				Role:  llms.ChatMessageTypeHuman,
@@ -159,7 +159,7 @@ Provide specific, actionable feedback.`,
 		log.Fatal(err)
 	}
 
-	finalState := result.(map[string]interface{})
+	finalState := result.(map[string]any)
 	draft := finalState["draft"].(string)
 	fmt.Printf("Code review:\n%s\n", draft)
 }

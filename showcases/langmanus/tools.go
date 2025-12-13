@@ -44,10 +44,10 @@ func (t *SearchTool) Search(ctx context.Context, query string, maxResults int) (
 func (t *SearchTool) searchTavily(ctx context.Context, query string, maxResults int) ([]Source, error) {
 	url := "https://api.tavily.com/search"
 
-	requestBody := map[string]interface{}{
-		"api_key": t.APIKey,
-		"query":   query,
-		"max_results": maxResults,
+	requestBody := map[string]any{
+		"api_key":        t.APIKey,
+		"query":          query,
+		"max_results":    maxResults,
 		"include_answer": false,
 	}
 

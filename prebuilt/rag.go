@@ -12,7 +12,7 @@ import (
 // Document represents a document with content and metadata
 type Document struct {
 	PageContent string
-	Metadata    map[string]interface{}
+	Metadata    map[string]any
 }
 
 // DocumentLoader loads documents from various sources
@@ -63,7 +63,7 @@ type RAGState struct {
 	Context            string
 	Answer             string
 	Citations          []string
-	Metadata           map[string]interface{}
+	Metadata           map[string]any
 }
 
 // RAGConfig configures a RAG pipeline
@@ -223,7 +223,7 @@ func (p *RAGPipeline) BuildConditionalRAG() error {
 	p.graph.AddEdge("retrieve", "rerank")
 
 	// Conditional edge based on relevance score
-	p.graph.AddConditionalEdge("rerank", func(ctx context.Context, state interface{}) string {
+	p.graph.AddConditionalEdge("rerank", func(ctx context.Context, state any) string {
 		ragState := state.(RAGState)
 		if len(ragState.RankedDocuments) > 0 && ragState.RankedDocuments[0].Score >= p.config.ScoreThreshold {
 			return "generate"
@@ -260,7 +260,7 @@ func (p *RAGPipeline) GetGraph() *graph.StateGraph {
 
 // Node implementations
 
-func (p *RAGPipeline) retrieveNode(ctx context.Context, state interface{}) (interface{}, error) {
+func (p *RAGPipeline) retrieveNode(ctx context.Context, state any) (any, error) {
 	ragState := state.(RAGState)
 
 	docs, err := p.config.Retriever.GetRelevantDocuments(ctx, ragState.Query)
@@ -274,7 +274,7 @@ func (p *RAGPipeline) retrieveNode(ctx context.Context, state interface{}) (inte
 	return ragState, nil
 }
 
-func (p *RAGPipeline) rerankNode(ctx context.Context, state interface{}) (interface{}, error) {
+func (p *RAGPipeline) rerankNode(ctx context.Context, state any) (any, error) {
 	ragState := state.(RAGState)
 
 	if p.config.Reranker == nil {
@@ -307,19 +307,19 @@ func (p *RAGPipeline) rerankNode(ctx context.Context, state interface{}) (interf
 	return ragState, nil
 }
 
-func (p *RAGPipeline) fallbackSearchNode(ctx context.Context, state interface{}) (interface{}, error) {
+func (p *RAGPipeline) fallbackSearchNode(ctx context.Context, state any) (any, error) {
 	ragState := state.(RAGState)
 
 	// Placeholder for fallback search (e.g., web search)
 	// In a real implementation, this would call an external search API
-	ragState.Metadata = map[string]interface{}{
+	ragState.Metadata = map[string]any{
 		"fallback_used": true,
 	}
 
 	return ragState, nil
 }
 
-func (p *RAGPipeline) generateNode(ctx context.Context, state interface{}) (interface{}, error) {
+func (p *RAGPipeline) generateNode(ctx context.Context, state any) (any, error) {
 	ragState := state.(RAGState)
 
 	// Build context from retrieved documents
@@ -354,7 +354,7 @@ func (p *RAGPipeline) generateNode(ctx context.Context, state interface{}) (inte
 	return ragState, nil
 }
 
-func (p *RAGPipeline) formatCitationsNode(ctx context.Context, state interface{}) (interface{}, error) {
+func (p *RAGPipeline) formatCitationsNode(ctx context.Context, state any) (any, error) {
 	ragState := state.(RAGState)
 
 	// Extract citations from documents

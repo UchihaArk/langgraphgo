@@ -10,7 +10,7 @@ import (
 
 // Custom Set Reducer
 // Merges two values and removes duplicates
-func SetReducer(current interface{}, new interface{}) (interface{}, error) {
+func SetReducer(current any, new any) (any, error) {
 	// Initialize set with current values
 	set := make(map[string]bool)
 
@@ -50,20 +50,20 @@ func main() {
 	g.SetSchema(schema)
 
 	// Define Nodes
-	g.AddNode("start", "start", func(ctx context.Context, state interface{}) (interface{}, error) {
-		return map[string]interface{}{
+	g.AddNode("start", "start", func(ctx context.Context, state any) (any, error) {
+		return map[string]any{
 			"tags": []string{"initial"},
 		}, nil
 	})
 
-	g.AddNode("tagger_a", "tagger_a", func(ctx context.Context, state interface{}) (interface{}, error) {
-		return map[string]interface{}{
+	g.AddNode("tagger_a", "tagger_a", func(ctx context.Context, state any) (any, error) {
+		return map[string]any{
 			"tags": []string{"go", "langgraph"},
 		}, nil
 	})
 
-	g.AddNode("tagger_b", "tagger_b", func(ctx context.Context, state interface{}) (interface{}, error) {
-		return map[string]interface{}{
+	g.AddNode("tagger_b", "tagger_b", func(ctx context.Context, state any) (any, error) {
+		return map[string]any{
 			"tags": []string{"ai", "agent", "go"}, // "go" is duplicate
 		}, nil
 	})
@@ -80,13 +80,13 @@ func main() {
 	}
 
 	fmt.Println("=== Custom Reducer Example (Set Merge) ===")
-	res, err := runnable.Invoke(context.Background(), map[string]interface{}{
+	res, err := runnable.Invoke(context.Background(), map[string]any{
 		"tags": []string{},
 	})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	mState := res.(map[string]interface{})
+	mState := res.(map[string]any)
 	fmt.Printf("Final Tags: %v\n", mState["tags"])
 }

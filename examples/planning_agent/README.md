@@ -53,7 +53,7 @@ agent, err := prebuilt.CreatePlanningAgent(
 ### Step 3: Execute with User Request
 ```go
 query := "Fetch user data, validate it, and save the results"
-initialState := map[string]interface{}{
+initialState := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman, query),
     },
@@ -112,8 +112,8 @@ START → fetch_data → validate_data → transform_data → analyze_data → g
 
 ### Defining a Node
 ```go
-func fetchDataNode(ctx context.Context, state interface{}) (interface{}, error) {
-    mState := state.(map[string]interface{})
+func fetchDataNode(ctx context.Context, state any) (any, error) {
+    mState := state.(map[string]any)
     messages := mState["messages"].([]llms.MessageContent)
 
     // Your business logic here
@@ -124,7 +124,7 @@ func fetchDataNode(ctx context.Context, state interface{}) (interface{}, error) 
         Parts: []llms.ContentPart{llms.TextPart("Data fetched successfully")},
     }
 
-    return map[string]interface{}{
+    return map[string]any{
         "messages": append(messages, msg),
     }, nil
 }

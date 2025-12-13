@@ -341,7 +341,7 @@ Add new agent nodes by:
 
 1. Define node function in `nodes.go`:
 ```go
-func MyCustomNode(ctx context.Context, state interface{}) (interface{}, error) {
+func MyCustomNode(ctx context.Context, state any) (any, error) {
     s := state.(*State)
     // Your logic here
     return s, nil

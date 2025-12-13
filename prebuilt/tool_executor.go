@@ -56,7 +56,7 @@ func (te *ToolExecutor) ExecuteMany(ctx context.Context, invocations []ToolInvoc
 // ToolNode is a graph node function that executes tools
 // It expects the state to contain a list of ToolInvocation or a single ToolInvocation
 // This is a simplified version. In a real agent, it would parse messages.
-func (te *ToolExecutor) ToolNode(ctx context.Context, state interface{}) (interface{}, error) {
+func (te *ToolExecutor) ToolNode(ctx context.Context, state any) (any, error) {
 	// Try to parse state as ToolInvocation
 	if inv, ok := state.(ToolInvocation); ok {
 		return te.Execute(ctx, inv)
@@ -68,7 +68,7 @@ func (te *ToolExecutor) ToolNode(ctx context.Context, state interface{}) (interf
 	}
 
 	// Try to parse from map
-	if m, ok := state.(map[string]interface{}); ok {
+	if m, ok := state.(map[string]any); ok {
 		// Check for "tool" and "tool_input" keys
 		if t, ok := m["tool"].(string); ok {
 			input := ""

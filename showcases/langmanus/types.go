@@ -8,27 +8,27 @@ import (
 type MessageType string
 
 const (
-	MessageTypeHuman    MessageType = "human"
-	MessageTypeAI       MessageType = "ai"
-	MessageTypeSystem   MessageType = "system"
-	MessageTypeTool     MessageType = "tool"
+	MessageTypeHuman  MessageType = "human"
+	MessageTypeAI     MessageType = "ai"
+	MessageTypeSystem MessageType = "system"
+	MessageTypeTool   MessageType = "tool"
 )
 
 // Message represents a single message in the conversation
 type Message struct {
-	Type      MessageType            `json:"type"`
-	Content   string                 `json:"content"`
-	Name      string                 `json:"name,omitempty"`
-	ToolCallID string                `json:"tool_call_id,omitempty"`
-	ToolCalls []ToolCall             `json:"tool_calls,omitempty"`
-	Metadata  map[string]interface{} `json:"metadata,omitempty"`
+	Type       MessageType    `json:"type"`
+	Content    string         `json:"content"`
+	Name       string         `json:"name,omitempty"`
+	ToolCallID string         `json:"tool_call_id,omitempty"`
+	ToolCalls  []ToolCall     `json:"tool_calls,omitempty"`
+	Metadata   map[string]any `json:"metadata,omitempty"`
 }
 
 // ToolCall represents a tool invocation
 type ToolCall struct {
-	ID       string                 `json:"id"`
-	Name     string                 `json:"name"`
-	Args     map[string]interface{} `json:"args"`
+	ID   string         `json:"id"`
+	Name string         `json:"name"`
+	Args map[string]any `json:"args"`
 }
 
 // Task represents a research or coding task
@@ -51,9 +51,9 @@ type ResearchResult struct {
 
 // Source represents a search result source
 type Source struct {
-	Title   string `json:"title"`
-	URL     string `json:"url"`
-	Content string `json:"content"`
+	Title   string  `json:"title"`
+	URL     string  `json:"url"`
+	Content string  `json:"content"`
 	Score   float64 `json:"score,omitempty"`
 }
 

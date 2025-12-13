@@ -10,13 +10,13 @@ This guide will help you get started with RAG in LangGraphGo quickly.
 documents := []prebuilt.Document{
     {
         PageContent: "LangGraph is a library for building stateful, multi-actor applications.",
-        Metadata: map[string]interface{}{
+        Metadata: map[string]any{
             "source": "intro.txt",
         },
     },
     {
         PageContent: "RAG combines information retrieval with text generation.",
-        Metadata: map[string]interface{}{
+        Metadata: map[string]any{
             "source": "rag.txt",
         },
     },
@@ -91,7 +91,7 @@ func main() {
     documents := []prebuilt.Document{
         {
             PageContent: "LangGraph is a library for building stateful, multi-actor applications.",
-            Metadata:    map[string]interface{}{"source": "intro.txt"},
+            Metadata:    map[string]any{"source": "intro.txt"},
         },
     }
 

@@ -81,7 +81,7 @@ func main() {
     }
 
     // 准备查询
-    initialState := map[string]interface{}{
+    initialState := map[string]any{
         "messages": []llms.MessageContent{
             {
                 Role:  llms.ChatMessageTypeHuman,
@@ -99,7 +99,7 @@ func main() {
     }
 
     // 提取最终响应
-    finalState := result.(map[string]interface{})
+    finalState := result.(map[string]any)
     draft := finalState["draft"].(string)
     fmt.Println(draft)
 }

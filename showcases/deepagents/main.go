@@ -42,7 +42,7 @@ func main() {
 	}
 
 	// Run the agent
-	inputs := map[string]interface{}{
+	inputs := map[string]any{
 		"messages": []llms.MessageContent{
 			llms.TextParts(llms.ChatMessageTypeHuman, "Create a file named 'hello.txt' with content 'Hello, DeepAgents!', then read it back to confirm."),
 		},
@@ -55,7 +55,7 @@ func main() {
 	}
 
 	// Print result
-	mState := result.(map[string]interface{})
+	mState := result.(map[string]any)
 	messages := mState["messages"].([]llms.MessageContent)
 	lastMsg := messages[len(messages)-1]
 

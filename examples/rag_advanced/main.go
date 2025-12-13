@@ -29,7 +29,7 @@ func main() {
 				"It extends LangChain Expression Language with the ability to coordinate multiple chains " +
 				"across multiple steps of computation in a cyclic manner. LangGraph is particularly useful " +
 				"for building complex agent workflows and multi-agent systems.",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"source":   "langgraph_intro.txt",
 				"topic":    "LangGraph",
 				"category": "Framework",
@@ -40,7 +40,7 @@ func main() {
 				"with text generation. It retrieves relevant documents from a knowledge base and uses them " +
 				"to augment the context provided to a language model for generation. This approach helps " +
 				"reduce hallucinations and provides more factual, grounded responses.",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"source":   "rag_overview.txt",
 				"topic":    "RAG",
 				"category": "Technique",
@@ -51,7 +51,7 @@ func main() {
 				"They enable efficient similarity search by comparing vector distances using metrics like " +
 				"cosine similarity or Euclidean distance. Popular vector databases include Pinecone, Weaviate, " +
 				"Chroma, and Qdrant. These databases are essential for RAG systems.",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"source":   "vector_db.txt",
 				"topic":    "Vector Databases",
 				"category": "Infrastructure",
@@ -62,7 +62,7 @@ func main() {
 				"Models like OpenAI's text-embedding-ada-002, sentence transformers, or Cohere embeddings " +
 				"can generate these embeddings. Similar texts have similar embeddings in the vector space, " +
 				"which enables semantic search.",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"source":   "embeddings.txt",
 				"topic":    "Embeddings",
 				"category": "Technique",
@@ -73,7 +73,7 @@ func main() {
 				"documents based on their relevance to the query. Cross-encoder models are often used for " +
 				"reranking as they can better capture query-document interactions compared to bi-encoders " +
 				"used for initial retrieval.",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"source":   "reranking.txt",
 				"topic":    "Reranking",
 				"category": "Technique",
@@ -83,7 +83,7 @@ func main() {
 			PageContent: "Multi-agent systems involve multiple AI agents working together to solve complex problems. " +
 				"Each agent can have specialized roles and capabilities. LangGraph provides excellent support " +
 				"for building multi-agent systems with its graph-based architecture and state management.",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"source":   "multi_agent.txt",
 				"topic":    "Multi-Agent",
 				"category": "Architecture",

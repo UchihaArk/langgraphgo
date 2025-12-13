@@ -101,7 +101,7 @@ func (s *LangChainTextSplitter) SplitDocuments(documents []Document) ([]Document
 		for i, chunk := range chunks {
 			newDoc := Document{
 				PageContent: chunk,
-				Metadata:    make(map[string]interface{}),
+				Metadata:    make(map[string]any),
 			}
 
 			// Copy original metadata

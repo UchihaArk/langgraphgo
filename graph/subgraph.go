@@ -27,7 +27,7 @@ func NewSubgraph(name string, graph *StateGraph) (*Subgraph, error) {
 }
 
 // Execute runs the subgraph as a node
-func (s *Subgraph) Execute(ctx context.Context, state interface{}) (interface{}, error) {
+func (s *Subgraph) Execute(ctx context.Context, state any) (any, error) {
 	result, err := s.runnable.Invoke(ctx, state)
 	if err != nil {
 		return nil, fmt.Errorf("subgraph %s execution failed: %w", s.name, err)
@@ -78,12 +78,12 @@ func (cg *CompositeGraph) Connect(
 	fromNode string,
 	toGraph string,
 	toNode string,
-	transform func(interface{}) interface{},
+	transform func(any) any,
 ) error {
 	// Create a bridge node that transforms state between graphs
 	bridgeName := fmt.Sprintf("%s_%s_to_%s_%s", fromGraph, fromNode, toGraph, toNode)
 
-	cg.main.AddNode(bridgeName, "Bridge: "+bridgeName, func(_ context.Context, state interface{}) (interface{}, error) {
+	cg.main.AddNode(bridgeName, "Bridge: "+bridgeName, func(_ context.Context, state any) (any, error) {
 		if transform != nil {
 			return transform(state), nil
 		}
@@ -110,14 +110,14 @@ type RecursiveSubgraph struct {
 	name      string
 	graph     *StateGraph
 	maxDepth  int
-	condition func(interface{}, int) bool // Should continue recursion?
+	condition func(any, int) bool // Should continue recursion?
 }
 
 // NewRecursiveSubgraph creates a new recursive subgraph
 func NewRecursiveSubgraph(
 	name string,
 	maxDepth int,
-	condition func(interface{}, int) bool,
+	condition func(any, int) bool,
 ) *RecursiveSubgraph {
 	return &RecursiveSubgraph{
 		name:      name,
@@ -128,11 +128,11 @@ func NewRecursiveSubgraph(
 }
 
 // Execute runs the recursive subgraph
-func (rs *RecursiveSubgraph) Execute(ctx context.Context, state interface{}) (interface{}, error) {
+func (rs *RecursiveSubgraph) Execute(ctx context.Context, state any) (any, error) {
 	return rs.executeRecursive(ctx, state, 0)
 }
 
-func (rs *RecursiveSubgraph) executeRecursive(ctx context.Context, state interface{}, depth int) (interface{}, error) {
+func (rs *RecursiveSubgraph) executeRecursive(ctx context.Context, state any, depth int) (any, error) {
 	// Check max depth
 	if depth >= rs.maxDepth {
 		return state, nil
@@ -162,7 +162,7 @@ func (rs *RecursiveSubgraph) executeRecursive(ctx context.Context, state interfa
 func (g *StateGraph) AddRecursiveSubgraph(
 	name string,
 	maxDepth int,
-	condition func(interface{}, int) bool,
+	condition func(any, int) bool,
 	builder func(*StateGraph),
 ) {
 	rs := NewRecursiveSubgraph(name, maxDepth, condition)
@@ -173,11 +173,11 @@ func (g *StateGraph) AddRecursiveSubgraph(
 // NestedConditionalSubgraph creates a subgraph with its own conditional routing
 func (g *StateGraph) AddNestedConditionalSubgraph(
 	name string,
-	router func(interface{}) string,
+	router func(any) string,
 	subgraphs map[string]*StateGraph,
 ) error {
 	// Create a wrapper node that routes to different subgraphs
-	g.AddNode(name, "Nested conditional subgraph: "+name, func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode(name, "Nested conditional subgraph: "+name, func(ctx context.Context, state any) (any, error) {
 		// Determine which subgraph to use
 		subgraphName := router(state)
 

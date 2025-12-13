@@ -30,9 +30,9 @@
 var HandoffTool = llms.Tool{
     Name: "handoff",
     // ...
-    Parameters: map[string]interface{}{
-        "properties": map[string]interface{}{
-            "to": map[string]interface{}{
+    Parameters: map[string]any{
+        "properties": map[string]any{
+            "to": map[string]any{
                 "enum": []string{"Researcher", "Writer"},
             },
         },
@@ -44,7 +44,7 @@ var HandoffTool = llms.Tool{
 ```go
 if tc.FunctionCall.Name == "handoff" {
     // ... 解析参数 ...
-    return map[string]interface{}{
+    return map[string]any{
         // 将工具调用和响应添加到历史记录
         "messages": []llms.MessageContent{ ... },
         // 设置下一个 Agent
@@ -55,8 +55,8 @@ if tc.FunctionCall.Name == "handoff" {
 
 ### 条件路由
 ```go
-router := func(ctx context.Context, state interface{}) string {
-    mState := state.(map[string]interface{})
+router := func(ctx context.Context, state any) string {
+    mState := state.(map[string]any)
     next := mState["next"].(string)
     if next == "" || next == "END" {
         return graph.END

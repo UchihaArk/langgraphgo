@@ -49,7 +49,7 @@ func TestPTCToolNode(t *testing.T) {
 	defer node.Close(ctx)
 
 	// Create state with AI message containing code
-	state := map[string]interface{}{
+	state := map[string]any{
 		"messages": []llms.MessageContent{
 			{
 				Role: llms.ChatMessageTypeAI,
@@ -67,7 +67,7 @@ func TestPTCToolNode(t *testing.T) {
 	}
 
 	// Check that a new message was added
-	messages := newState.(map[string]interface{})["messages"].([]llms.MessageContent)
+	messages := newState.(map[string]any)["messages"].([]llms.MessageContent)
 	if len(messages) != 2 {
 		t.Errorf("Expected 2 messages, got %d", len(messages))
 	}
@@ -97,7 +97,7 @@ func TestPTCToolNodeWithGoCode(t *testing.T) {
 	}
 	defer node.Close(ctx)
 
-	state := map[string]interface{}{
+	state := map[string]any{
 		"messages": []llms.MessageContent{
 			{
 				Role: llms.ChatMessageTypeAI,
@@ -113,7 +113,7 @@ func TestPTCToolNodeWithGoCode(t *testing.T) {
 		t.Fatalf("Failed to invoke node: %v", err)
 	}
 
-	messages := newState.(map[string]interface{})["messages"].([]llms.MessageContent)
+	messages := newState.(map[string]any)["messages"].([]llms.MessageContent)
 	if len(messages) != 2 {
 		t.Errorf("Expected 2 messages, got %d", len(messages))
 	}
@@ -138,7 +138,7 @@ func TestPTCToolNodeErrorHandling(t *testing.T) {
 	defer node.Close(ctx)
 
 	// State with code that has syntax error
-	state := map[string]interface{}{
+	state := map[string]any{
 		"messages": []llms.MessageContent{
 			{
 				Role: llms.ChatMessageTypeAI,
@@ -155,7 +155,7 @@ func TestPTCToolNodeErrorHandling(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 
-	messages := newState.(map[string]interface{})["messages"].([]llms.MessageContent)
+	messages := newState.(map[string]any)["messages"].([]llms.MessageContent)
 	lastMsg := messages[len(messages)-1]
 	lastText := lastMsg.Parts[0].(llms.TextContent).Text
 
@@ -183,7 +183,7 @@ func TestPTCToolNodeWithoutCode(t *testing.T) {
 	defer node.Close(ctx)
 
 	// State with plain text (will be treated as code and may execute or error)
-	state := map[string]interface{}{
+	state := map[string]any{
 		"messages": []llms.MessageContent{
 			{
 				Role: llms.ChatMessageTypeAI,

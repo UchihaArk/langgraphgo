@@ -25,8 +25,8 @@ func CreateReactAgent(model llms.Model, inputTools []tools.Tool) (*graph.StateRu
 	workflow.SetSchema(agentSchema)
 
 	// Define the agent node
-	workflow.AddNode("agent", "ReAct agent decision maker", func(ctx context.Context, state interface{}) (interface{}, error) {
-		mState, ok := state.(map[string]interface{})
+	workflow.AddNode("agent", "ReAct agent decision maker", func(ctx context.Context, state any) (any, error) {
+		mState, ok := state.(map[string]any)
 		if !ok {
 			return nil, fmt.Errorf("invalid state type: %T", state)
 		}
@@ -44,10 +44,10 @@ func CreateReactAgent(model llms.Model, inputTools []tools.Tool) (*graph.StateRu
 				Function: &llms.FunctionDefinition{
 					Name:        t.Name(),
 					Description: t.Description(),
-					Parameters: map[string]interface{}{
+					Parameters: map[string]any{
 						"type": "object",
-						"properties": map[string]interface{}{
-							"input": map[string]interface{}{
+						"properties": map[string]any{
+							"input": map[string]any{
 								"type":        "string",
 								"description": "The input query for the tool",
 							},
@@ -88,14 +88,14 @@ func CreateReactAgent(model llms.Model, inputTools []tools.Tool) (*graph.StateRu
 			}
 		}
 
-		return map[string]interface{}{
+		return map[string]any{
 			"messages": []llms.MessageContent{aiMsg},
 		}, nil
 	})
 
 	// Define the tools node
-	workflow.AddNode("tools", "Tool execution node", func(ctx context.Context, state interface{}) (interface{}, error) {
-		mState, ok := state.(map[string]interface{})
+	workflow.AddNode("tools", "Tool execution node", func(ctx context.Context, state any) (any, error) {
+		mState, ok := state.(map[string]any)
 		if !ok {
 			return nil, fmt.Errorf("invalid state")
 		}
@@ -112,7 +112,7 @@ func CreateReactAgent(model llms.Model, inputTools []tools.Tool) (*graph.StateRu
 		for _, part := range lastMsg.Parts {
 			if tc, ok := part.(llms.ToolCall); ok {
 				// Parse arguments to get input
-				var args map[string]interface{}
+				var args map[string]any
 				if err := json.Unmarshal([]byte(tc.FunctionCall.Arguments), &args); err != nil {
 					// If unmarshal fails, try to use the raw string if it's not JSON object
 				}
@@ -148,7 +148,7 @@ func CreateReactAgent(model llms.Model, inputTools []tools.Tool) (*graph.StateRu
 			}
 		}
 
-		return map[string]interface{}{
+		return map[string]any{
 			"messages": toolMessages,
 		}, nil
 	})
@@ -156,8 +156,8 @@ func CreateReactAgent(model llms.Model, inputTools []tools.Tool) (*graph.StateRu
 	// Define edges
 	workflow.SetEntryPoint("agent")
 
-	workflow.AddConditionalEdge("agent", func(ctx context.Context, state interface{}) string {
-		mState := state.(map[string]interface{})
+	workflow.AddConditionalEdge("agent", func(ctx context.Context, state any) string {
+		mState := state.(map[string]any)
 		messages := mState["messages"].([]llms.MessageContent)
 		lastMsg := messages[len(messages)-1]
 

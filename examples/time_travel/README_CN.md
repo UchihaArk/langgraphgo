@@ -40,7 +40,7 @@
 
 3.  **人工干预**:
     ```go
-    runnable.UpdateState(ctx, config, map[string]interface{}{"count": 50}, "human")
+    runnable.UpdateState(ctx, config, map[string]any{"count": 50}, "human")
     ```
     我们手动将计数设置为 50。系统会合并此值（取决于 Reducer，这里我们假设是覆盖或适合示例的加法逻辑）。
 

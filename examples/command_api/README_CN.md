@@ -16,8 +16,8 @@
 
 ```go
 type Command struct {
-    Update interface{} // 要应用的状态更新
-    Goto   interface{} // 下一个要执行的节点 (string 或 []string)
+    Update any // 要应用的状态更新
+    Goto   any // 下一个要执行的节点 (string 或 []string)
 }
 ```
 
@@ -31,12 +31,12 @@ type Command struct {
 
 1.  **Router 节点**:
     ```go
-    g.AddNode("router", func(ctx context.Context, state interface{}) (interface{}, error) {
+    g.AddNode("router", func(ctx context.Context, state any) (any, error) {
         // ... 检查 count 的逻辑 ...
         if count > 5 {
             // 动态跳转: 跳过 "process" 直接去 "end_high"
             return &graph.Command{
-                Update: map[string]interface{}{"status": "high"},
+                Update: map[string]any{"status": "high"},
                 Goto:   "end_high",
             }, nil
         }

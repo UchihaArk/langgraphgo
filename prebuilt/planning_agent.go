@@ -56,8 +56,8 @@ func CreatePlanningAgent(model llms.Model, nodes []*graph.Node, inputTools []too
 	workflow.SetSchema(agentSchema)
 
 	// Add planning node - this is where LLM generates the workflow
-	workflow.AddNode("planner", "Generates workflow plan based on user request", func(ctx context.Context, state interface{}) (interface{}, error) {
-		mState, ok := state.(map[string]interface{})
+	workflow.AddNode("planner", "Generates workflow plan based on user request", func(ctx context.Context, state any) (any, error) {
+		mState, ok := state.(map[string]any)
 		if !ok {
 			return nil, fmt.Errorf("invalid state type: %T", state)
 		}
@@ -107,15 +107,15 @@ func CreatePlanningAgent(model llms.Model, nodes []*graph.Node, inputTools []too
 			Parts: []llms.ContentPart{llms.TextPart(fmt.Sprintf("Workflow plan created with %d nodes and %d edges", len(workflowPlan.Nodes), len(workflowPlan.Edges)))},
 		}
 
-		return map[string]interface{}{
+		return map[string]any{
 			"messages":      []llms.MessageContent{aiMsg},
 			"workflow_plan": workflowPlan,
 		}, nil
 	})
 
 	// Add executor node - this builds and executes the planned workflow
-	workflow.AddNode("executor", "Executes the planned workflow", func(ctx context.Context, state interface{}) (interface{}, error) {
-		mState, ok := state.(map[string]interface{})
+	workflow.AddNode("executor", "Executes the planned workflow", func(ctx context.Context, state any) (any, error) {
+		mState, ok := state.(map[string]any)
 		if !ok {
 			return nil, fmt.Errorf("invalid state type: %T", state)
 		}
@@ -172,7 +172,7 @@ func CreatePlanningAgent(model llms.Model, nodes []*graph.Node, inputTools []too
 				// This is a conditional edge
 				// For now, we'll add a simple conditional edge
 				// In a real implementation, you might want to parse the condition
-				dynamicWorkflow.AddConditionalEdge(edge.From, func(ctx context.Context, state interface{}) string {
+				dynamicWorkflow.AddConditionalEdge(edge.From, func(ctx context.Context, state any) string {
 					// Simple condition evaluation
 					// You can enhance this to evaluate the actual condition
 					return edge.To

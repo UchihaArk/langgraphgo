@@ -174,7 +174,7 @@ langchainDoc := schema.Document{
 // 转换后
 ourDoc := prebuilt.Document{
     PageContent: "内容",
-    Metadata: map[string]interface{}{
+    Metadata: map[string]any{
         "source": "test.txt",
         "score": float32(0.95),  // Score 存储在 metadata 中
     },
@@ -186,7 +186,7 @@ ourDoc := prebuilt.Document{
 ```go
 ourDoc := prebuilt.Document{
     PageContent: "内容",
-    Metadata: map[string]interface{}{
+    Metadata: map[string]any{
         "source": "test.txt",
         "score": float32(0.95),
     },

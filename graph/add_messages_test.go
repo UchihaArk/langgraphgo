@@ -61,7 +61,7 @@ func TestAddMessages(t *testing.T) {
 	})
 
 	// Case 3: Mixed append (some have ID, some don't)
-	// Note: In Go, slices must be of same type. So we can't easily mix types unless using []interface{}
+	// Note: In Go, slices must be of same type. So we can't easily mix types unless using []any
 	// But we can test structs where ID is optional (empty string)
 	t.Run("OptionalIDs", func(t *testing.T) {
 		current := []TestMessage{

@@ -25,10 +25,10 @@ const (
 
 // Logger interface for PTC logging
 type Logger interface {
-	Debug(format string, v ...interface{})
-	Info(format string, v ...interface{})
-	Warn(format string, v ...interface{})
-	Error(format string, v ...interface{})
+	Debug(format string, v ...any)
+	Info(format string, v ...any)
+	Warn(format string, v ...any)
+	Error(format string, v ...any)
 }
 
 // DefaultLogger implements Logger using Go's standard log package
@@ -54,28 +54,28 @@ func NewCustomLogger(out io.Writer, level LogLevel) *DefaultLogger {
 }
 
 // Debug logs debug messages
-func (l *DefaultLogger) Debug(format string, v ...interface{}) {
+func (l *DefaultLogger) Debug(format string, v ...any) {
 	if l.level <= LogLevelDebug {
 		l.logger.Printf("[DEBUG] "+format, v...)
 	}
 }
 
 // Info logs informational messages
-func (l *DefaultLogger) Info(format string, v ...interface{}) {
+func (l *DefaultLogger) Info(format string, v ...any) {
 	if l.level <= LogLevelInfo {
 		l.logger.Printf("[INFO] "+format, v...)
 	}
 }
 
 // Warn logs warning messages
-func (l *DefaultLogger) Warn(format string, v ...interface{}) {
+func (l *DefaultLogger) Warn(format string, v ...any) {
 	if l.level <= LogLevelWarn {
 		l.logger.Printf("[WARN] "+format, v...)
 	}
 }
 
 // Error logs error messages
-func (l *DefaultLogger) Error(format string, v ...interface{}) {
+func (l *DefaultLogger) Error(format string, v ...any) {
 	if l.level <= LogLevelError {
 		l.logger.Printf("[ERROR] "+format, v...)
 	}
@@ -85,16 +85,16 @@ func (l *DefaultLogger) Error(format string, v ...interface{}) {
 type NoOpLogger struct{}
 
 // Debug does nothing
-func (l *NoOpLogger) Debug(format string, v ...interface{}) {}
+func (l *NoOpLogger) Debug(format string, v ...any) {}
 
 // Info does nothing
-func (l *NoOpLogger) Info(format string, v ...interface{}) {}
+func (l *NoOpLogger) Info(format string, v ...any) {}
 
 // Warn does nothing
-func (l *NoOpLogger) Warn(format string, v ...interface{}) {}
+func (l *NoOpLogger) Warn(format string, v ...any) {}
 
 // Error does nothing
-func (l *NoOpLogger) Error(format string, v ...interface{}) {}
+func (l *NoOpLogger) Error(format string, v ...any) {}
 
 // String returns the string representation of LogLevel
 func (l LogLevel) String() string {
@@ -135,21 +135,21 @@ func SetLogLevel(level LogLevel) {
 }
 
 // Debug logs a debug message using the package-level logger
-func Debug(format string, v ...interface{}) {
+func Debug(format string, v ...any) {
 	defaultLogger.Debug(format, v...)
 }
 
 // Info logs an informational message using the package-level logger
-func Info(format string, v ...interface{}) {
+func Info(format string, v ...any) {
 	defaultLogger.Info(format, v...)
 }
 
 // Warn logs a warning message using the package-level logger
-func Warn(format string, v ...interface{}) {
+func Warn(format string, v ...any) {
 	defaultLogger.Warn(format, v...)
 }
 
 // Error logs an error message using the package-level logger
-func Error(format string, v ...interface{}) {
+func Error(format string, v ...any) {
 	defaultLogger.Error(format, v...)
 }

@@ -68,7 +68,7 @@ func (c *ChatAgent) Chat(ctx context.Context, message string) (string, error) {
 	c.messages = append(c.messages, userMsg)
 
 	// 2. Construct input with full conversation history and dynamic tools
-	input := map[string]interface{}{
+	input := map[string]any{
 		"messages": c.messages,
 	}
 
@@ -79,7 +79,7 @@ func (c *ChatAgent) Chat(ctx context.Context, message string) (string, error) {
 
 	// 3. Create config with thread_id
 	config := &graph.Config{
-		Configurable: map[string]interface{}{
+		Configurable: map[string]any{
 			"thread_id": c.threadID,
 		},
 	}
@@ -91,7 +91,7 @@ func (c *ChatAgent) Chat(ctx context.Context, message string) (string, error) {
 	}
 
 	// 5. Extract messages from response
-	mState, ok := resp.(map[string]interface{})
+	mState, ok := resp.(map[string]any)
 	if !ok {
 		return "", fmt.Errorf("invalid response type: %T", resp)
 	}

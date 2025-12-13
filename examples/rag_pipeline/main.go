@@ -29,7 +29,7 @@ func main() {
 	g := graph.NewStateGraph()
 
 	// Query Classification - Route based on intent
-	g.AddNode("query_classifier", "query_classifier", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("query_classifier", "query_classifier", func(ctx context.Context, state any) (any, error) {
 		docs := state.(DocumentState)
 		// Classify query type (factual, analytical, etc.)
 		docs.Query = "classified: " + docs.Query
@@ -37,7 +37,7 @@ func main() {
 	})
 
 	// Document Retrieval - Vector search
-	g.AddNode("retrieve_docs", "retrieve_docs", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("retrieve_docs", "retrieve_docs", func(ctx context.Context, state any) (any, error) {
 		docs := state.(DocumentState)
 		// Perform vector similarity search
 		docs.Documents = []string{"doc1", "doc2", "doc3"}
@@ -45,7 +45,7 @@ func main() {
 	})
 
 	// Document Reranking - Score relevance
-	g.AddNode("rerank_docs", "rerank_docs", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("rerank_docs", "rerank_docs", func(ctx context.Context, state any) (any, error) {
 		docs := state.(DocumentState)
 		// Calculate relevance scores
 		docs.RelevanceScore = 0.85 // Example score
@@ -53,7 +53,7 @@ func main() {
 	})
 
 	// Web Search Fallback - External sources
-	g.AddNode("fallback_search", "fallback_search", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("fallback_search", "fallback_search", func(ctx context.Context, state any) (any, error) {
 		docs := state.(DocumentState)
 		// Search external sources
 		docs.Documents = append(docs.Documents, "web_result1", "web_result2")
@@ -61,7 +61,7 @@ func main() {
 	})
 
 	// Generate Answer - LLM with context
-	g.AddNode("generate_answer", "generate_answer", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("generate_answer", "generate_answer", func(ctx context.Context, state any) (any, error) {
 		docs := state.(DocumentState)
 
 		// Build context from documents
@@ -81,7 +81,7 @@ func main() {
 	})
 
 	// Format Response - Add citations
-	g.AddNode("format_response", "format_response", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("format_response", "format_response", func(ctx context.Context, state any) (any, error) {
 		docs := state.(DocumentState)
 		docs.Citations = []string{"[1] doc1", "[2] doc2"}
 		return docs, nil
@@ -93,7 +93,7 @@ func main() {
 	g.AddEdge("retrieve_docs", "rerank_docs")
 
 	// Conditional routing based on relevance
-	g.AddConditionalEdge("rerank_docs", func(ctx context.Context, state interface{}) string {
+	g.AddConditionalEdge("rerank_docs", func(ctx context.Context, state any) string {
 		docs := state.(DocumentState)
 		if docs.RelevanceScore > 0.7 {
 			return "generate_answer"

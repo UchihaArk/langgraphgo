@@ -47,7 +47,7 @@ func main() {
 	fmt.Printf("User: %s\n\n", query)
 	fmt.Println("Agent is thinking and searching...")
 
-	inputs := map[string]interface{}{
+	inputs := map[string]any{
 		"messages": []llms.MessageContent{
 			llms.TextParts(llms.ChatMessageTypeHuman, query),
 		},
@@ -59,7 +59,7 @@ func main() {
 	}
 
 	// 5. Print the Result
-	if state, ok := response.(map[string]interface{}); ok {
+	if state, ok := response.(map[string]any); ok {
 		if messages, ok := state["messages"].([]llms.MessageContent); ok {
 			lastMsg := messages[len(messages)-1]
 			for _, part := range lastMsg.Parts {

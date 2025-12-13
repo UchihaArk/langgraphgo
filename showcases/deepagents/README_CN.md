@@ -118,7 +118,7 @@ func main() {
     }
 
     // 运行智能体
-    inputs := map[string]interface{}{
+    inputs := map[string]any{
         "messages": []llms.MessageContent{
             llms.TextParts(llms.ChatMessageTypeHuman,
                 "创建一个名为 'hello.txt' 的文件，内容为 'Hello, DeepAgents!'，然后读取它。"),
@@ -302,7 +302,7 @@ type Tool interface {
 ### 1. 文件组织
 
 ```go
-inputs := map[string]interface{}{
+inputs := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman,
             "将所有 .txt 文件组织到 'docs' 目录中"),
@@ -319,7 +319,7 @@ inputs := map[string]interface{}{
 ### 2. 任务管理
 
 ```go
-inputs := map[string]interface{}{
+inputs := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman,
             "为设置新 Go 项目创建待办事项列表"),
@@ -340,7 +340,7 @@ subAgentHandler := func(ctx context.Context, task string) (string, error) {
     return processFile(task)
 }
 
-inputs := map[string]interface{}{
+inputs := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman,
             "处理 data 目录中的所有 JSON 文件"),
@@ -356,7 +356,7 @@ inputs := map[string]interface{}{
 ### 4. 代码生成
 
 ```go
-inputs := map[string]interface{}{
+inputs := map[string]any{
     "messages": []llms.MessageContent{
         llms.TextParts(llms.ChatMessageTypeHuman,
             "在 server.go 中创建一个简单的 Go HTTP 服务器"),

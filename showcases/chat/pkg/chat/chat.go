@@ -784,7 +784,7 @@ func (cs *ChatServer) HandleChat(w http.ResponseWriter, r *http.Request) {
 			EnableSkills bool `json:"enable_skills"`
 			EnableMCP    bool `json:"enable_mcp"`
 		} `json:"user_settings"`
-		Stream       bool   `json:"stream"` // New field for streaming request
+		Stream bool `json:"stream"` // New field for streaming request
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -910,7 +910,7 @@ func (cs *ChatServer) HandleChatStream(w http.ResponseWriter, r *http.Request, a
 		select {
 		case <-ctx.Done():
 			// Context cancelled, send end event with partial response
-			partialData := map[string]interface{}{
+			partialData := map[string]any{
 				"type":    "end",
 				"message": responseBuilder.String(),
 			}
@@ -928,7 +928,7 @@ func (cs *ChatServer) HandleChatStream(w http.ResponseWriter, r *http.Request, a
 			responseBuilder.WriteString(chunk)
 
 			// Send chunk event
-			data := map[string]interface{}{
+			data := map[string]any{
 				"type":  "chunk",
 				"chunk": chunk,
 				"index": i,
@@ -946,7 +946,7 @@ func (cs *ChatServer) HandleChatStream(w http.ResponseWriter, r *http.Request, a
 	sm.AddMessage(sessionID, "assistant", response)
 
 	// Send end event
-	endData := map[string]interface{}{
+	endData := map[string]any{
 		"type":    "end",
 		"message": response,
 	}
@@ -1008,7 +1008,7 @@ func (cs *ChatServer) HandleMCPTools(w http.ResponseWriter, r *http.Request) {
 	tools := simpleAgent.GetAvailableTools()
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	json.NewEncoder(w).Encode(map[string]any{
 		"tools":   tools,
 		"enabled": simpleAgent.toolsEnabled,
 	})
@@ -1038,11 +1038,11 @@ func (cs *ChatServer) HandleToolsHierarchical(w http.ResponseWriter, r *http.Req
 
 	// Prepare hierarchical data
 	var result struct {
-		Skills       []map[string]interface{} `json:"skills"`
-		MCPTools     []map[string]interface{} `json:"mcp_tools"`
-		Enabled      bool                     `json:"enabled"`
-		ToolsLoading bool                     `json:"tools_loading"`
-		ToolsLoaded  bool                     `json:"tools_loaded"`
+		Skills       []map[string]any `json:"skills"`
+		MCPTools     []map[string]any `json:"mcp_tools"`
+		Enabled      bool             `json:"enabled"`
+		ToolsLoading bool             `json:"tools_loading"`
+		ToolsLoaded  bool             `json:"tools_loaded"`
 	}
 
 	// Lock for reading skills and MCP tools
@@ -1058,16 +1058,16 @@ func (cs *ChatServer) HandleToolsHierarchical(w http.ResponseWriter, r *http.Req
 
 	// Add skills with their tools
 	for _, skill := range skills {
-		skillData := map[string]interface{}{
+		skillData := map[string]any{
 			"name":        skill.Name,
 			"description": skill.Description,
-			"tools":       []map[string]interface{}{},
+			"tools":       []map[string]any{},
 		}
 
 		// Get tools for this skill if already loaded
 		if skill.Loaded && len(skill.Tools) > 0 {
 			for _, tool := range skill.Tools {
-				skillData["tools"] = append(skillData["tools"].([]map[string]interface{}), map[string]interface{}{
+				skillData["tools"] = append(skillData["tools"].([]map[string]any), map[string]any{
 					"name":        tool.Name(),
 					"description": tool.Description(),
 				})
@@ -1076,7 +1076,7 @@ func (cs *ChatServer) HandleToolsHierarchical(w http.ResponseWriter, r *http.Req
 			// Load tools on demand
 			if tools, err := simpleAgent.loadSkillTools(skill.Name); err == nil {
 				for _, tool := range tools {
-					skillData["tools"] = append(skillData["tools"].([]map[string]interface{}), map[string]interface{}{
+					skillData["tools"] = append(skillData["tools"].([]map[string]any), map[string]any{
 						"name":        tool.Name(),
 						"description": tool.Description(),
 					})
@@ -1088,7 +1088,7 @@ func (cs *ChatServer) HandleToolsHierarchical(w http.ResponseWriter, r *http.Req
 	}
 
 	// Add MCP tools (group them by category if possible, or list them individually)
-	mcpGroups := make(map[string][]map[string]interface{})
+	mcpGroups := make(map[string][]map[string]any)
 	for _, tool := range mcpTools {
 		toolName := tool.Name()
 		desc := tool.Description()
@@ -1103,7 +1103,7 @@ func (cs *ChatServer) HandleToolsHierarchical(w http.ResponseWriter, r *http.Req
 			category = "Other"
 		}
 
-		mcpGroups[category] = append(mcpGroups[category], map[string]interface{}{
+		mcpGroups[category] = append(mcpGroups[category], map[string]any{
 			"name":        toolName,
 			"description": desc,
 		})
@@ -1111,7 +1111,7 @@ func (cs *ChatServer) HandleToolsHierarchical(w http.ResponseWriter, r *http.Req
 
 	// Convert groups to array
 	for category, tools := range mcpGroups {
-		result.MCPTools = append(result.MCPTools, map[string]interface{}{
+		result.MCPTools = append(result.MCPTools, map[string]any{
 			"category":    category,
 			"description": fmt.Sprintf("%s tools", category),
 			"tools":       tools,
@@ -1125,7 +1125,7 @@ func (cs *ChatServer) HandleToolsHierarchical(w http.ResponseWriter, r *http.Req
 // HandleConfig returns the chat configuration
 func (cs *ChatServer) HandleConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	json.NewEncoder(w).Encode(map[string]any{
 		"chatTitle": cs.config.ChatTitle,
 	})
 }
@@ -1309,7 +1309,7 @@ IMPORTANT:
 }
 
 // selectToolForTask uses LLM to determine which tool should be used
-func (a *SimpleChatAgent) selectToolForTask(ctx context.Context, message string, availableTools []tools.Tool) (*tools.Tool, map[string]interface{}, error) {
+func (a *SimpleChatAgent) selectToolForTask(ctx context.Context, message string, availableTools []tools.Tool) (*tools.Tool, map[string]any, error) {
 	if len(availableTools) == 0 {
 		return nil, nil, nil // No tools available
 	}
@@ -1369,10 +1369,10 @@ IMPORTANT:
 
 	// Parse the decision
 	var toolDecision struct {
-		UseTool  bool                   `json:"use_tool"`
-		ToolName string                 `json:"tool_name"`
-		Args     map[string]interface{} `json:"args"`
-		Reason   string                 `json:"reason"`
+		UseTool  bool           `json:"use_tool"`
+		ToolName string         `json:"tool_name"`
+		Args     map[string]any `json:"args"`
+		Reason   string         `json:"reason"`
 	}
 
 	if err := json.Unmarshal([]byte(cleanDecision), &toolDecision); err != nil {

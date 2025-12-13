@@ -41,7 +41,7 @@ latestCP := checkpoints[len(checkpoints)-1]
 
 // 2. Configure resume
 config := &graph.Config{
-    Configurable: map[string]interface{}{"thread_id": threadID},
+    Configurable: map[string]any{"thread_id": threadID},
     ResumeFrom:   []string{"step3"}, // Resume starting at step3
 }
 

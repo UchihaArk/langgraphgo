@@ -44,7 +44,7 @@ func TestToolExecutor(t *testing.T) {
 	assert.Equal(t, "Executed test-tool with input", resNode)
 
 	// Test ToolNode with map
-	mapState := map[string]interface{}{
+	mapState := map[string]any{
 		"tool":       "test-tool",
 		"tool_input": "map-input",
 	}

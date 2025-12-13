@@ -10,13 +10,13 @@
 documents := []prebuilt.Document{
     {
         PageContent: "LangGraph 是一个用于构建有状态、多角色应用的库。",
-        Metadata: map[string]interface{}{
+        Metadata: map[string]any{
             "source": "intro.txt",
         },
     },
     {
         PageContent: "RAG 结合了信息检索和文本生成。",
-        Metadata: map[string]interface{}{
+        Metadata: map[string]any{
             "source": "rag.txt",
         },
     },
@@ -91,7 +91,7 @@ func main() {
     documents := []prebuilt.Document{
         {
             PageContent: "LangGraph 是一个用于构建有状态、多角色应用的库。",
-            Metadata:    map[string]interface{}{"source": "intro.txt"},
+            Metadata:    map[string]any{"source": "intro.txt"},
         },
     }
 

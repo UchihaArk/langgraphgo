@@ -7,21 +7,21 @@ import (
 // State represents the overall state of the LangManus workflow
 type State struct {
 	// Core fields
-	Query        string    `json:"query"`
-	Messages     []Message `json:"messages"`
+	Query    string    `json:"query"`
+	Messages []Message `json:"messages"`
 
 	// Planning and execution
-	Plan         *Plan  `json:"plan,omitempty"`
-	Tasks        []Task `json:"tasks"`
-	CurrentTask  *Task  `json:"current_task,omitempty"`
+	Plan        *Plan  `json:"plan,omitempty"`
+	Tasks       []Task `json:"tasks"`
+	CurrentTask *Task  `json:"current_task,omitempty"`
 
 	// Agent routing
-	CurrentAgent AgentType  `json:"current_agent"`
-	NextAgent    *NextAgent `json:"next_agent,omitempty"`
+	CurrentAgent AgentType   `json:"current_agent"`
+	NextAgent    *NextAgent  `json:"next_agent,omitempty"`
 	AgentHistory []AgentType `json:"agent_history"`
 
 	// Research and coding results
-	ResearchResults []ResearchResult     `json:"research_results"`
+	ResearchResults []ResearchResult      `json:"research_results"`
 	CodeResults     []CodeExecutionResult `json:"code_results"`
 
 	// Final output
@@ -29,7 +29,7 @@ type State struct {
 	Status      string `json:"status"` // "in_progress", "completed", "failed"
 
 	// Metadata
-	Metadata map[string]interface{} `json:"metadata"`
+	Metadata map[string]any `json:"metadata"`
 }
 
 // NewState creates a new state with the given query
@@ -42,7 +42,7 @@ func NewState(query string) *State {
 		ResearchResults: []ResearchResult{},
 		CodeResults:     []CodeExecutionResult{},
 		Status:          "in_progress",
-		Metadata:        make(map[string]interface{}),
+		Metadata:        make(map[string]any),
 	}
 }
 

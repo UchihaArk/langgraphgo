@@ -34,28 +34,28 @@ func SimpleIntentRouter() {
 	g := graph.NewStateGraph()
 
 	// Entry point - analyze intent
-	g.AddNode("analyze_intent", "analyze_intent", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("analyze_intent", "analyze_intent", func(ctx context.Context, state any) (any, error) {
 		messages := state.([]llms.MessageContent)
 		fmt.Printf("   Analyzing: %s\n", messages[0].Parts[0].(llms.TextContent).Text)
 		return messages, nil
 	})
 
 	// Different handlers for different intents
-	g.AddNode("handle_question", "handle_question", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("handle_question", "handle_question", func(ctx context.Context, state any) (any, error) {
 		messages := state.([]llms.MessageContent)
 		response := "I'll help answer your question about that."
 		fmt.Printf("   ❓ Question Handler: %s\n", response)
 		return append(messages, llms.TextParts("ai", response)), nil
 	})
 
-	g.AddNode("handle_command", "handle_command", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("handle_command", "handle_command", func(ctx context.Context, state any) (any, error) {
 		messages := state.([]llms.MessageContent)
 		response := "Executing your command..."
 		fmt.Printf("   ⚡ Command Handler: %s\n", response)
 		return append(messages, llms.TextParts("ai", response)), nil
 	})
 
-	g.AddNode("handle_feedback", "handle_feedback", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("handle_feedback", "handle_feedback", func(ctx context.Context, state any) (any, error) {
 		messages := state.([]llms.MessageContent)
 		response := "Thank you for your feedback!"
 		fmt.Printf("   💬 Feedback Handler: %s\n", response)
@@ -63,7 +63,7 @@ func SimpleIntentRouter() {
 	})
 
 	// Conditional routing based on intent
-	g.AddConditionalEdge("analyze_intent", func(ctx context.Context, state interface{}) string {
+	g.AddConditionalEdge("analyze_intent", func(ctx context.Context, state any) string {
 		messages := state.([]llms.MessageContent)
 		if len(messages) > 0 {
 			text := messages[0].Parts[0].(llms.TextContent).Text
@@ -124,8 +124,8 @@ func MultiStepWorkflow() {
 	g := graph.NewStateGraph()
 
 	// Data validation step
-	g.AddNode("validate", "validate", func(ctx context.Context, state interface{}) (interface{}, error) {
-		data := state.(map[string]interface{})
+	g.AddNode("validate", "validate", func(ctx context.Context, state any) (any, error) {
+		data := state.(map[string]any)
 		fmt.Printf("   Validating data: %v\n", data)
 
 		// Check if data is valid
@@ -138,8 +138,8 @@ func MultiStepWorkflow() {
 	})
 
 	// Process valid data
-	g.AddNode("process", "process", func(ctx context.Context, state interface{}) (interface{}, error) {
-		data := state.(map[string]interface{})
+	g.AddNode("process", "process", func(ctx context.Context, state any) (any, error) {
+		data := state.(map[string]any)
 		fmt.Println("   ✅ Processing valid data...")
 		data["result"] = data["value"].(int) * 2
 		data["status"] = "processed"
@@ -147,8 +147,8 @@ func MultiStepWorkflow() {
 	})
 
 	// Handle invalid data
-	g.AddNode("handle_error", "handle_error", func(ctx context.Context, state interface{}) (interface{}, error) {
-		data := state.(map[string]interface{})
+	g.AddNode("handle_error", "handle_error", func(ctx context.Context, state any) (any, error) {
+		data := state.(map[string]any)
 		fmt.Println("   ❌ Handling invalid data...")
 		data["status"] = "error"
 		data["error"] = "Invalid input value"
@@ -156,15 +156,15 @@ func MultiStepWorkflow() {
 	})
 
 	// Store results
-	g.AddNode("store", "store", func(ctx context.Context, state interface{}) (interface{}, error) {
-		data := state.(map[string]interface{})
+	g.AddNode("store", "store", func(ctx context.Context, state any) (any, error) {
+		data := state.(map[string]any)
 		fmt.Printf("   💾 Storing result: %v\n", data["result"])
 		return data, nil
 	})
 
 	// Conditional edge after validation
-	g.AddConditionalEdge("validate", func(ctx context.Context, state interface{}) string {
-		data := state.(map[string]interface{})
+	g.AddConditionalEdge("validate", func(ctx context.Context, state any) string {
+		data := state.(map[string]any)
 		if valid, ok := data["valid"].(bool); ok && valid {
 			fmt.Println("   → Data is valid, proceeding to process")
 			return "process"
@@ -174,8 +174,8 @@ func MultiStepWorkflow() {
 	})
 
 	// Conditional edge after processing
-	g.AddConditionalEdge("process", func(ctx context.Context, state interface{}) string {
-		data := state.(map[string]interface{})
+	g.AddConditionalEdge("process", func(ctx context.Context, state any) string {
+		data := state.(map[string]any)
 		if result, ok := data["result"].(int); ok && result > 100 {
 			fmt.Println("   → Large result, storing...")
 			return "store"
@@ -193,7 +193,7 @@ func MultiStepWorkflow() {
 	runnable, _ := g.Compile()
 	ctx := context.Background()
 
-	testCases := []map[string]interface{}{
+	testCases := []map[string]any{
 		{"value": 60}, // Valid, large result -> will be stored
 		{"value": 10}, // Valid, small result -> won't be stored
 		{"value": -5}, // Invalid -> error handling
@@ -202,7 +202,7 @@ func MultiStepWorkflow() {
 	for i, testData := range testCases {
 		fmt.Printf("\n   Test %d: Input = %v\n", i+1, testData)
 		result, _ := runnable.Invoke(ctx, testData)
-		finalData := result.(map[string]interface{})
+		finalData := result.(map[string]any)
 		fmt.Printf("   Final State: %v\n", finalData)
 	}
 	fmt.Println()
@@ -216,39 +216,39 @@ func DynamicToolSelection() {
 	g := graph.NewStateGraph()
 
 	// Analyze task requirements
-	g.AddNode("analyze_task", "analyze_task", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("analyze_task", "analyze_task", func(ctx context.Context, state any) (any, error) {
 		task := state.(string)
 		fmt.Printf("   Analyzing task: %s\n", task)
 		return task, nil
 	})
 
 	// Different tools
-	g.AddNode("calculator", "calculator", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("calculator", "calculator", func(ctx context.Context, state any) (any, error) {
 		task := state.(string)
 		fmt.Println("   🧮 Using Calculator Tool")
 		return task + " -> Result: 42", nil
 	})
 
-	g.AddNode("web_search", "web_search", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("web_search", "web_search", func(ctx context.Context, state any) (any, error) {
 		task := state.(string)
 		fmt.Println("   🔍 Using Web Search Tool")
 		return task + " -> Found 10 relevant results", nil
 	})
 
-	g.AddNode("code_generator", "code_generator", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("code_generator", "code_generator", func(ctx context.Context, state any) (any, error) {
 		task := state.(string)
 		fmt.Println("   💻 Using Code Generator Tool")
 		return task + " -> Generated code snippet", nil
 	})
 
-	g.AddNode("translator", "translator", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("translator", "translator", func(ctx context.Context, state any) (any, error) {
 		task := state.(string)
 		fmt.Println("   🌐 Using Translator Tool")
 		return task + " -> Translated to target language", nil
 	})
 
 	// Tool selection based on task keywords
-	g.AddConditionalEdge("analyze_task", func(ctx context.Context, state interface{}) string {
+	g.AddConditionalEdge("analyze_task", func(ctx context.Context, state any) string {
 		task := strings.ToLower(state.(string))
 
 		if strings.Contains(task, "calculate") || strings.Contains(task, "compute") || strings.Contains(task, "math") {

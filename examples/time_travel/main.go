@@ -17,7 +17,7 @@ func main() {
 
 	// Schema with integer reducer
 	schema := graph.NewMapSchema()
-	schema.RegisterReducer("count", func(curr, new interface{}) (interface{}, error) {
+	schema.RegisterReducer("count", func(curr, new any) (any, error) {
 		if curr == nil {
 			return new, nil
 		}
@@ -26,15 +26,15 @@ func main() {
 	g.SetSchema(schema)
 
 	// Node A: Adds 1
-	g.AddNode("A", "A", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("A", "A", func(ctx context.Context, state any) (any, error) {
 		fmt.Println("Node A executing...")
-		return map[string]interface{}{"count": 1}, nil
+		return map[string]any{"count": 1}, nil
 	})
 
 	// Node B: Adds 10
-	g.AddNode("B", "B", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("B", "B", func(ctx context.Context, state any) (any, error) {
 		fmt.Println("Node B executing...")
-		return map[string]interface{}{"count": 10}, nil
+		return map[string]any{"count": 10}, nil
 	})
 
 	g.SetEntryPoint("A")
@@ -44,7 +44,7 @@ func main() {
 	// Configure interrupt before B
 	config := &graph.Config{
 		InterruptBefore: []string{"B"},
-		Configurable: map[string]interface{}{
+		Configurable: map[string]any{
 			"thread_id": "thread_1",
 		},
 	}
@@ -58,7 +58,7 @@ func main() {
 
 	// 2. Run Initial (Interrupts before B)
 	fmt.Println("--- Run 1 (Start) ---")
-	res, err := runnable.InvokeWithConfig(ctx, map[string]interface{}{"count": 0}, config)
+	res, err := runnable.InvokeWithConfig(ctx, map[string]any{"count": 0}, config)
 	// Expect interrupt error or partial result?
 	// Invoke returns state at interrupt.
 	// Note: Invoke returns (state, error). If interrupted, error is GraphInterrupt.
@@ -78,7 +78,7 @@ func main() {
 	// Since our reducer adds, if we pass 99, 1+99=100.
 	// Or if we want to OVERWRITE, we need a different reducer or schema logic.
 	// For this example, let's just add 50.
-	newConfig, err := runnable.UpdateState(ctx, config, map[string]interface{}{"count": 50}, "human")
+	newConfig, err := runnable.UpdateState(ctx, config, map[string]any{"count": 50}, "human")
 	if err != nil {
 		log.Fatal(err)
 	}

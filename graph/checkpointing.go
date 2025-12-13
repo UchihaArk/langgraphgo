@@ -15,12 +15,12 @@ import (
 
 // Checkpoint represents a saved state at a specific point in execution
 type Checkpoint struct {
-	ID        string                 `json:"id"`
-	NodeName  string                 `json:"node_name"`
-	State     interface{}            `json:"state"`
-	Metadata  map[string]interface{} `json:"metadata"`
-	Timestamp time.Time              `json:"timestamp"`
-	Version   int                    `json:"version"`
+	ID        string         `json:"id"`
+	NodeName  string         `json:"node_name"`
+	State     any            `json:"state"`
+	Metadata  map[string]any `json:"metadata"`
+	Timestamp time.Time      `json:"timestamp"`
+	Version   int            `json:"version"`
 }
 
 // CheckpointStore defines the interface for checkpoint persistence
@@ -314,12 +314,12 @@ func NewCheckpointableRunnable(runnable *ListenableRunnable, config CheckpointCo
 }
 
 // Invoke executes the graph with checkpointing
-func (cr *CheckpointableRunnable) Invoke(ctx context.Context, initialState interface{}) (interface{}, error) {
+func (cr *CheckpointableRunnable) Invoke(ctx context.Context, initialState any) (any, error) {
 	return cr.InvokeWithConfig(ctx, initialState, nil)
 }
 
 // InvokeWithConfig executes the graph with checkpointing and config
-func (cr *CheckpointableRunnable) InvokeWithConfig(ctx context.Context, initialState interface{}, config *Config) (interface{}, error) {
+func (cr *CheckpointableRunnable) InvokeWithConfig(ctx context.Context, initialState any, config *Config) (any, error) {
 	// Extract thread_id from config if present
 	var threadID string
 	if config != nil && config.Configurable != nil {
@@ -346,7 +346,7 @@ func (cr *CheckpointableRunnable) InvokeWithConfig(ctx context.Context, initialS
 }
 
 // SaveCheckpoint manually saves a checkpoint
-func (cr *CheckpointableRunnable) SaveCheckpoint(ctx context.Context, nodeName string, state interface{}) error {
+func (cr *CheckpointableRunnable) SaveCheckpoint(ctx context.Context, nodeName string, state any) error {
 	// Get current version from existing checkpoints
 	checkpoints, err := cr.config.Store.List(ctx, cr.executionID)
 	version := 1
@@ -362,7 +362,7 @@ func (cr *CheckpointableRunnable) SaveCheckpoint(ctx context.Context, nodeName s
 		State:     state,
 		Timestamp: time.Now(),
 		Version:   version,
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"execution_id": cr.executionID,
 		},
 	}
@@ -381,7 +381,7 @@ func (cr *CheckpointableRunnable) ListCheckpoints(ctx context.Context) ([]*Check
 }
 
 // ResumeFromCheckpoint resumes execution from a specific checkpoint
-func (cr *CheckpointableRunnable) ResumeFromCheckpoint(ctx context.Context, checkpointID string) (interface{}, error) {
+func (cr *CheckpointableRunnable) ResumeFromCheckpoint(ctx context.Context, checkpointID string) (any, error) {
 	checkpoint, err := cr.LoadCheckpoint(ctx, checkpointID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to load checkpoint: %w", err)
@@ -409,7 +409,7 @@ type CheckpointListener struct {
 }
 
 // OnGraphStep implements GraphCallbackHandler
-func (cl *CheckpointListener) OnGraphStep(ctx context.Context, stepNode string, state interface{}) {
+func (cl *CheckpointListener) OnGraphStep(ctx context.Context, stepNode string, state any) {
 	if !cl.autoSave {
 		return
 	}
@@ -423,7 +423,7 @@ func (cl *CheckpointListener) OnGraphStep(ctx context.Context, stepNode string, 
 		version = latest.Version + 1
 	}
 
-	metadata := map[string]interface{}{
+	metadata := map[string]any{
 		"execution_id": cl.executionID,
 		"event":        "step",
 	}
@@ -503,10 +503,10 @@ func generateCheckpointID() string {
 
 // StateSnapshot represents a snapshot of the graph state
 type StateSnapshot struct {
-	Values    interface{}
+	Values    any
 	Next      []string
 	Config    Config
-	Metadata  map[string]interface{}
+	Metadata  map[string]any
 	CreatedAt time.Time
 	ParentID  string
 }
@@ -564,7 +564,7 @@ func (cr *CheckpointableRunnable) GetState(ctx context.Context, config *Config) 
 		CreatedAt: checkpoint.Timestamp,
 		Metadata:  checkpoint.Metadata,
 		Config: Config{
-			Configurable: map[string]interface{}{
+			Configurable: map[string]any{
 				"thread_id":     threadID,
 				"checkpoint_id": checkpoint.ID,
 			},
@@ -580,7 +580,7 @@ func (cr *CheckpointableRunnable) GetState(ctx context.Context, config *Config) 
 }
 
 // UpdateState updates the state for the given config
-func (cr *CheckpointableRunnable) UpdateState(ctx context.Context, config *Config, values interface{}, asNode string) (*Config, error) {
+func (cr *CheckpointableRunnable) UpdateState(ctx context.Context, config *Config, values any, asNode string) (*Config, error) {
 	var threadID string
 	if config != nil && config.Configurable != nil {
 		if tid, ok := config.Configurable["thread_id"].(string); ok {
@@ -595,7 +595,7 @@ func (cr *CheckpointableRunnable) UpdateState(ctx context.Context, config *Confi
 	// 1. Get current state
 	// We need to find the latest checkpoint for this thread to merge against
 	checkpoints, err := cr.config.Store.List(ctx, threadID)
-	var currentState interface{}
+	var currentState any
 	var currentVersion int
 
 	if err == nil && len(checkpoints) > 0 {
@@ -614,7 +614,7 @@ func (cr *CheckpointableRunnable) UpdateState(ctx context.Context, config *Confi
 	newState := values
 	if cr.runnable.graph.Schema != nil {
 		// If Schema is defined, use it to update state with results
-		var baseState interface{}
+		var baseState any
 		if currentState != nil {
 			baseState = currentState
 		} else {
@@ -629,10 +629,10 @@ func (cr *CheckpointableRunnable) UpdateState(ctx context.Context, config *Confi
 	} else if currentState != nil {
 		// No schema, but have current state.
 		// Detailed map merge logic
-		if curMap, ok := currentState.(map[string]interface{}); ok {
-			if valMap, ok := values.(map[string]interface{}); ok {
+		if curMap, ok := currentState.(map[string]any); ok {
+			if valMap, ok := values.(map[string]any); ok {
 				// Create a new map for the merged state to avoid mutating the original
-				merged := make(map[string]interface{})
+				merged := make(map[string]any)
 				for k, v := range curMap {
 					merged[k] = v
 				}
@@ -651,7 +651,7 @@ func (cr *CheckpointableRunnable) UpdateState(ctx context.Context, config *Confi
 		State:     newState,
 		Timestamp: time.Now(),
 		Version:   currentVersion + 1,
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"execution_id": threadID,
 			"source":       "update_state",
 			"updated_by":   asNode,
@@ -663,7 +663,7 @@ func (cr *CheckpointableRunnable) UpdateState(ctx context.Context, config *Confi
 	}
 
 	return &Config{
-		Configurable: map[string]interface{}{
+		Configurable: map[string]any{
 			"thread_id":     threadID,
 			"checkpoint_id": checkpoint.ID,
 		},

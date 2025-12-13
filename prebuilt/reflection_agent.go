@@ -76,12 +76,12 @@ func CreateReflectionAgent(config ReflectionAgentConfig) (*graph.StateRunnable, 
 	workflow.SetSchema(agentSchema)
 
 	// Add generation node
-	workflow.AddNode("generate", "Generate or revise response based on reflection", func(ctx context.Context, state interface{}) (interface{}, error) {
+	workflow.AddNode("generate", "Generate or revise response based on reflection", func(ctx context.Context, state any) (any, error) {
 		return generateNode(ctx, state, config.Model, config.SystemMessage, config.Verbose)
 	})
 
 	// Add reflection node
-	workflow.AddNode("reflect", "Reflect on the generated response and suggest improvements", func(ctx context.Context, state interface{}) (interface{}, error) {
+	workflow.AddNode("reflect", "Reflect on the generated response and suggest improvements", func(ctx context.Context, state any) (any, error) {
 		return reflectNode(ctx, state, reflectionModel, config.ReflectionPrompt, config.Verbose)
 	})
 
@@ -89,12 +89,12 @@ func CreateReflectionAgent(config ReflectionAgentConfig) (*graph.StateRunnable, 
 	workflow.SetEntryPoint("generate")
 
 	// Add conditional edge from generate
-	workflow.AddConditionalEdge("generate", func(ctx context.Context, state interface{}) string {
+	workflow.AddConditionalEdge("generate", func(ctx context.Context, state any) string {
 		return shouldContinueAfterGenerate(state, config.MaxIterations, config.Verbose)
 	})
 
 	// Add conditional edge from reflect
-	workflow.AddConditionalEdge("reflect", func(ctx context.Context, state interface{}) string {
+	workflow.AddConditionalEdge("reflect", func(ctx context.Context, state any) string {
 		return shouldContinueAfterReflect(state, config.Verbose)
 	})
 
@@ -102,8 +102,8 @@ func CreateReflectionAgent(config ReflectionAgentConfig) (*graph.StateRunnable, 
 }
 
 // generateNode generates or revises a response
-func generateNode(ctx context.Context, state interface{}, model llms.Model, systemMessage string, verbose bool) (interface{}, error) {
-	mState := state.(map[string]interface{})
+func generateNode(ctx context.Context, state any, model llms.Model, systemMessage string, verbose bool) (any, error) {
+	mState := state.(map[string]any)
 
 	// Get current iteration
 	iteration := 0
@@ -191,7 +191,7 @@ Generate an improved response that addresses the issues raised in the reflection
 		Parts: []llms.ContentPart{llms.TextPart(draft)},
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"messages":  []llms.MessageContent{aiMsg},
 		"draft":     draft,
 		"iteration": iteration + 1,
@@ -199,8 +199,8 @@ Generate an improved response that addresses the issues raised in the reflection
 }
 
 // reflectNode reflects on the generated response
-func reflectNode(ctx context.Context, state interface{}, model llms.Model, reflectionPrompt string, verbose bool) (interface{}, error) {
-	mState := state.(map[string]interface{})
+func reflectNode(ctx context.Context, state any, model llms.Model, reflectionPrompt string, verbose bool) (any, error) {
+	mState := state.(map[string]any)
 
 	draft, ok := mState["draft"].(string)
 	if !ok || draft == "" {
@@ -253,15 +253,15 @@ Provide a critical reflection on this response.`, originalRequest, draft)),
 	// Determine if response is satisfactory
 	isSatisfactory := isResponseSatisfactory(reflection)
 
-	return map[string]interface{}{
-		"reflection":     reflection,
+	return map[string]any{
+		"reflection":      reflection,
 		"is_satisfactory": isSatisfactory,
 	}, nil
 }
 
 // shouldContinueAfterGenerate decides whether to reflect or end
-func shouldContinueAfterGenerate(state interface{}, maxIterations int, verbose bool) string {
-	mState := state.(map[string]interface{})
+func shouldContinueAfterGenerate(state any, maxIterations int, verbose bool) string {
+	mState := state.(map[string]any)
 
 	iteration, _ := mState["iteration"].(int)
 
@@ -292,8 +292,8 @@ func shouldContinueAfterGenerate(state interface{}, maxIterations int, verbose b
 }
 
 // shouldContinueAfterReflect decides whether to revise or accept
-func shouldContinueAfterReflect(state interface{}, verbose bool) string {
-	mState := state.(map[string]interface{})
+func shouldContinueAfterReflect(state any, verbose bool) string {
+	mState := state.(map[string]any)
 
 	isSatisfactory, _ := mState["is_satisfactory"].(bool)
 

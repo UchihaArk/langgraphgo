@@ -58,13 +58,13 @@ type TraceSpan struct {
 	Duration time.Duration
 
 	// State is a snapshot of the state at this point (optional)
-	State interface{}
+	State any
 
 	// Error contains any error that occurred during execution
 	Error error
 
 	// Metadata contains additional key-value pairs for observability
-	Metadata map[string]interface{}
+	Metadata map[string]any
 }
 
 // TraceHook defines the interface for trace event handlers
@@ -107,7 +107,7 @@ func (t *Tracer) StartSpan(ctx context.Context, event TraceEvent, nodeName strin
 		Event:     event,
 		NodeName:  nodeName,
 		StartTime: time.Now(),
-		Metadata:  make(map[string]interface{}),
+		Metadata:  make(map[string]any),
 	}
 
 	// Extract parent ID from context if available
@@ -126,7 +126,7 @@ func (t *Tracer) StartSpan(ctx context.Context, event TraceEvent, nodeName strin
 }
 
 // EndSpan completes a trace span
-func (t *Tracer) EndSpan(ctx context.Context, span *TraceSpan, state interface{}, err error) {
+func (t *Tracer) EndSpan(ctx context.Context, span *TraceSpan, state any, err error) {
 	span.EndTime = time.Now()
 	span.Duration = span.EndTime.Sub(span.StartTime)
 	span.State = state
@@ -157,7 +157,7 @@ func (t *Tracer) TraceEdgeTraversal(ctx context.Context, fromNode, toNode string
 		StartTime: time.Now(),
 		EndTime:   time.Now(),
 		Duration:  0,
-		Metadata:  make(map[string]interface{}),
+		Metadata:  make(map[string]any),
 	}
 
 	// Extract parent ID from context if available
@@ -221,7 +221,7 @@ func NewTracedRunnable(runnable *Runnable, tracer *Tracer) *TracedRunnable {
 }
 
 // Invoke executes the graph with tracing enabled
-func (tr *TracedRunnable) Invoke(ctx context.Context, initialState interface{}) (interface{}, error) {
+func (tr *TracedRunnable) Invoke(ctx context.Context, initialState any) (any, error) {
 	// Start graph execution span
 	graphSpan := tr.tracer.StartSpan(ctx, TraceEventGraphStart, "")
 	ctx = ContextWithSpan(ctx, graphSpan)

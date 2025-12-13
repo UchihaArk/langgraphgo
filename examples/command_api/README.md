@@ -16,8 +16,8 @@ The `Command` struct is defined as:
 
 ```go
 type Command struct {
-    Update interface{} // State update to apply
-    Goto   interface{} // Next node(s) to execute (string or []string)
+    Update any // State update to apply
+    Goto   any // Next node(s) to execute (string or []string)
 }
 ```
 
@@ -31,12 +31,12 @@ In `main.go`:
 
 1.  **Router Node**:
     ```go
-    g.AddNode("router", func(ctx context.Context, state interface{}) (interface{}, error) {
+    g.AddNode("router", func(ctx context.Context, state any) (any, error) {
         // ... logic to check count ...
         if count > 5 {
             // Dynamic Goto: Skip "process" and go straight to "end_high"
             return &graph.Command{
-                Update: map[string]interface{}{"status": "high"},
+                Update: map[string]any{"status": "high"},
                 Goto:   "end_high",
             }, nil
         }

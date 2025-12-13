@@ -87,7 +87,7 @@ func main() {
 	ctx := context.Background()
 	input := "Please use the available skill to say hello to the world."
 
-	resp, err := agent.Invoke(ctx, map[string]interface{}{
+	resp, err := agent.Invoke(ctx, map[string]any{
 		"messages": []llms.MessageContent{
 			llms.TextParts(llms.ChatMessageTypeHuman, input),
 		},

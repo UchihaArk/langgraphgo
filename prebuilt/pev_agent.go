@@ -89,22 +89,22 @@ func CreatePEVAgent(config PEVAgentConfig) (*graph.StateRunnable, error) {
 	workflow.SetSchema(agentSchema)
 
 	// Add planner node
-	workflow.AddNode("planner", "Create or revise execution plan", func(ctx context.Context, state interface{}) (interface{}, error) {
+	workflow.AddNode("planner", "Create or revise execution plan", func(ctx context.Context, state any) (any, error) {
 		return plannerNode(ctx, state, config.Model, config.SystemMessage, config.Verbose)
 	})
 
 	// Add executor node
-	workflow.AddNode("executor", "Execute the current step using tools", func(ctx context.Context, state interface{}) (interface{}, error) {
+	workflow.AddNode("executor", "Execute the current step using tools", func(ctx context.Context, state any) (any, error) {
 		return executorNode(ctx, state, toolExecutor, config.Model, config.Verbose)
 	})
 
 	// Add verifier node
-	workflow.AddNode("verifier", "Verify the execution result", func(ctx context.Context, state interface{}) (interface{}, error) {
+	workflow.AddNode("verifier", "Verify the execution result", func(ctx context.Context, state any) (any, error) {
 		return verifierNode(ctx, state, config.Model, config.VerificationPrompt, config.Verbose)
 	})
 
 	// Add synthesizer node
-	workflow.AddNode("synthesizer", "Synthesize final answer from all steps", func(ctx context.Context, state interface{}) (interface{}, error) {
+	workflow.AddNode("synthesizer", "Synthesize final answer from all steps", func(ctx context.Context, state any) (any, error) {
 		return synthesizerNode(ctx, state, config.Model, config.Verbose)
 	})
 
@@ -112,15 +112,15 @@ func CreatePEVAgent(config PEVAgentConfig) (*graph.StateRunnable, error) {
 	workflow.SetEntryPoint("planner")
 
 	// Add conditional edges
-	workflow.AddConditionalEdge("planner", func(ctx context.Context, state interface{}) string {
+	workflow.AddConditionalEdge("planner", func(ctx context.Context, state any) string {
 		return routeAfterPlanner(state, config.Verbose)
 	})
 
-	workflow.AddConditionalEdge("executor", func(ctx context.Context, state interface{}) string {
+	workflow.AddConditionalEdge("executor", func(ctx context.Context, state any) string {
 		return routeAfterExecutor(state, config.Verbose)
 	})
 
-	workflow.AddConditionalEdge("verifier", func(ctx context.Context, state interface{}) string {
+	workflow.AddConditionalEdge("verifier", func(ctx context.Context, state any) string {
 		return routeAfterVerifier(state, config.MaxRetries, config.Verbose)
 	})
 
@@ -130,8 +130,8 @@ func CreatePEVAgent(config PEVAgentConfig) (*graph.StateRunnable, error) {
 }
 
 // plannerNode creates or revises an execution plan
-func plannerNode(ctx context.Context, state interface{}, model llms.Model, systemMessage string, verbose bool) (interface{}, error) {
-	mState := state.(map[string]interface{})
+func plannerNode(ctx context.Context, state any, model llms.Model, systemMessage string, verbose bool) (any, error) {
+	mState := state.(map[string]any)
 
 	retries, _ := mState["retries"].(int)
 	messages, ok := mState["messages"].([]llms.MessageContent)
@@ -209,15 +209,15 @@ Create a new plan that addresses the issues identified.`,
 		log.Info("")
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"plan":         steps,
 		"current_step": 0,
 	}, nil
 }
 
 // executorNode executes the current step
-func executorNode(ctx context.Context, state interface{}, toolExecutor *ToolExecutor, model llms.Model, verbose bool) (interface{}, error) {
-	mState := state.(map[string]interface{})
+func executorNode(ctx context.Context, state any, toolExecutor *ToolExecutor, model llms.Model, verbose bool) (any, error) {
+	mState := state.(map[string]any)
 
 	plan, ok := mState["plan"].([]string)
 	if !ok || len(plan) == 0 {
@@ -245,15 +245,15 @@ func executorNode(ctx context.Context, state interface{}, toolExecutor *ToolExec
 		log.Info("result: %s\n", truncateString(result, 200))
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"last_tool_result":   result,
 		"intermediate_steps": []string{fmt.Sprintf("Step %d: %s -> %s", currentStep+1, stepDescription, truncateString(result, 100))},
 	}, nil
 }
 
 // verifierNode verifies the execution result
-func verifierNode(ctx context.Context, state interface{}, model llms.Model, verificationPrompt string, verbose bool) (interface{}, error) {
-	mState := state.(map[string]interface{})
+func verifierNode(ctx context.Context, state any, model llms.Model, verificationPrompt string, verbose bool) (any, error) {
+	mState := state.(map[string]any)
 
 	lastResult, ok := mState["last_tool_result"].(string)
 	if !ok {
@@ -321,14 +321,14 @@ Determine if this result indicates success or failure. Respond with JSON in this
 		}
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"verification_result": verificationResult,
 	}, nil
 }
 
 // synthesizerNode creates the final answer from all intermediate steps
-func synthesizerNode(ctx context.Context, state interface{}, model llms.Model, verbose bool) (interface{}, error) {
-	mState := state.(map[string]interface{})
+func synthesizerNode(ctx context.Context, state any, model llms.Model, verbose bool) (any, error) {
+	mState := state.(map[string]any)
 
 	messages, _ := mState["messages"].([]llms.MessageContent)
 	intermediateSteps, _ := mState["intermediate_steps"].([]string)
@@ -381,7 +381,7 @@ Provide a clear, concise final answer that directly addresses the user's request
 		Parts: []llms.ContentPart{llms.TextPart(finalAnswer)},
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"messages":     []llms.MessageContent{aiMsg},
 		"final_answer": finalAnswer,
 	}, nil
@@ -389,8 +389,8 @@ Provide a clear, concise final answer that directly addresses the user's request
 
 // Routing functions
 
-func routeAfterPlanner(state interface{}, verbose bool) string {
-	mState := state.(map[string]interface{})
+func routeAfterPlanner(state any, verbose bool) string {
+	mState := state.(map[string]any)
 	plan, ok := mState["plan"].([]string)
 
 	if !ok || len(plan) == 0 {
@@ -403,13 +403,13 @@ func routeAfterPlanner(state interface{}, verbose bool) string {
 	return "executor"
 }
 
-func routeAfterExecutor(state interface{}, verbose bool) string {
+func routeAfterExecutor(state any, verbose bool) string {
 	// After execution, always verify
 	return "verifier"
 }
 
-func routeAfterVerifier(state interface{}, maxRetries int, verbose bool) string {
-	mState := state.(map[string]interface{})
+func routeAfterVerifier(state any, maxRetries int, verbose bool) string {
+	mState := state.(map[string]any)
 
 	verificationResult, _ := mState["verification_result"].(VerificationResult)
 	currentStep, _ := mState["current_step"].(int)

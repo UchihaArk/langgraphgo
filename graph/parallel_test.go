@@ -19,11 +19,11 @@ func TestParallelNodes(t *testing.T) {
 	var counter int32
 
 	// Add parallel nodes
-	parallelFuncs := make(map[string]func(context.Context, interface{}) (interface{}, error))
+	parallelFuncs := make(map[string]func(context.Context, any) (any, error))
 	for i := 0; i < 5; i++ {
 		id := fmt.Sprintf("worker_%d", i)
-		parallelFuncs[id] = func(workerID string) func(context.Context, interface{}) (interface{}, error) {
-			return func(ctx context.Context, state interface{}) (interface{}, error) {
+		parallelFuncs[id] = func(workerID string) func(context.Context, any) (any, error) {
+			return func(ctx context.Context, state any) (any, error) {
 				// Simulate work
 				time.Sleep(10 * time.Millisecond)
 				atomic.AddInt32(&counter, 1)
@@ -61,7 +61,7 @@ func TestParallelNodes(t *testing.T) {
 	}
 
 	// Check results
-	results := result.([]interface{})
+	results := result.([]any)
 	if len(results) != 5 {
 		t.Errorf("Expected 5 results, got %d", len(results))
 	}
@@ -73,8 +73,8 @@ func TestMapReduceNode(t *testing.T) {
 	g := graph.NewStateGraph()
 
 	// Create map functions that process parts of data
-	mapFuncs := map[string]func(context.Context, interface{}) (interface{}, error){
-		"map1": func(ctx context.Context, state interface{}) (interface{}, error) {
+	mapFuncs := map[string]func(context.Context, any) (any, error){
+		"map1": func(ctx context.Context, state any) (any, error) {
 			nums := state.([]int)
 			sum := 0
 			for i := 0; i < len(nums)/2; i++ {
@@ -82,7 +82,7 @@ func TestMapReduceNode(t *testing.T) {
 			}
 			return sum, nil
 		},
-		"map2": func(ctx context.Context, state interface{}) (interface{}, error) {
+		"map2": func(ctx context.Context, state any) (any, error) {
 			nums := state.([]int)
 			sum := 0
 			for i := len(nums) / 2; i < len(nums); i++ {
@@ -93,7 +93,7 @@ func TestMapReduceNode(t *testing.T) {
 	}
 
 	// Reducer function
-	reducer := func(results []interface{}) (interface{}, error) {
+	reducer := func(results []any) (any, error) {
 		total := 0
 		for _, r := range results {
 			total += r.(int)
@@ -129,28 +129,28 @@ func TestFanOutFanIn(t *testing.T) {
 	g := graph.NewStateGraph()
 
 	// Source node
-	g.AddNode("source", "source", func(ctx context.Context, state interface{}) (interface{}, error) {
+	g.AddNode("source", "source", func(ctx context.Context, state any) (any, error) {
 		return state, nil
 	})
 
 	// Worker functions
-	workers := map[string]func(context.Context, interface{}) (interface{}, error){
-		"worker1": func(ctx context.Context, state interface{}) (interface{}, error) {
+	workers := map[string]func(context.Context, any) (any, error){
+		"worker1": func(ctx context.Context, state any) (any, error) {
 			n := state.(int)
 			return n * 2, nil
 		},
-		"worker2": func(ctx context.Context, state interface{}) (interface{}, error) {
+		"worker2": func(ctx context.Context, state any) (any, error) {
 			n := state.(int)
 			return n * 3, nil
 		},
-		"worker3": func(ctx context.Context, state interface{}) (interface{}, error) {
+		"worker3": func(ctx context.Context, state any) (any, error) {
 			n := state.(int)
 			return n * 4, nil
 		},
 	}
 
 	// Collector function
-	collector := func(results []interface{}) (interface{}, error) {
+	collector := func(results []any) (any, error) {
 		sum := 0
 		for _, r := range results {
 			sum += r.(int)
@@ -184,14 +184,14 @@ func TestParallelErrorHandling(t *testing.T) {
 	g := graph.NewStateGraph()
 
 	// Add parallel nodes where one fails
-	parallelFuncs := map[string]func(context.Context, interface{}) (interface{}, error){
-		"success1": func(ctx context.Context, state interface{}) (interface{}, error) {
+	parallelFuncs := map[string]func(context.Context, any) (any, error){
+		"success1": func(ctx context.Context, state any) (any, error) {
 			return "ok1", nil
 		},
-		"failure": func(ctx context.Context, state interface{}) (interface{}, error) {
+		"failure": func(ctx context.Context, state any) (any, error) {
 			return nil, fmt.Errorf("deliberate failure")
 		},
-		"success2": func(ctx context.Context, state interface{}) (interface{}, error) {
+		"success2": func(ctx context.Context, state any) (any, error) {
 			return "ok2", nil
 		},
 	}
@@ -217,8 +217,8 @@ func TestParallelContextCancellation(t *testing.T) {
 	g := graph.NewStateGraph()
 
 	// Add parallel nodes with different delays
-	parallelFuncs := map[string]func(context.Context, interface{}) (interface{}, error){
-		"fast": func(ctx context.Context, _ interface{}) (interface{}, error) {
+	parallelFuncs := map[string]func(context.Context, any) (any, error){
+		"fast": func(ctx context.Context, _ any) (any, error) {
 			select {
 			case <-time.After(10 * time.Millisecond):
 				return "fast_done", nil
@@ -226,7 +226,7 @@ func TestParallelContextCancellation(t *testing.T) {
 				return nil, ctx.Err()
 			}
 		},
-		"slow": func(ctx context.Context, _ interface{}) (interface{}, error) {
+		"slow": func(ctx context.Context, _ any) (any, error) {
 			select {
 			case <-time.After(1 * time.Second):
 				return "slow_done", nil
@@ -267,10 +267,10 @@ func BenchmarkParallelExecution(b *testing.B) {
 	g := graph.NewStateGraph()
 
 	// Create many parallel workers
-	workers := make(map[string]func(context.Context, interface{}) (interface{}, error))
+	workers := make(map[string]func(context.Context, any) (any, error))
 	for i := 0; i < 10; i++ {
 		workerID := fmt.Sprintf("worker_%d", i)
-		workers[workerID] = func(ctx context.Context, state interface{}) (interface{}, error) {
+		workers[workerID] = func(ctx context.Context, state any) (any, error) {
 			// Simulate some work
 			n := state.(int)
 			result := 0
@@ -302,7 +302,7 @@ func BenchmarkParallelExecution(b *testing.B) {
 }
 
 func BenchmarkSequentialVsParallel(b *testing.B) {
-	workFunc := func(ctx context.Context, state interface{}) (interface{}, error) {
+	workFunc := func(ctx context.Context, state any) (any, error) {
 		// Simulate CPU-bound work
 		n := state.(int)
 		result := 0
@@ -340,7 +340,7 @@ func BenchmarkSequentialVsParallel(b *testing.B) {
 		g := graph.NewStateGraph()
 
 		// Add nodes in parallel
-		workers := make(map[string]func(context.Context, interface{}) (interface{}, error))
+		workers := make(map[string]func(context.Context, any) (any, error))
 		for i := 0; i < 5; i++ {
 			workers[fmt.Sprintf("worker_%d", i)] = workFunc
 		}

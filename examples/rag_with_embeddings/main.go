@@ -87,7 +87,7 @@ func main() {
 		{
 			PageContent: "LangGraph is a library for building stateful, multi-actor applications with LLMs. " +
 				"It provides graph-based workflows with support for cycles and conditional edges.",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"source":   "langgraph_intro.txt",
 				"category": "Framework",
 			},
@@ -95,7 +95,7 @@ func main() {
 		{
 			PageContent: "RAG (Retrieval-Augmented Generation) combines information retrieval with text generation. " +
 				"It uses embeddings to find relevant documents and provides them as context to the LLM.",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"source":   "rag_overview.txt",
 				"category": "Technique",
 			},
@@ -103,7 +103,7 @@ func main() {
 		{
 			PageContent: "Vector embeddings are numerical representations of text that capture semantic meaning. " +
 				"Similar texts have similar embeddings, enabling semantic search and similarity matching.",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"source":   "embeddings_guide.txt",
 				"category": "Concept",
 			},
@@ -111,7 +111,7 @@ func main() {
 		{
 			PageContent: "OpenAI's text-embedding-ada-002 model generates 1536-dimensional embeddings. " +
 				"It's optimized for semantic search and provides high-quality representations of text.",
-			Metadata: map[string]interface{}{
+			Metadata: map[string]any{
 				"source":   "openai_embeddings.txt",
 				"category": "Model",
 			},

@@ -9,13 +9,13 @@ import (
 
 func TestVisualization(t *testing.T) {
 	g := NewStateGraph()
-	g.AddNode("A", "A", func(ctx context.Context, state interface{}) (interface{}, error) { return state, nil })
-	g.AddNode("B", "B", func(ctx context.Context, state interface{}) (interface{}, error) { return state, nil })
-	g.AddNode("C", "C", func(ctx context.Context, state interface{}) (interface{}, error) { return state, nil })
+	g.AddNode("A", "A", func(ctx context.Context, state any) (any, error) { return state, nil })
+	g.AddNode("B", "B", func(ctx context.Context, state any) (any, error) { return state, nil })
+	g.AddNode("C", "C", func(ctx context.Context, state any) (any, error) { return state, nil })
 
 	g.SetEntryPoint("A")
 	g.AddEdge("A", "B")
-	g.AddConditionalEdge("B", func(ctx context.Context, state interface{}) string { return "C" })
+	g.AddConditionalEdge("B", func(ctx context.Context, state any) string { return "C" })
 	g.AddEdge("C", END)
 
 	runnable, err := g.Compile()

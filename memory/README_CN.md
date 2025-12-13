@@ -319,7 +319,7 @@ type Message struct {
     Role       string                 // "user"、"assistant"、"system"
     Content    string                 // 消息内容
     Timestamp  time.Time              // 创建时间
-    Metadata   map[string]interface{} // 附加元数据
+    Metadata   map[string]any // 附加元数据
     TokenCount int                    // 估计的 token 数
 }
 ```

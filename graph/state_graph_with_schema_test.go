@@ -28,9 +28,9 @@ func TestNewMessageGraph(t *testing.T) {
 	}
 
 	// Test that the schema works with AddMessages
-	g.AddNode("node1", "Test node", func(ctx context.Context, state interface{}) (interface{}, error) {
-		return map[string]interface{}{
-			"messages": []map[string]interface{}{
+	g.AddNode("node1", "Test node", func(ctx context.Context, state any) (any, error) {
+		return map[string]any{
+			"messages": []map[string]any{
 				{"role": "assistant", "content": "Hello"},
 			},
 		}, nil
@@ -45,8 +45,8 @@ func TestNewMessageGraph(t *testing.T) {
 	}
 
 	// Execute with initial state
-	initialState := map[string]interface{}{
-		"messages": []map[string]interface{}{
+	initialState := map[string]any{
+		"messages": []map[string]any{
 			{"role": "user", "content": "Hi"},
 		},
 	}
@@ -57,12 +57,12 @@ func TestNewMessageGraph(t *testing.T) {
 	}
 
 	// Verify messages were merged
-	resultMap, ok := result.(map[string]interface{})
+	resultMap, ok := result.(map[string]any)
 	if !ok {
 		t.Fatal("Result should be a map")
 	}
 
-	messages, ok := resultMap["messages"].([]map[string]interface{})
+	messages, ok := resultMap["messages"].([]map[string]any)
 	if !ok {
 		t.Fatal("messages should be a slice")
 	}

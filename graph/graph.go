@@ -25,11 +25,11 @@ type GraphInterrupt struct {
 	// Node that caused the interruption
 	Node string
 	// State at the time of interruption
-	State interface{}
+	State any
 	// NextNodes that would have been executed if not interrupted
 	NextNodes []string
 	// InterruptValue is the value provided by the dynamic interrupt (if any)
-	InterruptValue interface{}
+	InterruptValue any
 }
 
 func (e *GraphInterrupt) Error() string {
@@ -41,7 +41,7 @@ func (e *GraphInterrupt) Error() string {
 
 // Interrupt pauses execution and waits for input.
 // If resuming, it returns the value provided in the resume command.
-func Interrupt(ctx context.Context, value interface{}) (interface{}, error) {
+func Interrupt(ctx context.Context, value any) (any, error) {
 	if resumeVal := GetResumeValue(ctx); resumeVal != nil {
 		return resumeVal, nil
 	}
@@ -58,7 +58,7 @@ type Node struct {
 
 	// Function is the function associated with the node.
 	// It takes a context and any state as input and returns the updated state and an error.
-	Function func(ctx context.Context, state interface{}) (interface{}, error)
+	Function func(ctx context.Context, state any) (any, error)
 }
 
 // Edge represents an edge in the graph.
@@ -71,7 +71,7 @@ type Edge struct {
 }
 
 // StateMerger merges multiple state updates into a single state.
-type StateMerger func(ctx context.Context, currentState interface{}, newStates []interface{}) (interface{}, error)
+type StateMerger func(ctx context.Context, currentState any, newStates []any) (any, error)
 
 // Runnable is an alias for StateRunnable for backward compatibility.
 // All Runnable functionality is now provided by StateRunnable.
@@ -80,13 +80,13 @@ type Runnable = StateRunnable
 // NewMessageGraph creates a new instance of StateGraph with a default schema
 // that handles "messages" using the AddMessages reducer.
 // This is the recommended constructor for chat-based agents that use
-// map[string]interface{} as state with a "messages" key.
+// map[string]any as state with a "messages" key.
 //
 // This replaces the old NewMessageGraphWithSchema() function.
 func NewMessageGraph() *StateGraph {
 	g := &StateGraph{
 		nodes:            make(map[string]Node),
-		conditionalEdges: make(map[string]func(ctx context.Context, state interface{}) string),
+		conditionalEdges: make(map[string]func(ctx context.Context, state any) string),
 	}
 
 	// Initialize default schema for message handling

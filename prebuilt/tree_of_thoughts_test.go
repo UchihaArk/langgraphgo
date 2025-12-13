@@ -150,12 +150,12 @@ func TestTreeOfThoughtsFindsGoal(t *testing.T) {
 		t.Fatalf("Failed to create agent: %v", err)
 	}
 
-	result, err := agent.Invoke(context.Background(), map[string]interface{}{})
+	result, err := agent.Invoke(context.Background(), map[string]any{})
 	if err != nil {
 		t.Fatalf("Failed to invoke agent: %v", err)
 	}
 
-	finalState := result.(map[string]interface{})
+	finalState := result.(map[string]any)
 	solution, ok := finalState["solution"].(SearchPath)
 	if !ok || solution.States == nil {
 		t.Fatal("Expected to find a solution")
@@ -205,12 +205,12 @@ func TestTreeOfThoughtsPrunesInvalidStates(t *testing.T) {
 		t.Fatalf("Failed to create agent: %v", err)
 	}
 
-	result, err := agent.Invoke(context.Background(), map[string]interface{}{})
+	result, err := agent.Invoke(context.Background(), map[string]any{})
 	if err != nil {
 		t.Fatalf("Failed to invoke agent: %v", err)
 	}
 
-	finalState := result.(map[string]interface{})
+	finalState := result.(map[string]any)
 	solution := finalState["solution"]
 
 	if solution != nil {

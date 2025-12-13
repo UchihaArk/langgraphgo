@@ -22,10 +22,10 @@ func TestPostgresCheckpointStore_Save(t *testing.T) {
 	cp := &graph.Checkpoint{
 		ID:        "cp-1",
 		NodeName:  "node-a",
-		State:     map[string]interface{}{"foo": "bar"},
+		State:     map[string]any{"foo": "bar"},
 		Timestamp: time.Now(),
 		Version:   1,
-		Metadata: map[string]interface{}{
+		Metadata: map[string]any{
 			"execution_id": "exec-1",
 		},
 	}
@@ -61,8 +61,8 @@ func TestPostgresCheckpointStore_Load(t *testing.T) {
 
 	cpID := "cp-1"
 	timestamp := time.Now()
-	state := map[string]interface{}{"foo": "bar"}
-	metadata := map[string]interface{}{"execution_id": "exec-1"}
+	state := map[string]any{"foo": "bar"}
+	metadata := map[string]any{"execution_id": "exec-1"}
 
 	stateJSON, _ := json.Marshal(state)
 	metadataJSON, _ := json.Marshal(metadata)
@@ -81,7 +81,7 @@ func TestPostgresCheckpointStore_Load(t *testing.T) {
 	assert.Equal(t, 1, loaded.Version)
 
 	// Check state
-	loadedState, ok := loaded.State.(map[string]interface{})
+	loadedState, ok := loaded.State.(map[string]any)
 	assert.True(t, ok)
 	assert.Equal(t, "bar", loadedState["foo"])
 

@@ -7,7 +7,7 @@ type NodeInterrupt struct {
 	// Node is the name of the node that triggered the interrupt
 	Node string
 	// Value is the data/query provided by the interrupt
-	Value interface{}
+	Value any
 }
 
 func (e *NodeInterrupt) Error() string {

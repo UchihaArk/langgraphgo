@@ -9,12 +9,12 @@ import (
 
 // Message represents a single conversation message
 type Message struct {
-	ID        string                 // Unique identifier
-	Role      string                 // "user", "assistant", "system"
-	Content   string                 // Message content
-	Timestamp time.Time              // When the message was created
-	Metadata  map[string]interface{} // Additional metadata
-	TokenCount int                   // Approximate token count
+	ID         string         // Unique identifier
+	Role       string         // "user", "assistant", "system"
+	Content    string         // Message content
+	Timestamp  time.Time      // When the message was created
+	Metadata   map[string]any // Additional metadata
+	TokenCount int            // Approximate token count
 }
 
 // Memory defines the interface for memory management strategies
@@ -46,11 +46,11 @@ type Stats struct {
 // NewMessage creates a new message with the given role and content
 func NewMessage(role, content string) *Message {
 	return &Message{
-		ID:        generateID(),
-		Role:      role,
-		Content:   content,
-		Timestamp: time.Now(),
-		Metadata:  make(map[string]interface{}),
+		ID:         generateID(),
+		Role:       role,
+		Content:    content,
+		Timestamp:  time.Now(),
+		Metadata:   make(map[string]any),
 		TokenCount: estimateTokens(content),
 	}
 }
