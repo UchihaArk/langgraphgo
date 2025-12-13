@@ -238,6 +238,7 @@ func (g *ListenableStateGraph) RemoveGlobalListener(listener NodeListener) {
 type ListenableRunnable struct {
 	graph           *ListenableStateGraph
 	listenableNodes map[string]*ListenableNode
+	runnable        *StateRunnable
 }
 
 // CompileListenable creates a runnable with listener support
@@ -246,15 +247,31 @@ func (g *ListenableStateGraph) CompileListenable() (*ListenableRunnable, error) 
 		return nil, ErrEntryPointNotSet
 	}
 
+	runnable, err := g.StateGraph.Compile()
+	if err != nil {
+		return nil, err
+	}
+
+	// Configure the runnable to use our listenable nodes
+	nodes := g.listenableNodes
+	runnable.nodeRunner = func(ctx context.Context, nodeName string, state interface{}) (interface{}, error) {
+		node, ok := nodes[nodeName]
+		if !ok {
+			return nil, fmt.Errorf("%w: %s", ErrNodeNotFound, nodeName)
+		}
+		return node.Execute(ctx, state)
+	}
+
 	return &ListenableRunnable{
 		graph:           g,
 		listenableNodes: g.listenableNodes,
+		runnable:        runnable,
 	}, nil
 }
 
 // Invoke executes the graph with listener notifications
 func (lr *ListenableRunnable) Invoke(ctx context.Context, initialState interface{}) (interface{}, error) {
-	return lr.InvokeWithConfig(ctx, initialState, nil)
+	return lr.runnable.Invoke(ctx, initialState)
 }
 
 // InvokeWithConfig executes the graph with listener notifications and config
@@ -262,101 +279,7 @@ func (lr *ListenableRunnable) InvokeWithConfig(ctx context.Context, initialState
 	if config != nil {
 		ctx = WithConfig(ctx, config)
 	}
-
-	state := initialState
-	currentNode := lr.graph.entryPoint
-
-	// Check if we should resume from a specific node
-	if config != nil && len(config.ResumeFrom) > 0 {
-		// For now, we only support resuming from a single node (the first one in the list)
-		currentNode = config.ResumeFrom[0]
-	}
-
-	for {
-		if currentNode == END {
-			break
-		}
-
-		// Check InterruptBefore
-		if config != nil && len(config.InterruptBefore) > 0 {
-			for _, interrupt := range config.InterruptBefore {
-				if currentNode == interrupt {
-					return state, &GraphInterrupt{
-						Node:  currentNode,
-						State: state,
-					}
-				}
-			}
-		}
-
-		listenableNode, ok := lr.listenableNodes[currentNode]
-		if !ok {
-			return nil, ErrNodeNotFound
-		}
-
-		// Execute the node function
-		result, err := listenableNode.Execute(ctx, state)
-		if err != nil {
-			return nil, err
-		}
-
-		// Update state using Schema if available
-		if lr.graph.Schema != nil {
-			state, err = lr.graph.Schema.Update(state, result)
-			if err != nil {
-				return nil, fmt.Errorf("schema update failed: %w", err)
-			}
-		} else {
-			// Default behavior: replace state
-			state = result
-		}
-
-		// Find next node
-		var nextNode string
-		foundNext := false
-		for _, edge := range lr.graph.edges {
-			if edge.From == currentNode {
-				nextNode = edge.To
-				foundNext = true
-				break
-			}
-		}
-
-		if !foundNext {
-			return nil, ErrNoOutgoingEdge
-		}
-
-		// Cleanup ephemeral state if supported
-		if cleaningSchema, ok := lr.graph.Schema.(CleaningStateSchema); ok {
-			state = cleaningSchema.Cleanup(state)
-		}
-
-		// Notify callbacks of step completion
-		if config != nil && len(config.Callbacks) > 0 {
-			for _, cb := range config.Callbacks {
-				if gcb, ok := cb.(GraphCallbackHandler); ok {
-					gcb.OnGraphStep(ctx, currentNode, state)
-				}
-			}
-		}
-
-		// Check InterruptAfter
-		if config != nil && len(config.InterruptAfter) > 0 {
-			for _, interrupt := range config.InterruptAfter {
-				if currentNode == interrupt {
-					return state, &GraphInterrupt{
-						Node:      currentNode,
-						State:     state,
-						NextNodes: []string{nextNode},
-					}
-				}
-			}
-		}
-
-		currentNode = nextNode
-	}
-
-	return state, nil
+	return lr.runnable.InvokeWithConfig(ctx, initialState, config)
 }
 
 // GetGraph returns a Exporter for visualization

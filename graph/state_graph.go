@@ -100,9 +100,11 @@ func (g *StateGraph) SetSchema(schema StateSchema) {
 }
 
 // StateRunnable represents a compiled state graph that can be invoked
+// StateRunnable represents a compiled state graph that can be invoked
 type StateRunnable struct {
-	graph  *StateGraph
-	tracer *Tracer
+	graph      *StateGraph
+	tracer     *Tracer
+	nodeRunner func(ctx context.Context, nodeName string, state interface{}) (interface{}, error)
 }
 
 // Compile compiles the state graph and returns a StateRunnable instance
@@ -246,22 +248,7 @@ func (r *StateRunnable) InvokeWithConfig(ctx context.Context, initialState inter
 			return nil, err
 		}
 
-		// Check InterruptAfter
-		if config != nil && len(config.InterruptAfter) > 0 {
-			for _, node := range currentNodes {
-				for _, interrupt := range config.InterruptAfter {
-					if node == interrupt {
-						return state, &GraphInterrupt{
-							Node:      node,
-							State:     state,
-							NextNodes: nextNodesList,
-						}
-					}
-				}
-			}
-		}
-
-		// Keep track of nodes that ran for callbacks
+		// Keep track of nodes that ran for callbacks and interrupts
 		nodesRan := make([]string, len(currentNodes))
 		copy(nodesRan, currentNodes)
 
@@ -284,6 +271,21 @@ func (r *StateRunnable) InvokeWithConfig(ctx context.Context, initialState inter
 						nodeName = fmt.Sprintf("step:%v", nodesRan)
 					}
 					gcb.OnGraphStep(ctx, nodeName, state)
+				}
+			}
+		}
+
+		// Check InterruptAfter
+		if config != nil && len(config.InterruptAfter) > 0 {
+			for _, node := range nodesRan {
+				for _, interrupt := range config.InterruptAfter {
+					if node == interrupt {
+						return state, &GraphInterrupt{
+							Node:      node,
+							State:     state,
+							NextNodes: nextNodesList,
+						}
+					}
 				}
 			}
 		}
@@ -315,7 +317,15 @@ func (r *StateRunnable) executeNodeWithRetry(ctx context.Context, node Node, sta
 	}
 
 	for attempt := 0; attempt < maxRetries; attempt++ {
-		result, err := node.Function(ctx, state)
+		var result interface{}
+		var err error
+
+		if r.nodeRunner != nil {
+			result, err = r.nodeRunner(ctx, node.Name, state)
+		} else {
+			result, err = node.Function(ctx, state)
+		}
+
 		if err == nil {
 			return result, nil
 		}
