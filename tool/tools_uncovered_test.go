@@ -147,7 +147,7 @@ func TestPythonTool(t *testing.T) {
 	assert.Contains(t, result, "Hello, World!")
 
 	// Test Python with syntax error
-	result, err = tool.Run(map[string]any{}, "print('unclosed string")
+	_, err = tool.Run(map[string]any{}, "print('unclosed string")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to run python script")
 
@@ -214,7 +214,7 @@ func TestShellTool(t *testing.T) {
 	assert.Contains(t, result, "Hello, World!")
 
 	// Test shell command that fails
-	result, err = tool.Run(map[string]any{}, "exit 1")
+	_, err = tool.Run(map[string]any{}, "exit 1")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "failed to run shell script")
 

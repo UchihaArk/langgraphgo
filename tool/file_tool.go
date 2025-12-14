@@ -17,7 +17,7 @@ func ReadFile(filePath string) (string, error) {
 // WriteFile writes the given content to a file.
 // If the file does not exist, it will be created. If it exists, its content will be truncated.
 func WriteFile(filePath string, content string) error {
-	err := os.WriteFile(filePath, []byte(content), 0644) // 0644 is standard file permissions
+	err := os.WriteFile(filePath, []byte(content), 0600)
 	if err != nil {
 		return fmt.Errorf("failed to write to file '%s': %w", filePath, err)
 	}

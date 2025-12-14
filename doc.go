@@ -385,22 +385,22 @@
 //
 // # Best Practices
 //
-//   1. **Choose the right agent type** for your use case
-//      - ReAct for general tasks
-//      - Supervisor for multi-agent workflows
-//      - PTC for complex tool interactions
+//  1. **Choose the right agent type** for your use case
+//     - ReAct for general tasks
+//     - Supervisor for multi-agent workflows
+//     - PTC for complex tool interactions
 //
-//   2. **Use typed graphs** when possible for better type safety
+//  2. **Use typed graphs** when possible for better type safety
 //
-//   3. **Implement proper error handling** in all node functions
+//  3. **Implement proper error handling** in all node functions
 //
-//   4. **Add checkpoints** for long-running or critical workflows
+//  4. **Add checkpoints** for long-running or critical workflows
 //
-//   5. **Use appropriate memory** strategy for conversations
+//  5. **Use appropriate memory** strategy for conversations
 //
-//   6. **Monitor execution** with listeners and logging
+//  6. **Monitor execution** with listeners and logging
 //
-//   7. **Test thoroughly** with various input scenarios
+//  7. **Test thoroughly** with various input scenarios
 //
 // # Configuration
 //
@@ -428,5 +428,4 @@
 // # License
 //
 // This project is licensed under the MIT License - see the LICENSE file for details.
-//
 package langgraphgo // import "github.com/smallnest/langgraphgo"

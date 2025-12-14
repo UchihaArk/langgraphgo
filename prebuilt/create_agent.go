@@ -315,9 +315,7 @@ func CreateAgent(model llms.Model, inputTools []tools.Tool, opts ...CreateAgentO
 			if tc, ok := part.(llms.ToolCall); ok {
 				// Parse arguments to get input
 				var args map[string]any
-				if err := json.Unmarshal([]byte(tc.FunctionCall.Arguments), &args); err != nil {
-					// If unmarshal fails, try to use the raw string if it's not JSON object
-				}
+				_ = json.Unmarshal([]byte(tc.FunctionCall.Arguments), &args) // Ignore error, will use raw string if unmarshal fails
 
 				inputVal := ""
 				if val, ok := args["input"].(string); ok {

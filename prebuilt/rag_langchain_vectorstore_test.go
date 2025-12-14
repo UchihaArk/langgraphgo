@@ -12,8 +12,9 @@ import (
 
 // MockLangChainVectorStore is a mock implementation of vectorstores.VectorStore for testing
 type MockLangChainVectorStore struct {
-	documents  []Document
-	embeddings [][]float64
+	documents []Document
+	// embeddings field removed as it's unused - if needed in future, uncomment:
+	// embeddings [][]float64
 }
 
 func (m *MockLangChainVectorStore) AddDocuments(ctx context.Context, docs []schema.Document, options ...vectorstores.Option) ([]string, error) {
@@ -23,9 +24,8 @@ func (m *MockLangChainVectorStore) AddDocuments(ctx context.Context, docs []sche
 			PageContent: doc.PageContent,
 			Metadata:    doc.Metadata,
 		})
-		if i < len(m.embeddings) {
-			// Store embeddings if provided
-		}
+		// Note: embeddings are available via m.embeddings[i] if needed
+		_ = i // Acknowledge index is available
 	}
 
 	// Return mock IDs

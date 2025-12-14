@@ -119,9 +119,7 @@ func (s *SummarizationMemory) GetContext(ctx context.Context, query string) ([]*
 	}
 
 	// Add recent messages
-	for _, msg := range s.recentMessages {
-		result = append(result, msg)
-	}
+	result = append(result, s.recentMessages...)
 
 	return result, nil
 }

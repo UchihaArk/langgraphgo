@@ -178,23 +178,10 @@ func SkillsToTools(skill goskills.SkillPackage) ([]tools.Tool, error) {
 		// but langchaingo tools usually just have a text description.
 		// We can append the JSON schema of parameters to the description to help the LLM.
 		desc := t.Function.Description
-		if t.Function.Parameters != nil {
-			// Convert parameters to JSON string to include in description?
-			// Or just rely on the fact that langchaingo might not use this description for function calling definition if we use bindTools?
-			// Wait, langchaingo's BindTools usually takes the tool struct and inspects it, or takes a definition.
-			// If we return tools.Tool, we are returning an interface.
-			// When using with langchaingo, we often use `tools.Tool` with `BindTools`.
-			// However, `BindTools` in langchaingo often expects structs with fields to infer schema, OR it calls `Name`, `Description`.
-			// If we want to support function calling properly, we might need to implement `Call` but also provide the schema.
-			// But `tools.Tool` interface doesn't have a `Schema` method.
-			// Langchaingo's `BindTools` often uses reflection on the tool struct if it's a struct, or if it's a `Tool` interface, it might be limited.
-			// Actually, for `BindTools` to work with dynamic tools, we might need to pass the schema explicitly or use a specific implementation.
-
-			// BUT, the user asked for "convenience methods to use goskills as []tools.Tool".
-			// If the user uses `prebuilt.create_agent`, it takes `[]tools.Tool`.
-			// `prebuilt.create_agent` uses `BindTools`.
-			// Let's check how `langgraphgo` handles tools.
-		}
+		// Note: Parameters schema is available via t.Function.Parameters if needed,
+		// but langchaingo's tools.Tool interface doesn't have a Schema method.
+		// The schema would need to be handled separately if function calling support is required.
+		_ = t.Function.Parameters // Acknowledge parameters exist but aren't used here
 
 		result = append(result, &SkillTool{
 			name:        t.Function.Name,

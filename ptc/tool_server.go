@@ -127,10 +127,12 @@ func (ts *ToolServer) GetBaseURL() string {
 // handleHealth handles health check requests
 func (ts *ToolServer) handleHealth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
+	if err := json.NewEncoder(w).Encode(map[string]any{
 		"status": "ok",
 		"tools":  len(ts.tools),
-	})
+	}); err != nil {
+		log.Error("Failed to encode health response: %v", err)
+	}
 }
 
 // handleListTools handles tool listing requests
@@ -152,9 +154,11 @@ func (ts *ToolServer) handleListTools(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
+	if err := json.NewEncoder(w).Encode(map[string]any{
 		"tools": toolList,
-	})
+	}); err != nil {
+		log.Error("Failed to encode tools list response: %v", err)
+	}
 }
 
 // handleCallTool handles tool execution requests
@@ -216,22 +220,26 @@ func (ts *ToolServer) handleCallTool(w http.ResponseWriter, r *http.Request) {
 // sendSuccessResponse sends a successful tool response
 func (ts *ToolServer) sendSuccessResponse(w http.ResponseWriter, toolName string, input any, result string) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(ToolResponse{
+	if err := json.NewEncoder(w).Encode(ToolResponse{
 		Success: true,
 		Result:  result,
 		Tool:    toolName,
 		Input:   input,
-	})
+	}); err != nil {
+		log.Error("Failed to encode success response: %v", err)
+	}
 }
 
 // sendErrorResponse sends an error tool response
 func (ts *ToolServer) sendErrorResponse(w http.ResponseWriter, toolName string, input any, errorMsg string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusBadRequest)
-	json.NewEncoder(w).Encode(ToolResponse{
+	if err := json.NewEncoder(w).Encode(ToolResponse{
 		Success: false,
 		Error:   errorMsg,
 		Tool:    toolName,
 		Input:   input,
-	})
+	}); err != nil {
+		log.Error("Failed to encode error response: %v", err)
+	}
 }

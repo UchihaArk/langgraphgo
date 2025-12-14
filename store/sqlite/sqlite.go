@@ -91,6 +91,7 @@ func (s *SqliteCheckpointStore) Save(ctx context.Context, checkpoint *graph.Chec
 		executionID = id
 	}
 
+	// nolint:gosec // G201: Table name cannot be parameterized, but all values use parameterized queries
 	query := fmt.Sprintf(`
 		INSERT INTO %s (id, execution_id, node_name, state, metadata, timestamp, version)
 		VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -122,6 +123,7 @@ func (s *SqliteCheckpointStore) Save(ctx context.Context, checkpoint *graph.Chec
 
 // Load retrieves a checkpoint by ID
 func (s *SqliteCheckpointStore) Load(ctx context.Context, checkpointID string) (*graph.Checkpoint, error) {
+	// nolint:gosec // G201: Table name cannot be parameterized, but all values use parameterized queries
 	query := fmt.Sprintf(`
 		SELECT id, node_name, state, metadata, timestamp, version
 		FROM %s
@@ -163,6 +165,7 @@ func (s *SqliteCheckpointStore) Load(ctx context.Context, checkpointID string) (
 
 // List returns all checkpoints for a given execution
 func (s *SqliteCheckpointStore) List(ctx context.Context, executionID string) ([]*graph.Checkpoint, error) {
+	// nolint:gosec // G201: Table name cannot be parameterized, but all values use parameterized queries
 	query := fmt.Sprintf(`
 		SELECT id, node_name, state, metadata, timestamp, version
 		FROM %s
@@ -216,6 +219,7 @@ func (s *SqliteCheckpointStore) List(ctx context.Context, executionID string) ([
 
 // Delete removes a checkpoint
 func (s *SqliteCheckpointStore) Delete(ctx context.Context, checkpointID string) error {
+	// nolint:gosec // G201: Table name cannot be parameterized, but all values use parameterized queries
 	query := fmt.Sprintf("DELETE FROM %s WHERE id = ?", s.tableName)
 	_, err := s.db.ExecContext(ctx, query, checkpointID)
 	if err != nil {
@@ -226,6 +230,7 @@ func (s *SqliteCheckpointStore) Delete(ctx context.Context, checkpointID string)
 
 // Clear removes all checkpoints for an execution
 func (s *SqliteCheckpointStore) Clear(ctx context.Context, executionID string) error {
+	// nolint:gosec // G201: Table name cannot be parameterized, but all values use parameterized queries
 	query := fmt.Sprintf("DELETE FROM %s WHERE execution_id = ?", s.tableName)
 	_, err := s.db.ExecContext(ctx, query, executionID)
 	if err != nil {

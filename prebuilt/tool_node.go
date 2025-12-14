@@ -55,13 +55,8 @@ func (tn *ToolNode) Invoke(ctx context.Context, state any) (any, error) {
 		if tc, ok := part.(llms.ToolCall); ok {
 			// Parse arguments to get input
 			var args map[string]any
-			// Arguments is a JSON string
-			if err := json.Unmarshal([]byte(tc.FunctionCall.Arguments), &args); err != nil {
-				// If unmarshal fails, it might be a simple string or malformed.
-				// We'll try to use it as is if it's not a JSON object, but usually it is.
-				// For now, let's log/ignore or treat as empty?
-				// Let's assume it might be a direct string input if not JSON.
-			}
+			// Arguments is a JSON string - ignore error, will use raw string if unmarshal fails
+			_ = json.Unmarshal([]byte(tc.FunctionCall.Arguments), &args)
 
 			inputVal := ""
 			if val, ok := args["input"].(string); ok {

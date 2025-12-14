@@ -529,13 +529,12 @@ func (r *StateRunnableTyped[S]) processNodeResults(results []S) ([]S, []string) 
 	var nextNodesFromCommands []string
 	processedResults := make([]S, len(results))
 
-	for i, res := range results {
-		// Note: In the generic version, we can't easily support Command[S] without type assertions
-		// because S is any type. Commands would need to be handled differently.
-		// For now, we just pass through the results as-is.
-		// TODO: Consider how to support Command with generics
-		processedResults[i] = res
-	}
+	// Note: In the generic version, we can't easily support Command[S] without type assertions
+	// because S is any type. Commands would need to be handled differently.
+	// For now, we just pass through the results as-is.
+	// TODO: Consider how to support Command with generics
+	copy(processedResults, results)
+
 	return processedResults, nextNodesFromCommands
 }
 

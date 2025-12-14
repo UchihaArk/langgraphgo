@@ -41,6 +41,7 @@ func (t *ShellTool) Run(args map[string]any, code string) (string, error) {
 
 // RunShellScript executes a shell script and returns its combined stdout and stderr.
 func RunShellScript(scriptPath string, args []string) (string, error) {
+	// nolint:gosec // G204: This is the intended functionality of the shell tool
 	cmd := exec.Command("bash", append([]string{scriptPath}, args...)...)
 
 	var stdout, stderr bytes.Buffer

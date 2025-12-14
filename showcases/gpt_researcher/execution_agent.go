@@ -159,7 +159,9 @@ func (e *ExecutionAgent) parseSearchResults(toolOutput string, question string) 
 		} else if strings.HasPrefix(line, "Relevance Score: ") {
 			if currentResult != nil {
 				scoreStr := strings.TrimPrefix(line, "Relevance Score: ")
-				fmt.Sscanf(scoreStr, "%f", &currentResult.Score)
+				if _, err := fmt.Sscanf(scoreStr, "%f", &currentResult.Score); err != nil {
+					currentResult.Score = 0.0 // Default score on parse error
+				}
 			}
 		}
 	}
@@ -240,7 +242,9 @@ func (e *ExecutionAgent) parseSummaryResponse(response string, result SearchResu
 			inKeyPoints = true
 		} else if strings.HasPrefix(line, "Relevance: ") {
 			relevanceStr := strings.TrimPrefix(line, "Relevance: ")
-			fmt.Sscanf(relevanceStr, "%f", &summary.Relevance)
+			if _, err := fmt.Sscanf(relevanceStr, "%f", &summary.Relevance); err != nil {
+				summary.Relevance = 0.0 // Default relevance on parse error
+			}
 			inKeyPoints = false
 		} else if inKeyPoints && strings.HasPrefix(line, "- ") {
 			point := strings.TrimPrefix(line, "- ")

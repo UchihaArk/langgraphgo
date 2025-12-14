@@ -79,8 +79,8 @@ func (p *PublisherAgent) buildReportPrompt(state *ResearchState) string {
 `, state.ResearchGoal))
 	}
 
-	prompt.WriteString(fmt.Sprintf(`Research Questions Investigated:
-`))
+	prompt.WriteString(`Research Questions Investigated:
+`)
 	for i, q := range state.Questions {
 		prompt.WriteString(fmt.Sprintf(`%d. %s
 `, i+1, q))
@@ -116,7 +116,7 @@ Key Points:
 		}
 	}
 
-	prompt.WriteString(fmt.Sprintf(`
+	prompt.WriteString(`
 
 Please synthesize all the above research findings into a comprehensive, well-structured research report.
 
@@ -129,7 +129,7 @@ Requirements:
 - Include a conclusion with key takeaways
 - Add a references section at the end
 
-Write the complete research report now:`))
+Write the complete research report now:`)
 
 	return prompt.String()
 }

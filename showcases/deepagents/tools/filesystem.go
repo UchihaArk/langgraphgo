@@ -90,7 +90,7 @@ func (t *WriteFileTool) Call(ctx context.Context, input string) (string, error) 
 	path := filepath.Join(t.RootDir, parts[0])
 	content := parts[1]
 
-	err := os.WriteFile(path, []byte(content), 0644)
+	err := os.WriteFile(path, []byte(content), 0600)
 	if err != nil {
 		return "", fmt.Errorf("failed to write file: %w", err)
 	}

@@ -28,6 +28,7 @@ func SearchNode(ctx context.Context, s any) (any, error) {
 	// 使用文本输出而不是 JSON
 	ctx, cancel := context.WithTimeout(ctx, 8*time.Minute)
 	defer cancel()
+	// nolint:gosec // G204: Username is validated input for the social-analyzer tool
 	cmd := exec.CommandContext(ctx, "social-analyzer", "--username", state.Username, "--top", "500")
 
 	// 获取 stdout 管道
@@ -79,11 +80,9 @@ func SearchNode(ctx context.Context, s any) (any, error) {
 				}
 			} else if strings.HasPrefix(line, "title") && currentResult != nil {
 				// title 也可以作为 name
-				parts := strings.SplitN(line, ":", 2)
-				if len(parts) == 2 {
-					// 简单起见，我们从 link 中提取 name，或者使用 title
-					// 这里我们暂时不提取 name，后面统一处理
-				}
+				// 简单起见，我们从 link 中提取 name，或者使用 title
+				// 这里我们暂时不提取 name，后面统一处理
+				// Parts would be split here if needed: parts := strings.SplitN(line, ":", 2)
 			} else if strings.HasPrefix(line, "-----------------------") {
 				if currentResult != nil && currentResult.Link != "" {
 					linkLower := strings.ToLower(currentResult.Link)

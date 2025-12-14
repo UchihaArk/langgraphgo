@@ -166,7 +166,7 @@ import sys
 %s
 `, toolWrappers, code)
 
-	if err := os.WriteFile(scriptPath, []byte(fullScript), 0644); err != nil {
+	if err := os.WriteFile(scriptPath, []byte(fullScript), 0600); err != nil {
 		return nil, fmt.Errorf("failed to write script: %w", err)
 	}
 
@@ -213,7 +213,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
@@ -237,7 +236,7 @@ func main() {
 }
 `, toolWrappers, code)
 
-	if err := os.WriteFile(scriptPath, []byte(fullScript), 0644); err != nil {
+	if err := os.WriteFile(scriptPath, []byte(fullScript), 0600); err != nil {
 		return nil, fmt.Errorf("failed to write script: %w", err)
 	}
 
@@ -559,6 +558,7 @@ import (
 	"bytes"
 	"io"
 	"net/http"
+	"os"
 )
 
 const toolServerURL = "%s"
@@ -690,7 +690,7 @@ func callGenericTool(ctx context.Context, toolName string, input string) (string
 
 // Helper function to run shell commands
 func runShell(ctx context.Context, code string, args []string) (string, error) {
-	tmpfile, err := ioutil.TempFile("", "shell-*.sh")
+	tmpfile, err := os.CreateTemp("", "shell-*.sh")
 	if err != nil {
 		return "", err
 	}
@@ -710,7 +710,7 @@ func runShell(ctx context.Context, code string, args []string) (string, error) {
 
 // Helper function to run Python scripts
 func runPython(ctx context.Context, code string, args []string) (string, error) {
-	tmpfile, err := ioutil.TempFile("", "python-*.py")
+	tmpfile, err := os.CreateTemp("", "python-*.py")
 	if err != nil {
 		return "", err
 	}
@@ -735,7 +735,7 @@ func runPython(ctx context.Context, code string, args []string) (string, error) 
 
 // Helper function to read files
 func readFile(filePath string) (string, error) {
-	data, err := ioutil.ReadFile(filePath)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
 		return "", err
 	}
@@ -744,7 +744,7 @@ func readFile(filePath string) (string, error) {
 
 // Helper function to write files
 func writeFile(filePath string, content string) (string, error) {
-	err := ioutil.WriteFile(filePath, []byte(content), 0644)
+	err := os.WriteFile(filePath, []byte(content), 0600)
 	if err != nil {
 		return "", err
 	}
@@ -884,194 +884,6 @@ func %s(ctx context.Context, input string) (string, error) {
 	}
 
 	return strings.Join(wrappers, "\n")
-}
-
-// createToolHelperProgram creates a helper executable for direct tool execution
-func (ce *CodeExecutor) createToolHelperProgram() string {
-	// Create a temporary Go program that can execute tools
-	helperPath := filepath.Join(ce.WorkDir, fmt.Sprintf("tool_helper_%d", time.Now().UnixNano()))
-
-	// Generate Go source code for the helper
-	helperSource := ce.generateHelperSource()
-
-	sourcePath := helperPath + ".go"
-	if err := os.WriteFile(sourcePath, []byte(helperSource), 0644); err != nil {
-		// If we can't create the helper, return empty path
-		// The calling code will handle the error
-		return ""
-	}
-
-	// Compile the helper program
-	cmd := exec.Command("go", "build", "-o", helperPath, sourcePath)
-	if err := cmd.Run(); err != nil {
-		// Compilation failed, clean up and return empty
-		os.Remove(sourcePath)
-		return ""
-	}
-
-	// Clean up source file
-	os.Remove(sourcePath)
-
-	return helperPath
-}
-
-// generateHelperSource generates the Go source code for the tool helper program
-func (ce *CodeExecutor) generateHelperSource() string {
-	serverURL := ce.GetToolServerURL()
-
-	// Build tool call implementations
-	var toolCases []string
-	for _, tool := range ce.Tools {
-		toolCase := fmt.Sprintf(`	case "%s":
-		result, err = tool_%s(ctx, req.Input)`,
-			tool.Name(),
-			sanitizeFunctionName(tool.Name()))
-		toolCases = append(toolCases, toolCase)
-	}
-
-	// Build tool function implementations that call the tool server
-	var toolFuncs []string
-	for _, tool := range ce.Tools {
-		toolFunc := fmt.Sprintf(`
-func tool_%s(ctx context.Context, input string) (string, error) {
-	// Call tool via internal server: %s
-	return callToolServer(ctx, "%s", input)
-}`,
-			sanitizeFunctionName(tool.Name()),
-			tool.Description(),
-			tool.Name())
-		toolFuncs = append(toolFuncs, toolFunc)
-	}
-
-	source := fmt.Sprintf(`package main
-
-import (
-	"bytes"
-	"context"
-	"encoding/json"
-	"fmt"
-	"io"
-	"net/http"
-	"os"
-)
-
-const toolServerURL = "%s"
-
-type Request struct {
-	ToolName string `+"`json:\"tool_name\"`"+`
-	Input    string `+"`json:\"input\"`"+`
-}
-
-type Response struct {
-	Success bool   `+"`json:\"success\"`"+`
-	Result  string `+"`json:\"result,omitempty\"`"+`
-	Error   string `+"`json:\"error,omitempty\"`"+`
-}
-
-type ToolCallRequest struct {
-	ToolName string      `+"`json:\"tool_name\"`"+`
-	Input    any `+"`json:\"input\"`"+`
-}
-
-type ToolCallResponse struct {
-	Success bool   `+"`json:\"success\"`"+`
-	Result  string `+"`json:\"result,omitempty\"`"+`
-	Error   string `+"`json:\"error,omitempty\"`"+`
-}
-
-// callToolServer calls a tool through the internal tool server
-func callToolServer(ctx context.Context, toolName string, input string) (string, error) {
-	requestBody := ToolCallRequest{
-		ToolName: toolName,
-		Input:    input,
-	}
-
-	jsonData, err := json.Marshal(requestBody)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal request: %%w", err)
-	}
-
-	req, err := http.NewRequestWithContext(ctx, "POST", toolServerURL+"/call", bytes.NewBuffer(jsonData))
-	if err != nil {
-		return "", fmt.Errorf("failed to create request: %%w", err)
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("failed to call tool server: %%w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("failed to read response: %%w", err)
-	}
-
-	var result ToolCallResponse
-	if err := json.Unmarshal(body, &result); err != nil {
-		return "", fmt.Errorf("failed to unmarshal response: %%w", err)
-	}
-
-	if !result.Success {
-		return "", fmt.Errorf("tool execution failed: %%s", result.Error)
-	}
-
-	return result.Result, nil
-}
-
-%s
-
-func main() {
-	if len(os.Args) < 2 {
-		respondError("missing request argument")
-		return
-	}
-
-	var req Request
-	if err := json.Unmarshal([]byte(os.Args[1]), &req); err != nil {
-		respondError("invalid request: " + err.Error())
-		return
-	}
-
-	ctx := context.Background()
-	var result string
-	var err error
-
-	switch req.ToolName {
-%s
-	default:
-		respondError("unknown tool: " + req.ToolName)
-		return
-	}
-
-	if err != nil {
-		respondError(err.Error())
-		return
-	}
-
-	respondSuccess(result)
-}
-
-func respondSuccess(result string) {
-	resp := Response{
-		Success: true,
-		Result:  result,
-	}
-	json.NewEncoder(os.Stdout).Encode(resp)
-}
-
-func respondError(errMsg string) {
-	resp := Response{
-		Success: false,
-		Error:   errMsg,
-	}
-	json.NewEncoder(os.Stdout).Encode(resp)
-}
-`, serverURL, strings.Join(toolFuncs, "\n"), strings.Join(toolCases, "\n"))
-
-	return source
 }
 
 // sanitizeFunctionName converts a tool name to a valid function name

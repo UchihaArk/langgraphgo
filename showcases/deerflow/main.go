@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -214,24 +213,24 @@ func saveRun(dir string, query string, logs []string, report string, podcastScri
 		DirName:   filepath.Base(dir),
 	}
 	metaData, _ := json.Marshal(meta)
-	if err := ioutil.WriteFile(filepath.Join(dir, "metadata.json"), metaData, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "metadata.json"), metaData, 0600); err != nil {
 		log.Printf("Failed to save metadata: %v", err)
 	}
 
 	// Save logs
 	logsData, _ := json.Marshal(logs)
-	if err := ioutil.WriteFile(filepath.Join(dir, "logs.json"), logsData, 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "logs.json"), logsData, 0600); err != nil {
 		log.Printf("Failed to save logs: %v", err)
 	}
 
 	// Save report
-	if err := ioutil.WriteFile(filepath.Join(dir, "report.html"), []byte(report), 0644); err != nil {
+	if err := os.WriteFile(filepath.Join(dir, "report.html"), []byte(report), 0600); err != nil {
 		log.Printf("Failed to save report: %v", err)
 	}
 
 	// Save podcast script if exists
 	if podcastScript != "" {
-		if err := ioutil.WriteFile(filepath.Join(dir, "podcast.txt"), []byte(podcastScript), 0644); err != nil {
+		if err := os.WriteFile(filepath.Join(dir, "podcast.txt"), []byte(podcastScript), 0600); err != nil {
 			log.Printf("Failed to save podcast script: %v", err)
 		}
 	}
@@ -239,7 +238,7 @@ func saveRun(dir string, query string, logs []string, report string, podcastScri
 
 func replayRun(w http.ResponseWriter, flusher http.Flusher, dir string) {
 	// Read logs
-	logsData, err := ioutil.ReadFile(filepath.Join(dir, "logs.json"))
+	logsData, err := os.ReadFile(filepath.Join(dir, "logs.json"))
 	if err != nil {
 		sendSSE(w, flusher, "error", map[string]string{"message": "Failed to load saved logs"})
 		return
@@ -251,7 +250,7 @@ func replayRun(w http.ResponseWriter, flusher http.Flusher, dir string) {
 	}
 
 	// Read report
-	reportData, err := ioutil.ReadFile(filepath.Join(dir, "report.html"))
+	reportData, err := os.ReadFile(filepath.Join(dir, "report.html"))
 	if err != nil {
 		sendSSE(w, flusher, "error", map[string]string{"message": "Failed to load saved report"})
 		return
@@ -259,7 +258,7 @@ func replayRun(w http.ResponseWriter, flusher http.Flusher, dir string) {
 
 	// Read podcast script (optional)
 	podcastScript := ""
-	podcastData, err := ioutil.ReadFile(filepath.Join(dir, "podcast.txt"))
+	podcastData, err := os.ReadFile(filepath.Join(dir, "podcast.txt"))
 	if err == nil {
 		podcastScript = string(podcastData)
 	}
@@ -282,7 +281,7 @@ func replayRun(w http.ResponseWriter, flusher http.Flusher, dir string) {
 
 func handleHistory(w http.ResponseWriter, r *http.Request) {
 	dataRoot := filepath.Join("showcases", "deerflow", "data")
-	entries, err := ioutil.ReadDir(dataRoot)
+	entries, err := os.ReadDir(dataRoot)
 	if err != nil {
 		http.Error(w, "Failed to read history", http.StatusInternalServerError)
 		return
@@ -295,7 +294,7 @@ func handleHistory(w http.ResponseWriter, r *http.Request) {
 		}
 
 		metaPath := filepath.Join(dataRoot, entry.Name(), "metadata.json")
-		data, err := ioutil.ReadFile(metaPath)
+		data, err := os.ReadFile(metaPath)
 		if err != nil {
 			continue // Skip if no metadata
 		}

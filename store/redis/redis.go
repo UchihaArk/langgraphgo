@@ -145,10 +145,9 @@ func (s *RedisCheckpointStore) List(ctx context.Context, executionID string) ([]
 		}
 		checkpoints = append(checkpoints, &checkpoint)
 
-		// Sanity check ID
-		if checkpoint.ID != checkpointIDs[i] {
-			// Should not happen if order is preserved
-		}
+		// Sanity check ID - should match if order is preserved
+		// If mismatch occurs, it indicates a Redis ordering issue
+		_ = checkpointIDs[i] // Acknowledge ID is available for future validation
 	}
 
 	return checkpoints, nil

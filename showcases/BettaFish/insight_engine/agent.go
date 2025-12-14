@@ -94,8 +94,12 @@ func InsightEngineNode(ctx context.Context, state any) (any, error) {
 			content = strings.TrimPrefix(content, "```json")
 			content = strings.TrimPrefix(content, "```")
 			content = strings.TrimSuffix(content, "```")
-			json.Unmarshal([]byte(content), &searchOutput)
-			searchQuery = searchOutput.SearchQuery
+			if err := json.Unmarshal([]byte(content), &searchOutput); err != nil {
+				fmt.Printf("InsightEngine: JSON解析失败: %v\n", err)
+				searchQuery = s.Query // Fallback to original query
+			} else {
+				searchQuery = searchOutput.SearchQuery
+			}
 			fmt.Printf("  搜索词: %s (工具: %s)\n", searchQuery, searchOutput.SearchTool)
 		}
 
@@ -143,9 +147,11 @@ func InsightEngineNode(ctx context.Context, state any) (any, error) {
 			content = strings.TrimPrefix(content, "```json")
 			content = strings.TrimPrefix(content, "```")
 			content = strings.TrimSuffix(content, "```")
-			json.Unmarshal([]byte(content), &summaryOutput)
-
-			insights = append(insights, fmt.Sprintf("### %s\n%s", p.Title, summaryOutput.ParagraphLatestState))
+			if err := json.Unmarshal([]byte(content), &summaryOutput); err != nil {
+				fmt.Printf("InsightEngine: JSON解析失败: %v\n", err)
+			} else {
+				insights = append(insights, fmt.Sprintf("### %s\n%s", p.Title, summaryOutput.ParagraphLatestState))
+			}
 		} else {
 			fmt.Printf("InsightEngine: 生成总结失败: %v\n", err)
 		}

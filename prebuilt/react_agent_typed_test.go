@@ -1107,6 +1107,9 @@ func TestCreateReactAgentTyped_LargeMessageHistory(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, agent)
 
+	// Verify messages were created
+	require.Len(t, messages, 100)
+
 	// Skip execution of large message history to avoid hanging
 	// Would use: ctx := context.Background()
 	//           state := ReactAgentState{Messages: messages}

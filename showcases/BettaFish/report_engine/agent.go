@@ -27,7 +27,7 @@ func ReportEngineNode(ctx context.Context, state any) (any, error) {
 
 	// Save to file
 	filename := fmt.Sprintf("report_%s_%s.md", strings.ReplaceAll(s.Query, " ", "_"), time.Now().Format("20060102_150405"))
-	err = os.WriteFile(filename, []byte(s.FinalReport), 0644)
+	err = os.WriteFile(filename, []byte(s.FinalReport), 0600)
 	if err != nil {
 		fmt.Printf("ReportEngine: 保存报告失败: %v\n", err)
 	} else {
