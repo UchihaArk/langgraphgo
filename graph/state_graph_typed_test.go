@@ -13,6 +13,19 @@ type TestState struct {
 	Name  string `json:"name"`
 }
 
+// mapSchemaAdapter adapts MapSchema to StateSchemaTyped[any]
+type mapSchemaAdapter struct {
+	*MapSchema
+}
+
+func (m *mapSchemaAdapter) Init() any {
+	return m.MapSchema.Init()
+}
+
+func (m *mapSchemaAdapter) Update(current, new any) (any, error) {
+	return m.MapSchema.Update(current, new)
+}
+
 func TestStateGraphTyped_BasicFunctionality(t *testing.T) {
 	// Create a new typed state graph
 	g := NewStateGraphTyped[TestState]()
@@ -711,5 +724,129 @@ func TestExecuteNodeWithRetry_RetryPolicy(t *testing.T) {
 
 	if result.Count != 3 {
 		t.Errorf("Expected 3 attempts, got %d", result.Count)
+	}
+}
+
+func TestStateGraphTyped_CommandGoto(t *testing.T) {
+	// Use any type to allow returning Command
+	g := NewStateGraphTyped[any]()
+
+	// Create a typed schema adapter for map[string]any
+	mapSchema := NewMapSchema()
+	mapSchema.RegisterReducer("count", func(curr, new any) (any, error) {
+		if curr == nil {
+			return new, nil
+		}
+		return curr.(int) + new.(int), nil
+	})
+
+	// Wrap in a typed schema
+	schema := &mapSchemaAdapter{mapSchema}
+	g.SetSchema(schema)
+
+	// Node A: Returns Command to update count and go to C (skipping B)
+	g.AddNode("A", "Node A", func(ctx context.Context, state any) (any, error) {
+		return &Command{
+			Update: map[string]any{"count": 1},
+			Goto:   "C",
+		}, nil
+	})
+
+	// Node B: Should be skipped
+	g.AddNode("B", "Node B", func(ctx context.Context, state any) (any, error) {
+		return map[string]any{"count": 10}, nil
+	})
+
+	// Node C: Final node
+	g.AddNode("C", "Node C", func(ctx context.Context, state any) (any, error) {
+		return map[string]any{"count": 100}, nil
+	})
+
+	g.SetEntryPoint("A")
+	g.AddEdge("A", "B") // Static edge A -> B (should be overridden by Command.Goto)
+	g.AddEdge("B", "C")
+	g.AddEdge("C", END)
+
+	runnable, err := g.Compile()
+	if err != nil {
+		t.Fatalf("Failed to compile: %v", err)
+	}
+
+	res, err := runnable.Invoke(context.Background(), map[string]any{"count": 0})
+	if err != nil {
+		t.Fatalf("Failed to invoke: %v", err)
+	}
+
+	// Extract the final state
+	mRes, ok := res.(map[string]any)
+	if !ok {
+		t.Fatalf("Expected result to be map[string]any, got %T", res)
+	}
+
+	// Expected: 0 + 1 (A) + 100 (C) = 101. B is skipped due to Command.Goto.
+	if mRes["count"].(int) != 101 {
+		t.Errorf("Expected count to be 101, got %v", mRes["count"])
+	}
+}
+
+func TestStateGraphTyped_CommandGotoMultiple(t *testing.T) {
+	// Use any type to allow returning Command
+	g := NewStateGraphTyped[any]()
+
+	// Create a typed schema adapter for map[string]any
+	mapSchema := NewMapSchema()
+	mapSchema.RegisterReducer("count", func(curr, new any) (any, error) {
+		if curr == nil {
+			return new, nil
+		}
+		return curr.(int) + new.(int), nil
+	})
+
+	// Wrap in a typed schema
+	schema := &mapSchemaAdapter{mapSchema}
+	g.SetSchema(schema)
+
+	// Node A: Returns Command with multiple Goto targets
+	g.AddNode("A", "Node A", func(ctx context.Context, state any) (any, error) {
+		return &Command{
+			Update: map[string]any{"count": 1},
+			Goto:   []string{"B", "C"},
+		}, nil
+	})
+
+	// Node B: Adds 10
+	g.AddNode("B", "Node B", func(ctx context.Context, state any) (any, error) {
+		return map[string]any{"count": 10}, nil
+	})
+
+	// Node C: Adds 100
+	g.AddNode("C", "Node C", func(ctx context.Context, state any) (any, error) {
+		return map[string]any{"count": 100}, nil
+	})
+
+	g.SetEntryPoint("A")
+	g.AddEdge("B", END)
+	g.AddEdge("C", END)
+
+	runnable, err := g.Compile()
+	if err != nil {
+		t.Fatalf("Failed to compile: %v", err)
+	}
+
+	res, err := runnable.Invoke(context.Background(), map[string]any{"count": 0})
+	if err != nil {
+		t.Fatalf("Failed to invoke: %v", err)
+	}
+
+	// Extract the final state
+	mRes, ok := res.(map[string]any)
+	if !ok {
+		t.Fatalf("Expected result to be map[string]any, got %T", res)
+	}
+
+	// Expected: 0 + 1 (A) + 10 (B) + 100 (C) = 111
+	// Both B and C should execute in parallel
+	if mRes["count"].(int) != 111 {
+		t.Errorf("Expected count to be 111, got %v", mRes["count"])
 	}
 }

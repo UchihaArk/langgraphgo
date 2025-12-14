@@ -14,7 +14,6 @@ type StateSchemaTyped[S any] interface {
 	Update(current, new S) (S, error)
 }
 
-
 // StructSchema implements StateSchemaTyped for struct-based states.
 // It provides a simple and type-safe way to manage struct states.
 //

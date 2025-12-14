@@ -51,11 +51,13 @@ func (m *MemoryCheckpointStore) List(_ context.Context, executionID string) ([]*
 
 	var checkpoints []*store.Checkpoint
 	for _, checkpoint := range m.checkpoints {
-		// Filter by executionID or threadID
+		// Filter by various ID fields that can be used for grouping
 		execID, _ := checkpoint.Metadata["execution_id"].(string)
 		threadID, _ := checkpoint.Metadata["thread_id"].(string)
+		sessionID, _ := checkpoint.Metadata["session_id"].(string)
+		workflowID, _ := checkpoint.Metadata["workflow_id"].(string)
 
-		if execID == executionID || threadID == executionID {
+		if execID == executionID || threadID == executionID || sessionID == executionID || workflowID == executionID {
 			checkpoints = append(checkpoints, checkpoint)
 		}
 	}
@@ -83,7 +85,13 @@ func (m *MemoryCheckpointStore) Clear(_ context.Context, executionID string) err
 	defer m.mutex.Unlock()
 
 	for id, checkpoint := range m.checkpoints {
-		if execID, ok := checkpoint.Metadata["execution_id"].(string); ok && execID == executionID {
+		// Check against various ID fields that can be used for grouping
+		execID, _ := checkpoint.Metadata["execution_id"].(string)
+		threadID, _ := checkpoint.Metadata["thread_id"].(string)
+		sessionID, _ := checkpoint.Metadata["session_id"].(string)
+		workflowID, _ := checkpoint.Metadata["workflow_id"].(string)
+
+		if execID == executionID || threadID == executionID || sessionID == executionID || workflowID == executionID {
 			delete(m.checkpoints, id)
 		}
 	}

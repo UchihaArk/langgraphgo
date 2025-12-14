@@ -524,11 +524,40 @@ func (r *StateRunnableTyped[S]) processNodeResults(results []S) ([]S, []string) 
 	var nextNodesFromCommands []string
 	processedResults := make([]S, len(results))
 
-	// Note: In the generic version, we can't easily support Command[S] without type assertions
-	// because S is any type. Commands would need to be handled differently.
-	// For now, we just pass through the results as-is.
-	// TODO: Consider how to support Command with generics
-	copy(processedResults, results)
+	for i, res := range results {
+		// Try to type assert to *Command
+		if cmd, ok := any(res).(*Command); ok {
+			// It's a Command - extract Update and Goto
+			if cmd.Update != nil {
+				// Try to convert Update to S type
+				if updateS, ok := cmd.Update.(S); ok {
+					processedResults[i] = updateS
+				} else {
+					// If Update cannot be converted to S, use zero value
+					// This maintains type safety while handling the conversion failure
+					var zero S
+					processedResults[i] = zero
+				}
+			} else {
+				// If Update is nil, use zero value
+				var zero S
+				processedResults[i] = zero
+			}
+
+			// Extract Goto to determine next nodes
+			if cmd.Goto != nil {
+				switch g := cmd.Goto.(type) {
+				case string:
+					nextNodesFromCommands = append(nextNodesFromCommands, g)
+				case []string:
+					nextNodesFromCommands = append(nextNodesFromCommands, g...)
+				}
+			}
+		} else {
+			// Regular result - not a Command
+			processedResults[i] = res
+		}
+	}
 
 	return processedResults, nextNodesFromCommands
 }
