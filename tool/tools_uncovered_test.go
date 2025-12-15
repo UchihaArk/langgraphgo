@@ -258,50 +258,6 @@ echo "Args: $@"`), 0755)
 
 // Tests for web_search_tool.go
 
-func TestDuckDuckGoSearch(t *testing.T) {
-	// Mock DuckDuckGo API server
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/" {
-			http.Error(w, "Not found", http.StatusNotFound)
-			return
-		}
-
-		// Check if it's a DuckDuckGo API request
-		if !strings.Contains(r.URL.RawQuery, "format=json") {
-			http.Error(w, "Bad request", http.StatusBadRequest)
-			return
-		}
-
-		// Return mock DuckDuckGo response with abstract
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{
-			"AbstractText": "This is a test abstract.",
-			"AbstractURL": "https://example.com",
-			"RelatedTopics": []
-		}`))
-	}))
-	defer server.Close()
-
-	// Note: DuckDuckGoSearch uses a hardcoded URL, so we can't easily mock it
-	// We'll test the function with a simple request
-	result, err := DuckDuckGoSearch("test query")
-
-	// The request might fail in test environment, but function shouldn't panic
-	if err != nil {
-		t.Logf("DuckDuckGo search failed (expected in test environment): %v", err)
-	} else {
-		t.Logf("DuckDuckGo search result: %s", result)
-	}
-}
-
-func TestDuckDuckGoSearchInvalidResponse(t *testing.T) {
-	// This test verifies the function handles invalid responses gracefully
-	_ = func() {
-		// This would fail in real scenario but shouldn't panic
-		_, _ = DuckDuckGoSearch("test")
-	}
-}
-
 // Tests for web_tool.go
 
 func TestWebFetch(t *testing.T) {
