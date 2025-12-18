@@ -71,7 +71,7 @@ func main() {
 	// Pre-warm: Initialize tools in background before server starts
 	// This prevents the first user from experiencing slow tool loading
 	log.Println("🔄 Pre-warming tools initialization...")
-	warmupAgent := chat.NewSimpleChatAgent(server.GetLLM(), server.GetConfig())
+	warmupAgent := chat.NewSimpleChatAgent(server.GetLLM(), *server.GetConfig())
 	warmupAgent.InitializeToolsAsync()
 
 	// Store the warmup agent so it can be reused for the first session

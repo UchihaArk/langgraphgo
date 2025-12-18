@@ -21,18 +21,15 @@ import (
 	"github.com/tmc/langchaingo/llms/openai"
 	"github.com/tmc/langchaingo/tools"
 
+	agentpkg "github.com/smallnest/langgraphgo/showcases/chat/pkg/agent"
+	"github.com/smallnest/langgraphgo/showcases/chat/pkg/api"
+	"github.com/smallnest/langgraphgo/showcases/chat/pkg/auth"
+	configpkg "github.com/smallnest/langgraphgo/showcases/chat/pkg/config"
+	"github.com/smallnest/langgraphgo/showcases/chat/pkg/middleware"
+	monitoringpkg "github.com/smallnest/langgraphgo/showcases/chat/pkg/monitoring"
 	sessionpkg "github.com/smallnest/langgraphgo/showcases/chat/pkg/session"
 )
 
-// Config holds application configuration
-type Config struct {
-	ChatTitle      string
-	AppLogo        string
-	OpenAIAPIKey   string
-	OpenAIModel    string
-	OpenAIBaseURL  string
-	EnableFeedback bool
-}
 
 // getEnvOrDefault returns environment variable or default value
 func getEnvOrDefault(key, defaultValue string) string {
@@ -42,17 +39,6 @@ func getEnvOrDefault(key, defaultValue string) string {
 	return defaultValue
 }
 
-// getConfig returns application configuration
-func GetConfig() Config {
-	return Config{
-		ChatTitle:      getEnvOrDefault("CHAT_TITLE", "LangGraphGo 聊天"),
-		AppLogo:        getEnvOrDefault("APP_LOGO", "/static/images/lango.png"),
-		OpenAIAPIKey:   os.Getenv("OPENAI_API_KEY"),
-		OpenAIModel:    getEnvOrDefault("OPENAI_MODEL", "gpt-4o-mini"),
-		OpenAIBaseURL:  os.Getenv("OPENAI_BASE_URL"),
-		EnableFeedback: getEnvOrDefault("ENABLE_FEEDBACK", "true") == "true",
-	}
-}
 
 // SkillInfo stores basic info about a skill
 type SkillInfo struct {
@@ -84,7 +70,7 @@ type SimpleChatAgent struct {
 }
 
 // NewSimpleChatAgent creates a simple chat agent
-func NewSimpleChatAgent(llm llms.Model, config Config) *SimpleChatAgent {
+func NewSimpleChatAgent(llm llms.Model, config configpkg.Config) *SimpleChatAgent {
 	// Add system message
 	systemMsg := llms.MessageContent{
 		Role:  llms.ChatMessageTypeSystem,
@@ -636,37 +622,56 @@ type ChatServer struct {
 	llm             llms.Model
 	agentMu         sync.RWMutex
 	port            string
-	config          Config
+	config          configpkg.Config
 	sessionManagers map[string]*sessionpkg.SessionManager // clientID -> SessionManager
 	smMu            sync.RWMutex
 	requestSem     chan struct{} // Semaphore for controlling concurrent requests
 	maxConcurrent   int          // Maximum number of concurrent requests
+
+	// New components for enterprise features
+	lifecycleManager *agentpkg.AgentLifecycleManager
+	metricsCollector *monitoringpkg.MetricsCollector
+	configManager     *configpkg.Manager
+	healthChecker     *monitoringpkg.HealthChecker
+
+	// Authentication components
+	authService      *auth.AuthService
+	jwtAuth          *middleware.AuthMiddleware
+	authAPI          *api.AuthAPI
+	staticHandler    *api.StaticHandler
 }
 
 // NewChatServer creates a new chat server
 func NewChatServer(sessionDir string, maxHistory int, port string) (*ChatServer, error) {
-	// Get configuration
-	config := GetConfig()
+	// Initialize configuration manager
+	configManager := configpkg.NewManager(configpkg.Development)
+	configPath := "configs/config.json"
+	if _, err := os.Stat(configPath); err == nil {
+		if err := configManager.Load(configPath); err != nil {
+			log.Printf("Warning: Failed to load config from file: %v", err)
+		}
+	}
+	config := configManager.Get()
 
 	// Check API key
-	if config.OpenAIAPIKey == "" {
-		return nil, fmt.Errorf("OPENAI_API_KEY environment variable not set")
+	if config.LLM.APIKey == "" {
+		return nil, fmt.Errorf("LLM API key not set in configuration")
 	}
 
 	// Create OpenAI LLM (works with OpenAI-compatible APIs like Baidu)
 	var llm llms.Model
 	var err error
 
-	if config.OpenAIBaseURL != "" {
+	if config.LLM.BaseURL != "" {
 		llm, err = openai.New(
-			openai.WithModel(config.OpenAIModel),
-			openai.WithToken(config.OpenAIAPIKey),
-			openai.WithBaseURL(config.OpenAIBaseURL),
+			openai.WithModel(config.LLM.Model),
+			openai.WithToken(config.LLM.APIKey),
+			openai.WithBaseURL(config.LLM.BaseURL),
 		)
 	} else {
 		llm, err = openai.New(
-			openai.WithModel(config.OpenAIModel),
-			openai.WithToken(config.OpenAIAPIKey),
+			openai.WithModel(config.LLM.Model),
+			openai.WithToken(config.LLM.APIKey),
 		)
 	}
 
@@ -674,24 +679,103 @@ func NewChatServer(sessionDir string, maxHistory int, port string) (*ChatServer,
 		return nil, fmt.Errorf("failed to create LLM: %w", err)
 	}
 
-	// Set default max concurrent requests from environment or use sensible default
-	maxConcurrent := 50 // Default value
-	if maxConcurrentStr := os.Getenv("MAX_CONCURRENT_REQUESTS"); maxConcurrentStr != "" {
-		if _, err := fmt.Sscanf(maxConcurrentStr, "%d", &maxConcurrent); err != nil {
-			maxConcurrent = 50 // Fallback to default
-		}
+	// Initialize monitoring components
+	metricsCollector := monitoringpkg.NewMetricsCollector()
+	healthChecker := monitoringpkg.NewHealthChecker()
+
+	// Start metrics server if monitoring is enabled
+	if config.Monitoring.Enabled {
+		go func() {
+			metricsServer := monitoringpkg.NewMetricsServer(metricsCollector, config.Monitoring.MetricsPort)
+			log.Printf("🔧 Starting metrics server on port %d", config.Monitoring.MetricsPort)
+			if err := metricsServer.Start(); err != nil {
+				log.Printf("Failed to start metrics server: %v", err)
+			}
+		}()
 	}
 
-	return &ChatServer{
-		sessionManager:  sessionpkg.NewSessionManager(sessionDir, maxHistory),
-		agents:          make(map[string]ChatAgent),
-		llm:             llm,
-		port:            port,
-		config:          config,
-		sessionManagers: make(map[string]*sessionpkg.SessionManager),
-		requestSem:      make(chan struct{}, maxConcurrent),
-		maxConcurrent:   maxConcurrent,
-	}, nil
+	// Initialize agent lifecycle manager
+	lifecycleConfig := agentpkg.DefaultAgentLifecycleConfig()
+	lifecycleConfig.MaxIdleTime = config.Agent.MaxIdleTime
+	lifecycleConfig.HealthCheckInterval = config.Agent.HealthCheckInterval
+	lifecycleConfig.MaxRetries = config.Agent.MaxRetries
+	lifecycleConfig.RetryDelay = config.Agent.RetryDelay
+	lifecycleManager := agentpkg.NewAgentLifecycleManager(lifecycleConfig)
+
+	// Set lifecycle event handler
+	lifecycleManager.SetEventHandler(func(event agentpkg.LifecycleEvent) {
+		log.Printf("Agent Lifecycle Event: %s - %s - %s", event.EventType, event.State, event.Message)
+		if event.Error != nil {
+			log.Printf("Agent Error: %v", event.Error)
+		}
+	})
+
+	// Register health checks
+	healthChecker.RegisterCheck("lifecycle_manager", func(ctx context.Context) error {
+		state := lifecycleManager.GetState()
+		if state == agentpkg.StateError {
+			return fmt.Errorf("agent is in error state")
+		}
+		return nil
+	})
+
+	healthChecker.RegisterCheck("llm_connection", func(ctx context.Context) error {
+		// Simple check - in a real implementation, you might test the LLM connection
+		if llm == nil {
+			return fmt.Errorf("LLM is not initialized")
+		}
+		return nil
+	})
+
+	// Initialize authentication components
+	jwtAuth := middleware.NewAuthMiddleware(
+		config.Security.JWTSecret,
+		config.Security.SessionTimeout,
+		config.Security.SessionTimeout*7, // 7x longer for refresh tokens
+	)
+
+	authService := auth.NewAuthService(
+		config.Security.JWTSecret,
+		config.Security.SessionTimeout,
+		config.Security.SessionTimeout*7,
+	)
+
+	// Create demo users for testing
+	if err := authService.CreateDemoUsers(); err != nil {
+		log.Printf("Warning: Failed to create demo users: %v", err)
+	}
+
+	authAPI := api.NewAuthAPI(authService, jwtAuth)
+	staticHandler := api.NewStaticHandler(authAPI)
+
+	// Set default max concurrent requests from configuration
+	maxConcurrent := config.Agent.MaxConcurrent
+
+	server := &ChatServer{
+		authService:   authService,
+		jwtAuth:       jwtAuth,
+		authAPI:       authAPI,
+		staticHandler: staticHandler,
+		sessionManager:    sessionpkg.NewSessionManager(sessionDir, maxHistory),
+		agents:           make(map[string]ChatAgent),
+		llm:              llm,
+		port:             port,
+		config:           *config,
+		sessionManagers:  make(map[string]*sessionpkg.SessionManager),
+		requestSem:       make(chan struct{}, maxConcurrent),
+		maxConcurrent:    maxConcurrent,
+		lifecycleManager: lifecycleManager,
+		metricsCollector: metricsCollector,
+		configManager:    configManager,
+		healthChecker:    healthChecker,
+	}
+
+	// Initialize lifecycle manager
+	if err := lifecycleManager.SetState(agentpkg.StateInitializing, "Server starting", nil); err != nil {
+		log.Printf("Warning: Failed to set initial lifecycle state: %v", err)
+	}
+
+	return server, nil
 }
 
 // getSessionManager gets or creates a SessionManager for a specific client
@@ -775,8 +859,28 @@ func (cs *ChatServer) GetLLM() llms.Model {
 }
 
 // GetConfig returns the server config
-func (cs *ChatServer) GetConfig() Config {
-	return cs.config
+func (cs *ChatServer) GetConfig() *configpkg.Config {
+	return &cs.config
+}
+
+// GetLifecycleManager returns the agent lifecycle manager
+func (cs *ChatServer) GetLifecycleManager() *agentpkg.AgentLifecycleManager {
+	return cs.lifecycleManager
+}
+
+// GetMetricsCollector returns the metrics collector
+func (cs *ChatServer) GetMetricsCollector() *monitoringpkg.MetricsCollector {
+	return cs.metricsCollector
+}
+
+// GetHealthChecker returns the health checker
+func (cs *ChatServer) GetHealthChecker() *monitoringpkg.HealthChecker {
+	return cs.healthChecker
+}
+
+// GetConfigManager returns the config manager
+func (cs *ChatServer) GetConfigManager() *configpkg.Manager {
+	return cs.configManager
 }
 
 // acquireRequest acquires a request slot or returns an error if limit exceeded
@@ -977,13 +1081,17 @@ func (cs *ChatServer) HandleGetHistory(w http.ResponseWriter, r *http.Request) {
 
 // HandleChat handles chat message requests
 func (cs *ChatServer) HandleChat(w http.ResponseWriter, r *http.Request) {
+	startTime := time.Now()
+
 	if r.Method != http.MethodPost {
+		cs.metricsCollector.RecordHTTPRequest(r.Method, r.URL.Path, "405", 0, 0, 0)
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	// Acquire request slot for concurrency control
 	if err := cs.acquireRequest(); err != nil {
+		cs.metricsCollector.RecordHTTPRequest(r.Method, r.URL.Path, "429", 0, 0, 0)
 		log.Printf("Request rejected: %v", err)
 		http.Error(w, err.Error(), http.StatusTooManyRequests)
 		return
@@ -1042,6 +1150,11 @@ func (cs *ChatServer) HandleChat(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Tool settings for session %s - Skills: %v, MCP: %v",
 		req.SessionID, enableSkills, enableMCP)
 
+	// Record metrics
+	duration := time.Since(startTime)
+	requestSize := int64(r.ContentLength)
+	cs.metricsCollector.RecordHTTPRequest(r.Method, r.URL.Path, "200", duration, requestSize, 0)
+
 	if req.Stream {
 		// Handle streaming response
 		cs.HandleChatStream(w, r, agent, req.SessionID, req.Message, enableSkills, enableMCP)
@@ -1049,6 +1162,9 @@ func (cs *ChatServer) HandleChat(w http.ResponseWriter, r *http.Request) {
 		// Handle non-streaming response (original behavior)
 		cs.HandleChatNonStream(w, r, agent, req.SessionID, req.Message, enableSkills, enableMCP)
 	}
+
+	// Record agent session event
+	cs.metricsCollector.RecordAgentSession("chat_request")
 }
 
 // HandleChatNonStream handles non-streaming chat responses (original behavior)
@@ -1059,11 +1175,16 @@ func (cs *ChatServer) HandleChatNonStream(w http.ResponseWriter, r *http.Request
 	response, err := agent.Chat(ctx, message, enableSkills, enableMCP)
 	if err != nil {
 		log.Printf("Chat error for session %s: %v", sessionID, err)
+		cs.metricsCollector.RecordAgentError(sessionID, "chat_error")
 		http.Error(w, fmt.Sprintf("Chat failed: %v", err), http.StatusInternalServerError)
 		return
 	}
 
 	log.Printf("Chat response for session %s: %s", sessionID, response)
+
+	// Record agent metrics
+	cs.metricsCollector.RecordAgentMessage(sessionID, "assistant")
+	cs.metricsCollector.RecordAgentTokenUsage(sessionID, "response", int64(len(response)))
 
 	// Add assistant response to history
 	clientID := getClientID(r)
@@ -1344,9 +1465,12 @@ func (cs *ChatServer) HandleFeedback(w http.ResponseWriter, r *http.Request) {
 func (cs *ChatServer) HandleConfig(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]any{
-		"chatTitle":      cs.config.ChatTitle,
-		"appLogo":        cs.config.AppLogo,
-		"enableFeedback": cs.config.EnableFeedback,
+		"chatTitle":      "LangGraphGo Chat Agent",
+		"appLogo":        "/static/logo.png",
+		"enableFeedback": false, // TODO: Add feedback feature to config
+		"environment":    "development", // TODO: Get from config manager
+		"llmModel":       cs.config.LLM.Model,
+		"version":        "1.0.0",
 	})
 }
 
@@ -1384,13 +1508,62 @@ func (cs *ChatServer) Close() error {
 
 // Start starts the HTTP server
 func (cs *ChatServer) Start(staticFS fs.FS) error {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	// Create a new ServeMux for better route handling
+	mux := http.NewServeMux()
+
+	// Authentication routes (public)
+	mux.HandleFunc("/login", cs.authAPI.HandleLoginPage)
+	mux.HandleFunc("/register", cs.authAPI.HandleRegisterPage)
+	mux.HandleFunc("/api/auth/login", cs.authAPI.HandleLogin)
+	mux.HandleFunc("/api/auth/register", cs.authAPI.HandleRegister)
+	mux.HandleFunc("/api/auth/refresh", cs.authAPI.HandleRefresh)
+	mux.HandleFunc("/api/auth/logout", cs.authAPI.HandleLogout)
+	mux.HandleFunc("/api/auth/me", cs.authAPI.HandleGetCurrentUser)
+
+	// Public endpoints
+	mux.HandleFunc("/health", cs.HandleHealth)
+	mux.HandleFunc("/ready", cs.HandleReady)
+	mux.HandleFunc("/info", cs.HandleInfo)
+	mux.HandleFunc("/api/config", cs.HandleConfig)
+
+	// Main app route - authenticate first, then serve original index.html
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			// Check if user is authenticated
+			token := r.Header.Get("Authorization")
+			if token == "" {
+				// Check for token in cookie (for browser access)
+				cookie, err := r.Cookie("access_token")
+				if err == nil {
+					token = "Bearer " + cookie.Value
+				}
+			}
+
+			if token != "" {
+				// Validate token
+				if strings.HasPrefix(token, "Bearer ") {
+					tokenStr := strings.TrimPrefix(token, "Bearer ")
+					if _, err := cs.jwtAuth.ValidateToken(tokenStr); err == nil {
+						// User is authenticated, serve original index.html
+						cs.HandleIndex(w, r, staticFS)
+						return
+					}
+				}
+			}
+
+			// User is not authenticated, redirect to login page
+			http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
+			return
+		}
 		cs.HandleIndex(w, r, staticFS)
 	})
-	http.HandleFunc("/api/client-id", cs.HandleGetClientID)
-	http.HandleFunc("/api/sessions/new", cs.HandleNewSession)
-	http.HandleFunc("/api/sessions", cs.HandleListSessions)
-	http.HandleFunc("/api/sessions/", func(w http.ResponseWriter, r *http.Request) {
+
+	// Protected routes (require authentication)
+	protectedMux := http.NewServeMux()
+	protectedMux.HandleFunc("/api/client-id", cs.HandleGetClientID)
+	protectedMux.HandleFunc("/api/sessions/new", cs.HandleNewSession)
+	protectedMux.HandleFunc("/api/sessions", cs.HandleListSessions)
+	protectedMux.HandleFunc("/api/sessions/", func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 		if strings.HasSuffix(path, "/history") {
 			cs.HandleGetHistory(w, r)
@@ -1400,22 +1573,26 @@ func (cs *ChatServer) Start(staticFS fs.FS) error {
 			http.NotFound(w, r)
 		}
 	})
-	http.HandleFunc("/api/chat", cs.HandleChat)
-	http.HandleFunc("/api/feedback", cs.HandleFeedback)
-	http.HandleFunc("/api/mcp/tools", cs.HandleMCPTools)
-	http.HandleFunc("/api/tools/hierarchical", cs.HandleToolsHierarchical)
-	http.HandleFunc("/api/config", cs.HandleConfig)
+	protectedMux.HandleFunc("/api/chat", cs.HandleChat)
+	protectedMux.HandleFunc("/api/feedback", cs.HandleFeedback)
+	protectedMux.HandleFunc("/api/mcp/tools", cs.HandleMCPTools)
+	protectedMux.HandleFunc("/api/tools/hierarchical", cs.HandleToolsHierarchical)
+	protectedMux.HandleFunc("/metrics", cs.HandleMetrics)
+
+	// Apply authentication middleware to protected routes
+	mux.Handle("/api/", cs.jwtAuth.Middleware(protectedMux))
 
 	// Serve static files from embedded filesystem
 	staticSubFS, err := fs.Sub(staticFS, "static")
 	if err != nil {
 		return fmt.Errorf("failed to create sub filesystem: %w", err)
 	}
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticSubFS))))
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticSubFS))))
 
 	addr := ":" + cs.port
 	log.Printf("🌐 HTTP server listening on http://localhost%s", addr)
-	return http.ListenAndServe(addr, nil)
+	log.Printf("🔐 Authentication enabled - visit /login to sign in")
+	return http.ListenAndServe(addr, mux)
 }
 
 // getSkillsOverview returns a formatted string of available skills (name and description only)
@@ -1613,4 +1790,153 @@ IMPORTANT:
 
 	log.Printf("No tool selected: %s", toolDecision.Reason)
 	return nil, nil, nil
+}
+
+// HandleHealth handles health check requests
+func (s *ChatServer) HandleHealth(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	// Perform health checks using the health checker
+	if s.healthChecker != nil {
+		results := s.healthChecker.CheckHealth(ctx)
+
+		// Check if any check failed
+		allHealthy := true
+		for _, status := range results {
+			if status.Status == "unhealthy" {
+				allHealthy = false
+				break
+			}
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if allHealthy {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"status": "healthy",
+				"timestamp": time.Now().UTC(),
+				"checks": results,
+			})
+		} else {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"status": "unhealthy",
+				"timestamp": time.Now().UTC(),
+				"checks": results,
+			})
+		}
+	} else {
+		// Fallback health check
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status": "healthy",
+			"timestamp": time.Now().UTC(),
+		})
+	}
+}
+
+// HandleMetrics handles metrics requests
+func (s *ChatServer) HandleMetrics(w http.ResponseWriter, r *http.Request) {
+	if s.metricsCollector != nil {
+		s.metricsCollector.UpdateSystemMetrics()
+
+		// Redirect to the actual metrics server
+		if s.config.Monitoring.Enabled {
+			http.Redirect(w, r, fmt.Sprintf("http://localhost:%d/metrics", s.config.Monitoring.MetricsPort), http.StatusTemporaryRedirect)
+			return
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusNotFound)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"error": "Metrics collection not enabled",
+	})
+}
+
+// HandleReady handles readiness probe requests
+func (s *ChatServer) HandleReady(w http.ResponseWriter, r *http.Request) {
+	// Check if the server is ready to handle requests
+	ctx := r.Context()
+
+	// Perform basic readiness checks
+	if s.healthChecker != nil {
+		results := s.healthChecker.CheckHealth(ctx)
+
+		// Consider the service ready if at least one health check passes
+		ready := false
+		for _, status := range results {
+			if status.Status == "healthy" {
+				ready = true
+				break
+			}
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		if ready {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"status": "ready",
+				"timestamp": time.Now().UTC(),
+			})
+		} else {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			json.NewEncoder(w).Encode(map[string]interface{}{
+				"status": "not ready",
+				"timestamp": time.Now().UTC(),
+			})
+		}
+	} else {
+		// Default to ready if no health checker is configured
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status": "ready",
+			"timestamp": time.Now().UTC(),
+		})
+	}
+}
+
+// HandleInfo handles server info requests
+func (s *ChatServer) HandleInfo(w http.ResponseWriter, r *http.Request) {
+	info := map[string]interface{}{
+		"service": "LangGraphGo Chat Agent",
+		"version": "1.0.0",
+		"environment": "development", // TODO: Get from config manager
+		"timestamp": time.Now().UTC(),
+		"features": map[string]interface{}{
+			"agent_management": s.lifecycleManager != nil,
+			"monitoring": s.metricsCollector != nil,
+			"health_checks": s.healthChecker != nil,
+			"tools": false, // TODO: Implement tools field
+			"skills": false, // TODO: Implement skills field
+		},
+	}
+
+	// Add agent statistics if lifecycle manager is available
+	if s.lifecycleManager != nil {
+		agentMetrics := s.lifecycleManager.GetMetrics()
+		info["agent_stats"] = agentMetrics
+	}
+
+	// Add configuration summary
+	info["config"] = map[string]interface{}{
+		"server": map[string]interface{}{
+			"host": s.config.Server.Host,
+			"port": s.config.Server.Port,
+		},
+		"agent": map[string]interface{}{
+			"max_concurrent": s.config.Agent.MaxConcurrent,
+			"max_idle_time": s.config.Agent.MaxIdleTime,
+		},
+		"monitoring": map[string]interface{}{
+			"enabled": s.config.Monitoring.Enabled,
+			"metrics_port": s.config.Monitoring.MetricsPort,
+		},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(info)
 }
