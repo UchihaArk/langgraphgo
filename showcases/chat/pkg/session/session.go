@@ -48,8 +48,9 @@ func NewSessionManager(sessionDir string, maxHistory int) *SessionManager {
 		maxHistory: maxHistory,
 	}
 
-	// Load existing sessions from disk
-	sm.loadSessions()
+	// Don't load all sessions at startup anymore
+	// Sessions will be loaded on-demand to improve startup performance
+	// sm.loadSessions()
 
 	return sm
 }
@@ -82,17 +83,19 @@ func (sm *SessionManager) CreateSession() *Session {
 	return session
 }
 
-// GetSession retrieves a session by ID
+// GetSession retrieves a session by ID (lazy loads from disk if not in memory)
 func (sm *SessionManager) GetSession(id string) (*Session, error) {
+	// First check if session is already loaded
 	sm.mu.RLock()
-	defer sm.mu.RUnlock()
-
 	session, exists := sm.sessions[id]
-	if !exists {
-		return nil, fmt.Errorf("session not found: %s", id)
+	sm.mu.RUnlock()
+
+	if exists {
+		return session, nil
 	}
 
-	return session, nil
+	// Try to load from disk
+	return sm.loadSessionFromDisk(id)
 }
 
 // ListSessions returns all active sessions
@@ -256,6 +259,29 @@ func (sm *SessionManager) loadSessions() {
 			sm.sessions[session.ID] = &session
 		}
 	}
+}
+
+// loadSessionFromDisk loads a specific session from disk
+func (sm *SessionManager) loadSessionFromDisk(sessionID string) (*Session, error) {
+	filePath := filepath.Join(sm.sessionDir, sessionID+".json")
+
+	data, err := os.ReadFile(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("session file not found: %s", sessionID)
+	}
+
+	var session Session
+	err = json.Unmarshal(data, &session)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal session: %v", err)
+	}
+
+	// Store in memory for future access
+	sm.mu.Lock()
+	sm.sessions[sessionID] = &session
+	sm.mu.Unlock()
+
+	return &session, nil
 }
 
 // ClearHistory clears all messages in a session

@@ -109,7 +109,25 @@ func (a *SimpleChatAgent) InitializeToolsAsync() {
 	a.mu.Unlock()
 
 	go func() {
+		defer func() {
+			// Mark as loaded regardless of success/failure to prevent blocking
+			a.mu.Lock()
+			a.toolsLoading = false
+			a.toolsLoaded = true
+			skillsCount := len(a.skills)
+			mcpToolsCount := len(a.mcpTools)
+			a.mu.Unlock()
+			log.Printf("✓ Tools pre-warming complete: %d Skills, %d MCP tools loaded", skillsCount, mcpToolsCount)
+		}()
+
 		log.Println("Starting background tools initialization...")
+
+		// Add recovery for any panics during tool loading
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("Panic during tools initialization: %v", r)
+			}
+		}()
 
 		// Load Skills
 		skillsDir := os.Getenv("SKILLS_DIR")
@@ -160,16 +178,6 @@ func (a *SimpleChatAgent) InitializeToolsAsync() {
 		if err := a.initializeMCP(mcpConfigPath); err != nil {
 			log.Printf("MCP initialization failed (continuing without MCP): %v", err)
 		}
-
-		// Mark as loaded
-		a.mu.Lock()
-		a.toolsLoading = false
-		a.toolsLoaded = true
-		skillsCount := len(a.skills)
-		mcpToolsCount := len(a.mcpTools)
-		a.mu.Unlock()
-
-		log.Printf("✓ Tools pre-warming complete: %d Skills, %d MCP tools loaded", skillsCount, mcpToolsCount)
 	}()
 }
 
@@ -631,6 +639,8 @@ type ChatServer struct {
 	config          Config
 	sessionManagers map[string]*sessionpkg.SessionManager // clientID -> SessionManager
 	smMu            sync.RWMutex
+	requestSem     chan struct{} // Semaphore for controlling concurrent requests
+	maxConcurrent   int          // Maximum number of concurrent requests
 }
 
 // NewChatServer creates a new chat server
@@ -664,6 +674,14 @@ func NewChatServer(sessionDir string, maxHistory int, port string) (*ChatServer,
 		return nil, fmt.Errorf("failed to create LLM: %w", err)
 	}
 
+	// Set default max concurrent requests from environment or use sensible default
+	maxConcurrent := 50 // Default value
+	if maxConcurrentStr := os.Getenv("MAX_CONCURRENT_REQUESTS"); maxConcurrentStr != "" {
+		if _, err := fmt.Sscanf(maxConcurrentStr, "%d", &maxConcurrent); err != nil {
+			maxConcurrent = 50 // Fallback to default
+		}
+	}
+
 	return &ChatServer{
 		sessionManager:  sessionpkg.NewSessionManager(sessionDir, maxHistory),
 		agents:          make(map[string]ChatAgent),
@@ -671,6 +689,8 @@ func NewChatServer(sessionDir string, maxHistory int, port string) (*ChatServer,
 		port:            port,
 		config:          config,
 		sessionManagers: make(map[string]*sessionpkg.SessionManager),
+		requestSem:      make(chan struct{}, maxConcurrent),
+		maxConcurrent:   maxConcurrent,
 	}, nil
 }
 
@@ -707,15 +727,21 @@ func (cs *ChatServer) GetOrCreateAgent(sessionID string) (ChatAgent, error) {
 		return agent, nil
 	}
 
-	// Try to reuse the warmup agent if available
+	// Try to use the warmup agent configuration but create a new instance
 	if warmupAgent, exists := cs.agents["__warmup__"]; exists {
-		log.Printf("Reusing pre-warmed agent for session %s", sessionID)
+		log.Printf("Using pre-warmed agent configuration for session %s", sessionID)
+		// Don't reuse the warmup agent instance to avoid state sharing issues
+		// Instead, create a new agent with the same configuration
+		// Clean up the warmup agent asynchronously
+		go func() {
+			if warmupAgentCloser, ok := warmupAgent.(interface{ Close() error }); ok {
+				warmupAgentCloser.Close()
+			}
+		}()
 		delete(cs.agents, "__warmup__")
-		cs.agents[sessionID] = warmupAgent
-		return warmupAgent, nil
 	}
 
-	// Create simple chat agent
+	// Create a new agent instance for this session
 	agent = NewSimpleChatAgent(cs.llm, cs.config)
 	cs.agents[sessionID] = agent
 
@@ -751,6 +777,26 @@ func (cs *ChatServer) GetLLM() llms.Model {
 // GetConfig returns the server config
 func (cs *ChatServer) GetConfig() Config {
 	return cs.config
+}
+
+// acquireRequest acquires a request slot or returns an error if limit exceeded
+func (cs *ChatServer) acquireRequest() error {
+	select {
+	case cs.requestSem <- struct{}{}:
+		return nil
+	default:
+		return fmt.Errorf("server is busy: maximum concurrent requests (%d) exceeded", cs.maxConcurrent)
+	}
+}
+
+// releaseRequest releases a request slot
+func (cs *ChatServer) releaseRequest() {
+	select {
+	case <-cs.requestSem:
+	default:
+		// This should not happen, but handle gracefully
+		log.Printf("Warning: attempt to release request when semaphore is empty")
+	}
 }
 
 // HandleIndex serves the main HTML page
@@ -935,6 +981,14 @@ func (cs *ChatServer) HandleChat(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+
+	// Acquire request slot for concurrency control
+	if err := cs.acquireRequest(); err != nil {
+		log.Printf("Request rejected: %v", err)
+		http.Error(w, err.Error(), http.StatusTooManyRequests)
+		return
+	}
+	defer cs.releaseRequest()
 
 	var req struct {
 		SessionID    string `json:"session_id"`
