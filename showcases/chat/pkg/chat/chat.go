@@ -449,6 +449,9 @@ func (a *SimpleChatAgent) ChatStream(ctx context.Context, message string, enable
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
+	// Accumulator for the full response content (including tool logs)
+	var fullResponseBuilder strings.Builder
+
 	// Add user message
 	userMsg := llms.MessageContent{
 		Role:  llms.ChatMessageTypeHuman,
@@ -490,6 +493,7 @@ func (a *SimpleChatAgent) ChatStream(ctx context.Context, message string, enable
 						toolName = (*tool).Name()
 						notifyStart := fmt.Sprintf("\n\n> 🛠️ Calling tool **%s**...\n\n", toolName)
 						onChunk(ctx, []byte(notifyStart))
+						fullResponseBuilder.WriteString(notifyStart)
 
 						// Call the tool
 						result, err := (*tool).Call(ctx, argsStr)
@@ -499,6 +503,7 @@ func (a *SimpleChatAgent) ChatStream(ctx context.Context, message string, enable
 							log.Printf("Tool %s call failed: %v", toolName, err)
 							notifyError := fmt.Sprintf("\n\n> ❌ Tool error: %v\n\n", err)
 							onChunk(ctx, []byte(notifyError))
+							fullResponseBuilder.WriteString(notifyError)
 						} else {
 							toolUsed = true
 							toolResult = result
@@ -507,6 +512,7 @@ func (a *SimpleChatAgent) ChatStream(ctx context.Context, message string, enable
 							// Format result in collapsible details
 							notifyResult := fmt.Sprintf("\n\n<details>\n<summary>Tool Result: %s</summary>\n\n```\n%s\n```\n\n</details>\n\n", toolName, result)
 							onChunk(ctx, []byte(notifyResult))
+							fullResponseBuilder.WriteString(notifyResult)
 						}
 					}
 				}
@@ -530,6 +536,7 @@ func (a *SimpleChatAgent) ChatStream(ctx context.Context, message string, enable
 				toolName = (*tool).Name()
 				notifyStart := fmt.Sprintf("\n\n> 🛠️ Calling tool **%s**...\n\n", toolName)
 				onChunk(ctx, []byte(notifyStart))
+				fullResponseBuilder.WriteString(notifyStart)
 
 				// Call the tool
 				result, err := (*tool).Call(ctx, argsStr)
@@ -539,6 +546,7 @@ func (a *SimpleChatAgent) ChatStream(ctx context.Context, message string, enable
 					log.Printf("MCP tool %s call failed: %v", toolName, err)
 					notifyError := fmt.Sprintf("\n\n> ❌ Tool error: %v\n\n", err)
 					onChunk(ctx, []byte(notifyError))
+					fullResponseBuilder.WriteString(notifyError)
 				} else {
 					toolUsed = true
 					toolResult = result
@@ -547,6 +555,7 @@ func (a *SimpleChatAgent) ChatStream(ctx context.Context, message string, enable
 					// Format result in collapsible details
 					notifyResult := fmt.Sprintf("\n\n<details>\n<summary>Tool Result: %s</summary>\n\n```\n%s\n```\n\n</details>\n\n", toolName, result)
 					onChunk(ctx, []byte(notifyResult))
+					fullResponseBuilder.WriteString(notifyResult)
 				}
 			}
 		}
@@ -575,14 +584,18 @@ func (a *SimpleChatAgent) ChatStream(ctx context.Context, message string, enable
 		responseText = response.Choices[0].Content
 	}
 
+	// Append LLM response to full response
+	fullResponseBuilder.WriteString(responseText)
+	fullResponse := fullResponseBuilder.String()
+
 	// Add assistant response to history
 	assistantMsg := llms.MessageContent{
 		Role:  llms.ChatMessageTypeAI,
-		Parts: []llms.ContentPart{llms.TextPart(responseText)},
+		Parts: []llms.ContentPart{llms.TextPart(fullResponse)},
 	}
 	a.messages = append(a.messages, assistantMsg)
 
-	return responseText, nil
+	return fullResponse, nil
 }
 
 // getClientID generates a unique client ID based on IP and User-Agent
