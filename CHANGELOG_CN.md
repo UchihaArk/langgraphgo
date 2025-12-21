@@ -1,8 +1,9 @@
 # 更新日志
 
-## [未发布] - 2025-12-14
+## [0.7.0] - 2025-12-21
 
 ### 核心特性
+- **图数据库**: 支持 FalkorDB (#53)
 - **泛型类型 (Generic Types)**: 泛型支持的重要里程碑 (#48)
   - 添加泛型 StateGraph 实现，支持类型安全的状态管理
   - 将代码库中的 `interface{}` 替换为 `any`
@@ -33,18 +34,21 @@
   - 全面的文档，解释 ToT 架构和用例
 
 ### 预构建代理
+- **Chat Agent**: 增强聊天能力与主题 (#55)
 - **[PEV Agent](./examples/pev_agent/)**: 问题-证据-验证代理 (#38)
   - 结构化问题求解与证据收集
   - 解决方案验证机制
   - 支持 https://profile.rpcx.io 项目个人资料生成展示
 
 ### 重构
+- **RAG 重构**: 重构 RAG 模块 (#54)
 - **MessageGraph 移除**: 移除 MessageGraph 特殊类型 (#43, #44)
   - 将 MessageGraph 功能合并到 StateGraph 以获得更好的一致性
   - 移除冗余的 `NewMessagesStateGraph` 方法简化 API
   - 更新 ListenableStateGraph 结构以获得更好的可维护性
 
 ### 错误修复与改进
+- 修复 GoSkills 集成问题
 - 修复并发执行场景中的竞态条件
 - 修复并行执行场景中的 duration_execution 错误
 - 增强了 GitHub Actions CI/CD，更新了 golangci-lint 版本

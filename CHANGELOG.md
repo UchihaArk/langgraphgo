@@ -1,8 +1,9 @@
 # Changelog
 
-## [Unreleased] - 2025-12-14
+## [0.7.0] - 2025-12-21
 
 ### Core Features
+- **Graph Database**: Support for FalkorDB (#53)
 - **Generic Types**: Major milestone for generic type support (#48)
   - Added generic StateGraph implementations for type-safe state management
   - Replaced `interface{}` with `any` throughout the codebase
@@ -33,18 +34,21 @@
   - Comprehensive documentation explaining ToT architecture and use cases
 
 ### Pre-built Agents
+- **Chat Agent**: Enhanced chat capabilities and themes (#55)
 - **[PEV Agent](./examples/pev_agent/)**: Problem-Evidence-Verification agent (#38)
   - Structured problem-solving with evidence gathering
   - Verification mechanism for solution validation
   - Support showcase for https://profile.rpcx.io project profile generation
 
 ### Refactoring
+- **RAG Refactoring**: Refactored RAG module (#54)
 - **MessageGraph Removal**: Removed MessageGraph as a special type (#43, #44)
   - Merged MessageGraph features into StateGraph for better consistency
   - Simplified API by removing redundant `NewMessagesStateGraph` method
   - Updated ListenableStateGraph structure for better maintainability
 
 ### Bug Fixes & Improvements
+- Fixed GoSkills integration issues
 - Fixed race conditions in concurrent execution scenarios
 - Fixed duration_execution bug in parallel execution scenarios
 - Enhanced GitHub Actions CI/CD with updated golangci-lint versions
