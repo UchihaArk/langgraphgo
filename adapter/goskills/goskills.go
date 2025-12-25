@@ -31,6 +31,15 @@ func (t *SkillTool) Description() string {
 	return t.description
 }
 
+func (t *SkillTool) MarshalJSON() ([]byte, error) {
+	return json.Marshal(map[string]any{
+		"name":        t.name,
+		"description": t.description,
+		"skillPath":   t.skillPath,
+		"scriptMap":   t.scriptMap,
+	})
+}
+
 func (t *SkillTool) Call(ctx context.Context, input string) (string, error) {
 	// input is the JSON string of arguments
 	// We need to parse it based on the tool name, similar to goskills runner.go
