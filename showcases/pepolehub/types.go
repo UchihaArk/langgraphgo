@@ -38,14 +38,14 @@ type SearchResult struct {
 
 // ScrapedContent represents the content scraped from a URL
 type ScrapedContent struct {
-	Url         string                 `json:"url"`
-	Status      int                    `json:"status,omitempty"`
-	ContentType string                 `json:"contentType,omitempty"`
-	Content     string                 `json:"content"`
-	Bytes       int                    `json:"bytes"`
-	FetchedAt   int64                  `json:"fetchedAt"`
-	Error       string                 `json:"error,omitempty"`
-	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	Url         string         `json:"url"`
+	Status      int            `json:"status,omitempty"`
+	ContentType string         `json:"contentType,omitempty"`
+	Content     string         `json:"content"`
+	Bytes       int            `json:"bytes"`
+	FetchedAt   int64          `json:"fetchedAt"`
+	Error       string         `json:"error,omitempty"`
+	Metadata    map[string]any `json:"metadata,omitempty"`
 }
 
 // WebSummary represents a summary of a scraped web page

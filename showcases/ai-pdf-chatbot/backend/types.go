@@ -14,7 +14,7 @@ import (
 type IngestionState struct {
 	// Docs contains the documents to be ingested.
 	// Can be a slice of Document or the string "delete" to clear the index.
-	Docs interface{}
+	Docs any
 }
 
 // ============================================

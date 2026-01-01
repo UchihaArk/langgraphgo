@@ -18,8 +18,8 @@ import (
 func fetchLinkedInProfile(url string) (*LinkedInData, error) {
 	// Attempt to fetch via Tavily (Search for profile content)
 	// Since direct scraping is hard, we search for the specific URL to see if Tavily has indexed it.
-	
-tavily, err := NewTavilyClient()
+
+	tavily, err := NewTavilyClient()
 	if err != nil {
 		return nil, err
 	}
@@ -35,20 +35,20 @@ tavily, err := NewTavilyClient()
 	}
 
 	res := results[0]
-	
+
 	// Create a "best effort" profile object
 	return &LinkedInData{
-		LinkedinUrl:    url,
-		LinkedinId:     "unknown", // Cannot extract easily
-		FirstName:      "Unknown", // Needs parsing
-		LastName:       "Unknown", // Needs parsing
-		FullName:       res.Title, // Use Page Title
-		Headline:       "Extracted from Web Search",
-		About:          res.Content, // Use the snippet/content from search
-		Location:       "Unknown",
-		Connections:    0,
-	},
-	nil
+			LinkedinUrl: url,
+			LinkedinId:  "unknown", // Cannot extract easily
+			FirstName:   "Unknown", // Needs parsing
+			LastName:    "Unknown", // Needs parsing
+			FullName:    res.Title, // Use Page Title
+			Headline:    "Extracted from Web Search",
+			About:       res.Content, // Use the snippet/content from search
+			Location:    "Unknown",
+			Connections: 0,
+		},
+		nil
 }
 
 func generateSearchQuery(personName, linkedinUrl string) (string, error) {
@@ -59,7 +59,7 @@ func generateSearchQuery(personName, linkedinUrl string) (string, error) {
 	}
 
 	prompt := fmt.Sprintf("Generate a Google search query to find information about %s (LinkedIn: %s). Return ONLY the query string, nothing else.", personName, linkedinUrl)
-	
+
 	resp, err := llm.Call(context.Background(), prompt)
 	if err != nil {
 		return "", err
@@ -93,18 +93,18 @@ func searchGoogleForPerson(personName, linkedinUrl string, options PersonSearchO
 	var searchResults []SearchResult
 	for i, r := range results {
 		searchResults = append(searchResults, SearchResult{
-			Title:  r.Title,
-			Url:    r.URL,
+			Title:   r.Title,
+			Url:     r.URL,
 			Snippet: r.Content,
-			Rank:   i + 1,
-			Source: "tavily",
+			Rank:    i + 1,
+			Source:  "tavily",
 		})
 	}
 
 	return searchResults, nil
 }
 
-type ScrapeOptions struct {}
+type ScrapeOptions struct{}
 
 func scrapeUrls(urls []string, options *ScrapeOptions) ([]ScrapedContent, error) {
 	var results []ScrapedContent
@@ -184,43 +184,43 @@ Sentiment: <positive/neutral/negative>
 
 	// Simple parsing of the response (Robust parsing would be better)
 	// Expecting the LLM to follow format somewhat.
-	
+
 	summary := "Generated summary"
 	keyPoints := []string{}
 	mentions := false
 	sentiment := "neutral"
 
-	lines := strings.Split(resp, "\n")
-	for _, line := range lines {
+	lines := strings.SplitSeq(resp, "\n")
+	for line := range lines {
 		line = strings.TrimSpace(line)
-		if strings.HasPrefix(line, "Summary:") {
-			summary = strings.TrimPrefix(line, "Summary:")
-		} else if strings.HasPrefix(line, "KeyPoints:") {
-			kp := strings.TrimPrefix(line, "KeyPoints:")
+		if after, ok := strings.CutPrefix(line, "Summary:"); ok {
+			summary = after
+		} else if after, ok := strings.CutPrefix(line, "KeyPoints:"); ok {
+			kp := after
 			keyPoints = strings.Split(kp, ",")
 			for i := range keyPoints {
 				keyPoints[i] = strings.TrimSpace(keyPoints[i])
 			}
-		} else if strings.HasPrefix(line, "MentionsPerson:") {
-			val := strings.TrimPrefix(line, "MentionsPerson:")
+		} else if after, ok := strings.CutPrefix(line, "MentionsPerson:"); ok {
+			val := after
 			if strings.ToLower(strings.TrimSpace(val)) == "true" {
 				mentions = true
 			}
-		} else if strings.HasPrefix(line, "Sentiment:") {
-			sentiment = strings.TrimSpace(strings.TrimPrefix(line, "Sentiment:"))
+		} else if after, ok := strings.CutPrefix(line, "Sentiment:"); ok {
+			sentiment = strings.TrimSpace(after)
 		}
 	}
 
 	return &WebSummary{
-		Url:            url,
-		Summary:        summary,
-		KeyPoints:      keyPoints,
-		MentionsPerson: mentions,
-		Confidence:     0.8,
-		Sentiment:      sentiment,
-		Source:         "web",
-	},
-	nil
+			Url:            url,
+			Summary:        summary,
+			KeyPoints:      keyPoints,
+			MentionsPerson: mentions,
+			Confidence:     0.8,
+			Sentiment:      sentiment,
+			Source:         "web",
+		},
+		nil
 }
 
 type ResearchDataBundle struct {
@@ -229,7 +229,7 @@ type ResearchDataBundle struct {
 	LinkedinData  *LinkedInData
 	WebSummaries  []WebSummary
 	SearchResults []SearchResult
-	Metadata      map[string]interface{}
+	Metadata      map[string]any
 }
 
 type ResearchReportResult struct {
@@ -244,11 +244,11 @@ func generateResearchReport(bundle ResearchDataBundle) (*ResearchReportResult, e
 
 	var sb strings.Builder
 	sb.WriteString(fmt.Sprintf("Research data for %s (%s):\n\n", bundle.PersonName, bundle.LinkedinUrl))
-	
+
 	if bundle.LinkedinData != nil {
 		sb.WriteString(fmt.Sprintf("LinkedIn Info: %s - %s\n%s\n\n", bundle.LinkedinData.FullName, bundle.LinkedinData.Headline, bundle.LinkedinData.About))
 	}
-	
+
 	sb.WriteString("Web Findings:\n")
 	for _, s := range bundle.WebSummaries {
 		sb.WriteString(fmt.Sprintf("- URL: %s\n  Summary: %s\n  Points: %v\n\n", s.Url, s.Summary, s.KeyPoints))

@@ -61,12 +61,12 @@ Respond with ONLY a JSON object, nothing else: {"route": "retrieve"}`, state.Que
 		jsonStr := strings.TrimSpace(resp)
 
 		// Clean up markdown code blocks if present
-		if strings.HasPrefix(jsonStr, "```json") {
-			jsonStr = strings.TrimPrefix(jsonStr, "```json")
+		if after, ok := strings.CutPrefix(jsonStr, "```json"); ok {
+			jsonStr = after
 			jsonStr = strings.TrimSuffix(jsonStr, "```")
 			jsonStr = strings.TrimSpace(jsonStr)
-		} else if strings.HasPrefix(jsonStr, "```") {
-			jsonStr = strings.TrimPrefix(jsonStr, "```")
+		} else if after, ok := strings.CutPrefix(jsonStr, "```"); ok {
+			jsonStr = after
 			jsonStr = strings.TrimSuffix(jsonStr, "```")
 			jsonStr = strings.TrimSpace(jsonStr)
 		}

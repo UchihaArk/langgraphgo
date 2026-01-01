@@ -110,7 +110,7 @@ func GoogleAIExample() {
 	// This graph expects NodeListener[[]llms.MessageContent].
 	// So we can't use standard ProgressListener here directly.
 	// We will create a custom listener for this example.
-	
+
 	listener := graph.NodeListenerFunc[[]llms.MessageContent](func(ctx context.Context, event graph.NodeEvent, nodeName string, state []llms.MessageContent, err error) {
 		if event == graph.NodeEventStart {
 			fmt.Printf("🤔 Thinking with Gemini... (Node: %s)\n", nodeName)
