@@ -10,6 +10,7 @@ import (
 
 	"github.com/smallnest/langgraphgo/graph"
 	st "github.com/smallnest/langgraphgo/store"
+	"github.com/smallnest/langgraphgo/store/redis"
 )
 
 func TestMemoryCheckpointStore_SaveAndLoad(t *testing.T) {
@@ -1289,5 +1290,91 @@ func TestMaxCheckpoints_ZeroOrNegative(t *testing.T) {
 
 	if len(checkpoints) != 3 {
 		t.Errorf("Expected 3 checkpoints with MaxCheckpoints=0 (no limit), got %d", len(checkpoints))
+	}
+}
+
+func TestMaxCheckpoints_AutoCleanup_RedisStore(t *testing.T) {
+	t.Parallel()
+
+	store := redis.NewRedisCheckpointStore(redis.RedisOptions{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+		Prefix:   "example_checkpoints:",
+		TTL:      1 * time.Hour,
+	})
+	g := graph.NewCheckpointableStateGraph[map[string]any]()
+
+	// Add multiple nodes to create multiple checkpoints
+	for i := 1; i <= 5; i++ {
+		nodeName := fmt.Sprintf("step%d", i)
+		g.AddNode(nodeName, nodeName, func(ctx context.Context, state map[string]any) (map[string]any, error) {
+			state[nodeName] = "done"
+			return state, nil
+		})
+
+		if i > 1 {
+			prevNode := fmt.Sprintf("step%d", i-1)
+			g.AddEdge(prevNode, nodeName)
+		}
+	}
+	g.AddEdge("step5", graph.END)
+	g.SetEntryPoint("step1")
+
+	// Set MaxCheckpoints to 3
+	config := graph.CheckpointConfig{
+		Store:          store,
+		AutoSave:       true,
+		MaxCheckpoints: 3,
+	}
+	g.SetCheckpointConfig(config)
+
+	runnable, err := g.CompileCheckpointable()
+	if err != nil {
+		t.Fatalf("Failed to compile: %v", err)
+	}
+
+	ctx := context.Background()
+	threadID := "test-max-checkpoints"
+
+	// Execute the graph with thread_id
+	_, err = runnable.InvokeWithConfig(ctx, map[string]any{"input": "test"}, graph.WithThreadID(threadID))
+	if err != nil {
+		t.Fatalf("Execution failed: %v", err)
+	}
+
+	// Wait for async checkpoint operations
+	time.Sleep(100 * time.Millisecond)
+
+	// Check that only 3 checkpoints remain (most recent ones)
+	checkpoints, err := store.ListByThread(ctx, threadID)
+	if err != nil {
+		t.Fatalf("Failed to list checkpoints: %v", err)
+	}
+
+	if len(checkpoints) != 3 {
+		t.Errorf("Expected 3 checkpoints after MaxCheckpoints cleanup, got %d", len(checkpoints))
+	}
+
+	// Verify that the remaining checkpoints are the most recent ones (step3, step4, step5)
+	nodeNames := make([]string, 0, len(checkpoints))
+	for _, cp := range checkpoints {
+		nodeNames = append(nodeNames, cp.NodeName)
+	}
+
+	// Should contain step3, step4, step5 (the 3 most recent)
+	expectedNodes := []string{"step3", "step4", "step5"}
+	for _, expected := range expectedNodes {
+		found := slices.Contains(nodeNames, expected)
+		if !found {
+			t.Errorf("Expected checkpoint for %s, but only found: %v", expected, nodeNames)
+		}
+	}
+	latestByThread, err := store.GetLatestByThread(ctx, threadID)
+	if err != nil {
+		t.Fatalf("Failed to get latest checkpoint by thread: %v", err)
+	}
+	if latestByThread == nil || latestByThread.NodeName != "step5" {
+		t.Errorf("Expected latest checkpoint by thread to be step5")
 	}
 }

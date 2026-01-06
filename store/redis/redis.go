@@ -3,6 +3,7 @@ package redis
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -73,7 +74,7 @@ func (s *RedisCheckpointStore) Save(ctx context.Context, checkpoint *graph.Check
 	// Index by execution_id if present
 	if execID, ok := checkpoint.Metadata["execution_id"].(string); ok && execID != "" {
 		execKey := s.executionKey(execID)
-		pipe.SAdd(ctx, execKey, checkpoint.ID)
+		pipe.ZAdd(ctx, execKey, redis.Z{Score: float64(checkpoint.Version), Member: checkpoint.ID})
 		if s.ttl > 0 {
 			pipe.Expire(ctx, execKey, s.ttl)
 		}
@@ -82,7 +83,7 @@ func (s *RedisCheckpointStore) Save(ctx context.Context, checkpoint *graph.Check
 	// Index by thread_id if present
 	if threadID, ok := checkpoint.Metadata["thread_id"].(string); ok && threadID != "" {
 		threadKey := s.threadKey(threadID)
-		pipe.SAdd(ctx, threadKey, checkpoint.ID)
+		pipe.ZAdd(ctx, threadKey, redis.Z{Score: float64(checkpoint.Version), Member: checkpoint.ID})
 		if s.ttl > 0 {
 			pipe.Expire(ctx, threadKey, s.ttl)
 		}
@@ -118,7 +119,7 @@ func (s *RedisCheckpointStore) Load(ctx context.Context, checkpointID string) (*
 // List returns all checkpoints for a given execution
 func (s *RedisCheckpointStore) List(ctx context.Context, executionID string) ([]*graph.Checkpoint, error) {
 	execKey := s.executionKey(executionID)
-	checkpointIDs, err := s.client.SMembers(ctx, execKey).Result()
+	checkpointIDs, err := s.client.ZRange(ctx, execKey, 0, -1).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to list checkpoints for execution %s: %w", executionID, err)
 	}
@@ -162,6 +163,7 @@ func (s *RedisCheckpointStore) List(ctx context.Context, executionID string) ([]
 		// If mismatch occurs, it indicates a Redis ordering issue
 		_ = checkpointIDs[i] // Acknowledge ID is available for future validation
 	}
+	//
 
 	return checkpoints, nil
 }
@@ -169,7 +171,7 @@ func (s *RedisCheckpointStore) List(ctx context.Context, executionID string) ([]
 // ListByThread returns all checkpoints for a specific thread_id
 func (s *RedisCheckpointStore) ListByThread(ctx context.Context, threadID string) ([]*graph.Checkpoint, error) {
 	threadKey := s.threadKey(threadID)
-	checkpointIDs, err := s.client.SMembers(ctx, threadKey).Result()
+	checkpointIDs, err := s.client.ZRange(ctx, threadKey, 0, -1).Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to list checkpoints for thread %s: %w", threadID, err)
 	}
@@ -212,24 +214,34 @@ func (s *RedisCheckpointStore) ListByThread(ctx context.Context, threadID string
 
 // GetLatestByThread returns the latest checkpoint for a thread_id
 func (s *RedisCheckpointStore) GetLatestByThread(ctx context.Context, threadID string) (*graph.Checkpoint, error) {
-	checkpoints, err := s.ListByThread(ctx, threadID)
-	if err != nil {
-		return nil, err
-	}
+	threadKey := s.threadKey(threadID)
 
-	if len(checkpoints) == 0 {
+	// get latest checkpoint
+	results, err := s.client.ZRevRangeWithScores(ctx, threadKey, 0, 0).Result()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get latest checkpoint for thread %s: %w", threadID, err)
+	}
+	if len(results) == 0 {
 		return nil, fmt.Errorf("no checkpoints found for thread: %s", threadID)
 	}
 
-	// Find the checkpoint with the highest version
-	var latest *graph.Checkpoint
-	for _, cp := range checkpoints {
-		if latest == nil || cp.Version > latest.Version {
-			latest = cp
+	latestCheckpointID := results[0].Member.(string)
+	key := s.checkpointKey(latestCheckpointID)
+
+	data, err := s.client.Get(ctx, key).Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return nil, fmt.Errorf("checkpoint not found: %s", latestCheckpointID)
 		}
+		return nil, fmt.Errorf("failed to load checkpoint %s: %w", latestCheckpointID, err)
 	}
 
-	return latest, nil
+	var checkpoint graph.Checkpoint
+	if err := json.Unmarshal([]byte(data), &checkpoint); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal checkpoint: %w", err)
+	}
+
+	return &checkpoint, nil
 }
 
 // Delete removes a checkpoint
@@ -247,12 +259,12 @@ func (s *RedisCheckpointStore) Delete(ctx context.Context, checkpointID string) 
 
 	if execID, ok := checkpoint.Metadata["execution_id"].(string); ok && execID != "" {
 		execKey := s.executionKey(execID)
-		pipe.SRem(ctx, execKey, checkpointID)
+		pipe.ZRem(ctx, execKey, checkpointID)
 	}
 
 	if threadID, ok := checkpoint.Metadata["thread_id"].(string); ok && threadID != "" {
 		threadKey := s.threadKey(threadID)
-		pipe.SRem(ctx, threadKey, checkpointID)
+		pipe.ZRem(ctx, threadKey, checkpointID)
 	}
 
 	_, err = pipe.Exec(ctx)
@@ -266,7 +278,7 @@ func (s *RedisCheckpointStore) Delete(ctx context.Context, checkpointID string) 
 // Clear removes all checkpoints for an execution
 func (s *RedisCheckpointStore) Clear(ctx context.Context, executionID string) error {
 	execKey := s.executionKey(executionID)
-	checkpointIDs, err := s.client.SMembers(ctx, execKey).Result()
+	checkpointIDs, err := s.client.ZRange(ctx, execKey, 0, -1).Result()
 	if err != nil {
 		return fmt.Errorf("failed to get checkpoints for clearing: %w", err)
 	}

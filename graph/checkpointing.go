@@ -127,14 +127,13 @@ func (cl *CheckpointListener[S]) saveCheckpoint(ctx context.Context, nodeName st
 // cleanupOldCheckpoints removes oldest checkpoints exceeding the max limit
 func (cl *CheckpointListener[S]) cleanupOldCheckpoints(ctx context.Context) {
 	// List checkpoints for this thread/execution
-	var checkpointID string
+	var checkpoints []*store.Checkpoint
+	var err error
 	if cl.threadID != "" {
-		checkpointID = cl.threadID
+		checkpoints, err = cl.store.ListByThread(ctx, cl.threadID)
 	} else {
-		checkpointID = cl.executionID
+		checkpoints, err = cl.store.List(ctx, cl.executionID)
 	}
-
-	checkpoints, err := cl.store.List(ctx, checkpointID)
 	if err != nil || len(checkpoints) <= cl.maxCheckpoints {
 		return
 	}
