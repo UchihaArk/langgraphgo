@@ -46,7 +46,7 @@ func main() {
 	inputTools := []tools.Tool{&WeatherTool{}}
 
 	// Create agent with options using CreateAgentMap
-	agent, err := prebuilt.CreateAgentMap(model, inputTools,
+	agent, err := prebuilt.CreateAgentMap(model, inputTools, 0,
 		prebuilt.WithSystemMessage("You are a helpful weather assistant. Always be polite."),
 		prebuilt.WithStateModifier(func(msgs []llms.MessageContent) []llms.MessageContent {
 			// Example modifier: Log the number of messages
@@ -76,9 +76,12 @@ func main() {
 	messages := result["messages"].([]llms.MessageContent)
 	lastMsg := messages[len(messages)-1]
 
-	if len(lastMsg.Parts) > 0 {
-		if textPart, ok := lastMsg.Parts[0].(llms.TextContent); ok {
-			fmt.Printf("Agent Response: %s\n", textPart.Text)
+	for _, part := range lastMsg.Parts {
+		switch p := part.(type) {
+		case llms.TextContent:
+			fmt.Printf("Agent Response: %s\n", p.Text)
+		case llms.ToolCall:
+			fmt.Printf("Tool Call: %s\n", p.FunctionCall.Name)
 		}
 	}
 }

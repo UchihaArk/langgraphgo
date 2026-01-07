@@ -11,6 +11,9 @@ import (
 )
 
 // CreateReactAgentMap creates a new ReAct agent graph with map[string]any state
+//
+// Deprecated: Use CreateAgentMap instead, which now includes the same iteration limiting functionality.
+// This function is kept for backward compatibility and will be removed in a future version.
 func CreateReactAgentMap(model llms.Model, inputTools []tools.Tool, maxIterations int) (*graph.StateRunnable[map[string]any], error) {
 	if maxIterations == 0 {
 		maxIterations = 20

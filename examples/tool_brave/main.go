@@ -42,7 +42,7 @@ func main() {
 	}
 
 	// 3. Create the ReAct Agent using map state convenience function
-	agent, err := prebuilt.CreateReactAgentMap(llm, []tools.Tool{braveTool}, 20)
+	agent, err := prebuilt.CreateAgentMap(llm, []tools.Tool{braveTool}, 20)
 	if err != nil {
 		log.Fatalf("Failed to create agent: %v", err)
 	}

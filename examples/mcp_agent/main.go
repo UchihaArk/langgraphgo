@@ -53,6 +53,7 @@ func main() {
 	agent, err := prebuilt.CreateAgentMap(
 		llm,
 		tools,
+		0,
 		prebuilt.WithSystemMessage("You are a helpful assistant with access to various tools through MCP. Use them to help answer questions."),
 	)
 	if err != nil {

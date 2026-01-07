@@ -37,7 +37,7 @@ func NewChatAgent(model llms.Model, inputTools []tools.Tool, opts ...CreateAgent
 	}
 
 	// Create the agent with options
-	agent, err := CreateAgentMap(model, inputTools, opts...)
+	agent, err := CreateAgentMap(model, inputTools, options.MaxIterations, opts...)
 	if err != nil {
 		return nil, err
 	}

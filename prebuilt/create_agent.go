@@ -19,6 +19,7 @@ type CreateAgentOptions struct {
 	Verbose       bool
 	SystemMessage string
 	StateModifier func(messages []llms.MessageContent) []llms.MessageContent
+	MaxIterations int
 }
 
 type CreateAgentOption func(*CreateAgentOptions)
@@ -39,17 +40,28 @@ func WithVerbose(verbose bool) CreateAgentOption {
 	return func(o *CreateAgentOptions) { o.Verbose = verbose }
 }
 
+func WithMaxIterations(maxIterations int) CreateAgentOption {
+	return func(o *CreateAgentOptions) { o.MaxIterations = maxIterations }
+}
+
 // CreateAgentMap creates a new agent graph with map[string]any state
-func CreateAgentMap(model llms.Model, inputTools []tools.Tool, opts ...CreateAgentOption) (*graph.StateRunnable[map[string]any], error) {
+func CreateAgentMap(model llms.Model, inputTools []tools.Tool, maxIterations int, opts ...CreateAgentOption) (*graph.StateRunnable[map[string]any], error) {
 	options := &CreateAgentOptions{}
 	for _, opt := range opts {
 		opt(options)
+	}
+	if maxIterations == 0 {
+		maxIterations = 20
+	}
+	if options.MaxIterations > 0 {
+		maxIterations = options.MaxIterations
 	}
 
 	workflow := graph.NewStateGraph[map[string]any]()
 	agentSchema := graph.NewMapSchema()
 	agentSchema.RegisterReducer("messages", graph.AppendReducer)
 	agentSchema.RegisterReducer("extra_tools", graph.AppendReducer)
+	agentSchema.RegisterReducer("iteration_count", graph.OverwriteReducer)
 	workflow.SetSchema(agentSchema)
 
 	if options.skillDir != "" {
@@ -97,6 +109,24 @@ func CreateAgentMap(model llms.Model, inputTools []tools.Tool, opts ...CreateAge
 			allTools = append(allTools, extra...)
 		}
 
+		// Check iteration count
+		iterationCount := 0
+		if count, ok := state["iteration_count"].(int); ok {
+			iterationCount = count
+		}
+		if iterationCount >= maxIterations {
+			// Max iterations reached, return final message
+			finalMsg := llms.MessageContent{
+				Role: llms.ChatMessageTypeAI,
+				Parts: []llms.ContentPart{
+					llms.TextPart("Maximum iterations reached. Please try a simpler query."),
+				},
+			}
+			return map[string]any{
+				"messages": []llms.MessageContent{finalMsg},
+			}, nil
+		}
+
 		var toolDefs []llms.Tool
 		for _, t := range allTools {
 			toolDefs = append(toolDefs, llms.Tool{
@@ -137,7 +167,10 @@ func CreateAgentMap(model llms.Model, inputTools []tools.Tool, opts ...CreateAge
 			aiMsg.Parts = append(aiMsg.Parts, tc)
 		}
 
-		return map[string]any{"messages": []llms.MessageContent{aiMsg}}, nil
+		return map[string]any{
+			"messages":        []llms.MessageContent{aiMsg},
+			"iteration_count": iterationCount + 1,
+		}, nil
 	})
 
 	workflow.AddNode("tools", "Tool execution node", func(ctx context.Context, state map[string]any) (map[string]any, error) {

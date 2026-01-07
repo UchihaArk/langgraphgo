@@ -78,7 +78,7 @@ func main() {
 	}
 
 	// 3. Create Agent with all skills
-	agent, err := prebuilt.CreateAgentMap(llm, allTools,
+	agent, err := prebuilt.CreateAgentMap(llm, allTools, 0,
 		prebuilt.WithSystemMessage("You are a powerful AI assistant with many skills. Use them wisely."),
 	)
 	if err != nil {

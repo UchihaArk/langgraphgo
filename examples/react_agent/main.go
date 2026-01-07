@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 	"strconv"
 	"strings"
 
@@ -64,20 +63,7 @@ func (t CalculatorTool) Call(ctx context.Context, input string) (string, error) 
 }
 
 func main() {
-	if os.Getenv("OPENAI_API_KEY") == "" {
-		log.Fatal("OPENAI_API_KEY not set")
-	}
-
-	// Initialize LLM
-	opts := []openai.Option{}
-	if base := os.Getenv("OPENAI_API_BASE"); base != "" {
-		opts = append(opts, openai.WithBaseURL(base))
-	}
-	if modelName := os.Getenv("OPENAI_MODEL"); modelName != "" {
-		opts = append(opts, openai.WithModel(modelName))
-	}
-
-	model, err := openai.New(opts...)
+	llm, err := openai.New()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -88,7 +74,7 @@ func main() {
 	}
 
 	// Create ReAct Agent using map state convenience function
-	agent, err := prebuilt.CreateReactAgentMap(model, inputTools, 20)
+	agent, err := prebuilt.CreateAgentMap(llm, inputTools, 20)
 	if err != nil {
 		log.Fatal(err)
 	}

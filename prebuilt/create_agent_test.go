@@ -15,7 +15,7 @@ func TestCreateAgentMap(t *testing.T) {
 	systemMessage := "You are a helpful assistant."
 
 	t.Run("Basic Agent Creation", func(t *testing.T) {
-		agent, err := CreateAgentMap(mockLLM, inputTools, WithSystemMessage(systemMessage))
+		agent, err := CreateAgentMap(mockLLM, inputTools, 0, WithSystemMessage(systemMessage))
 		assert.NoError(t, err)
 		assert.NotNil(t, agent)
 	})
@@ -26,7 +26,7 @@ func TestCreateAgentMap(t *testing.T) {
 			return append(messages, llms.TextParts(llms.ChatMessageTypeHuman, "Modified"))
 		}
 
-		agent, err := CreateAgentMap(mockLLM, inputTools, WithStateModifier(modifier))
+		agent, err := CreateAgentMap(mockLLM, inputTools, 0, WithStateModifier(modifier))
 		assert.NoError(t, err)
 
 		_, err = agent.Invoke(context.Background(), map[string]any{"messages": []llms.MessageContent{}})
@@ -42,7 +42,7 @@ func TestCreateAgentMap(t *testing.T) {
 		mockLLM := &MockLLMWithInputCapture{}
 		systemMsg := "You are a specialized bot."
 
-		agent, err := CreateAgentMap(mockLLM, inputTools, WithSystemMessage(systemMsg))
+		agent, err := CreateAgentMap(mockLLM, inputTools, 0, WithSystemMessage(systemMsg))
 		assert.NoError(t, err)
 
 		_, err = agent.Invoke(context.Background(), map[string]any{"messages": []llms.MessageContent{}})
@@ -57,21 +57,21 @@ func TestCreateAgentMap(t *testing.T) {
 
 	t.Run("Agent with Verbose option", func(t *testing.T) {
 		// Test that WithVerbose option is properly set
-		agent, err := CreateAgentMap(mockLLM, inputTools, WithVerbose(true))
+		agent, err := CreateAgentMap(mockLLM, inputTools, 0, WithVerbose(true))
 		assert.NoError(t, err)
 		assert.NotNil(t, agent)
 	})
 
 	t.Run("Agent with tools", func(t *testing.T) {
 		mockTool := &MockToolWithResponse{name: "test_tool", description: "A test tool", response: "Tool response"}
-		agent, err := CreateAgentMap(mockLLM, []tools.Tool{mockTool})
+		agent, err := CreateAgentMap(mockLLM, []tools.Tool{mockTool}, 0)
 		assert.NoError(t, err)
 		assert.NotNil(t, agent)
 	})
 
 	t.Run("Agent Invoke with messages", func(t *testing.T) {
 		mockLLM := &MockLLMWithInputCapture{}
-		agent, err := CreateAgentMap(mockLLM, inputTools)
+		agent, err := CreateAgentMap(mockLLM, inputTools, 0)
 		assert.NoError(t, err)
 
 		messages := []llms.MessageContent{
@@ -229,7 +229,7 @@ func TestCreateAgentWithToolCalls(t *testing.T) {
 			response:    "Tool executed successfully",
 		}
 
-		agent, err := CreateAgentMap(mockLLM, []tools.Tool{mockTool})
+		agent, err := CreateAgentMap(mockLLM, []tools.Tool{mockTool}, 0)
 		assert.NoError(t, err)
 
 		messages := []llms.MessageContent{
