@@ -1,7 +1,6 @@
 package memory
 
 import (
-	"container/heap"
 	"context"
 	"sync"
 	"time"
@@ -19,9 +18,6 @@ type OSLikeMemory struct {
 
 	// Archived (like disk) - rarely accessed
 	archived map[string]*MemoryPage
-
-	// LRU tracking
-	lru *LRUHeap
 
 	// Configuration
 	activeLimit  int           // Max pages in active memory
@@ -73,7 +69,6 @@ func NewOSLikeMemory(config *OSLikeConfig) *OSLikeMemory {
 		activeMemory: make(map[string]*MemoryPage),
 		cache:        make(map[string]*MemoryPage),
 		archived:     make(map[string]*MemoryPage),
-		lru:          &LRUHeap{},
 		activeLimit:  config.ActiveLimit,
 		cacheLimit:   config.CacheLimit,
 		accessWindow: config.AccessWindow,
@@ -161,8 +156,6 @@ func (o *OSLikeMemory) Clear(ctx context.Context) error {
 	o.activeMemory = make(map[string]*MemoryPage)
 	o.cache = make(map[string]*MemoryPage)
 	o.archived = make(map[string]*MemoryPage)
-	o.lru = &LRUHeap{}
-	heap.Init(o.lru)
 
 	return nil
 }
@@ -286,29 +279,4 @@ func (o *OSLikeMemory) GetMemoryInfo() map[string]any {
 		"active_limit":   o.activeLimit,
 		"cache_limit":    o.cacheLimit,
 	}
-}
-
-// LRUHeap implements a min-heap for LRU tracking
-type LRUHeap []*MemoryPage
-
-func (h LRUHeap) Len() int { return len(h) }
-
-func (h LRUHeap) Less(i, j int) bool {
-	return h[i].LastAccess.Before(h[j].LastAccess)
-}
-
-func (h LRUHeap) Swap(i, j int) {
-	h[i], h[j] = h[j], h[i]
-}
-
-func (h *LRUHeap) Push(x any) {
-	*h = append(*h, x.(*MemoryPage))
-}
-
-func (h *LRUHeap) Pop() any {
-	old := *h
-	n := len(old)
-	x := old[n-1]
-	*h = old[0 : n-1]
-	return x
 }

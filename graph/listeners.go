@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"sync"
 	"time"
 )
@@ -152,15 +153,14 @@ func (ln *ListenableNode[S]) RemoveListener(listenerID string) {
 	}
 }
 
-// RemoveListenerByFunc removes a listener from the node by comparing pointer values
+// RemoveListenerByFunc removes a listener from the node by comparing listener values
 func (ln *ListenableNode[S]) RemoveListenerByFunc(listener NodeListener[S]) {
 	ln.mutex.Lock()
 	defer ln.mutex.Unlock()
 
 	for i, lw := range ln.listeners {
-		// Compare pointer values for reference equality
-		if &lw.listener == &listener ||
-			fmt.Sprintf("%p", lw.listener) == fmt.Sprintf("%p", listener) {
+		// Use reflect.DeepEqual for proper interface value comparison
+		if reflect.DeepEqual(lw.listener, listener) {
 			ln.listeners = append(ln.listeners[:i], ln.listeners[i+1:]...)
 			break
 		}

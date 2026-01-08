@@ -9,7 +9,6 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/smallnest/langgraphgo/graph"
-	"github.com/smallnest/langgraphgo/store"
 )
 
 // SqliteCheckpointStore implements graph.CheckpointStore using SQLite
@@ -251,7 +250,7 @@ func (s *SqliteCheckpointStore) Clear(ctx context.Context, executionID string) e
 }
 
 // ListByThread returns all checkpoints for a specific thread_id
-func (s *SqliteCheckpointStore) ListByThread(ctx context.Context, threadID string) ([]*store.Checkpoint, error) {
+func (s *SqliteCheckpointStore) ListByThread(ctx context.Context, threadID string) ([]*graph.Checkpoint, error) {
 	// nolint:gosec // G201: Table name cannot be parameterized, but all values use parameterized queries
 	query := fmt.Sprintf(`
 		SELECT id, node_name, state, metadata, timestamp, version
@@ -266,9 +265,9 @@ func (s *SqliteCheckpointStore) ListByThread(ctx context.Context, threadID strin
 	}
 	defer rows.Close()
 
-	var checkpoints []*store.Checkpoint
+	var checkpoints []*graph.Checkpoint
 	for rows.Next() {
-		var cp store.Checkpoint
+		var cp graph.Checkpoint
 		var stateJSON string
 		var metadataJSON string
 
@@ -310,7 +309,7 @@ func (s *SqliteCheckpointStore) ListByThread(ctx context.Context, threadID strin
 }
 
 // GetLatestByThread returns the latest checkpoint for a thread_id
-func (s *SqliteCheckpointStore) GetLatestByThread(ctx context.Context, threadID string) (*store.Checkpoint, error) {
+func (s *SqliteCheckpointStore) GetLatestByThread(ctx context.Context, threadID string) (*graph.Checkpoint, error) {
 	checkpoints, err := s.ListByThread(ctx, threadID)
 	if err != nil {
 		return nil, err

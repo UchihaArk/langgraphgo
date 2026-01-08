@@ -18,9 +18,6 @@ type HierarchicalMemory struct {
 	importantMessages []*Message
 	importantLimit    int
 
-	// Layer 3: Archived messages (low priority, rarely accessed)
-	archivedMessages []*Message
-
 	mu sync.RWMutex
 
 	// ImportanceScorer determines message importance (0.0 to 1.0)
@@ -59,7 +56,6 @@ func NewHierarchicalMemory(config *HierarchicalConfig) *HierarchicalMemory {
 	return &HierarchicalMemory{
 		recentMessages:    make([]*Message, 0),
 		importantMessages: make([]*Message, 0),
-		archivedMessages:  make([]*Message, 0),
 		recentLimit:       config.RecentLimit,
 		importantLimit:    config.ImportantLimit,
 		ImportanceScorer:  scorer,
@@ -88,24 +84,16 @@ func (h *HierarchicalMemory) AddMessage(ctx context.Context, msg *Message) error
 
 	// Manage recent layer size
 	if len(h.recentMessages) > h.recentLimit {
-		// Move oldest recent message to archive
-		oldest := h.recentMessages[0]
+		// Remove oldest recent message
 		h.recentMessages = h.recentMessages[1:]
-
-		// Only archive if not already in important layer
-		if !h.isInImportant(oldest) {
-			h.archivedMessages = append(h.archivedMessages, oldest)
-		}
 	}
 
 	// Manage important layer size
 	if len(h.importantMessages) > h.importantLimit {
-		// Move lowest importance message to archive
+		// Remove lowest importance message
 		lowestIdx := h.findLowestImportance()
 		if lowestIdx >= 0 {
-			archived := h.importantMessages[lowestIdx]
 			h.importantMessages = append(h.importantMessages[:lowestIdx], h.importantMessages[lowestIdx+1:]...)
-			h.archivedMessages = append(h.archivedMessages, archived)
 		}
 	}
 
@@ -130,9 +118,6 @@ func (h *HierarchicalMemory) GetContext(ctx context.Context, query string) ([]*M
 		}
 	}
 
-	// Note: Archived messages are only included if specifically queried
-	// This implementation doesn't include them by default
-
 	return result, nil
 }
 
@@ -143,7 +128,6 @@ func (h *HierarchicalMemory) Clear(ctx context.Context) error {
 
 	h.recentMessages = make([]*Message, 0)
 	h.importantMessages = make([]*Message, 0)
-	h.archivedMessages = make([]*Message, 0)
 	return nil
 }
 
@@ -152,12 +136,12 @@ func (h *HierarchicalMemory) GetStats(ctx context.Context) (*Stats, error) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	allMessages := len(h.recentMessages) + len(h.importantMessages) + len(h.archivedMessages)
+	activeMessages := len(h.recentMessages) + len(h.importantMessages)
 
 	totalTokens := 0
 	activeTokens := 0
 
-	// Count tokens in all layers
+	// Count tokens in active layers
 	for _, msg := range h.recentMessages {
 		totalTokens += msg.TokenCount
 		activeTokens += msg.TokenCount
@@ -166,11 +150,6 @@ func (h *HierarchicalMemory) GetStats(ctx context.Context) (*Stats, error) {
 		totalTokens += msg.TokenCount
 		activeTokens += msg.TokenCount
 	}
-	for _, msg := range h.archivedMessages {
-		totalTokens += msg.TokenCount
-	}
-
-	activeMessages := len(h.recentMessages) + len(h.importantMessages)
 
 	compressionRate := 1.0
 	if totalTokens > 0 {
@@ -178,22 +157,12 @@ func (h *HierarchicalMemory) GetStats(ctx context.Context) (*Stats, error) {
 	}
 
 	return &Stats{
-		TotalMessages:   allMessages,
+		TotalMessages:   activeMessages,
 		TotalTokens:     totalTokens,
 		ActiveMessages:  activeMessages,
 		ActiveTokens:    activeTokens,
 		CompressionRate: compressionRate,
 	}, nil
-}
-
-// isInImportant checks if a message is in the important layer
-func (h *HierarchicalMemory) isInImportant(msg *Message) bool {
-	for _, m := range h.importantMessages {
-		if m.ID == msg.ID {
-			return true
-		}
-	}
-	return false
 }
 
 // findLowestImportance finds the index of the least important message
