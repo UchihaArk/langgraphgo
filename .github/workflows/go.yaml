@@ -20,12 +20,6 @@ jobs:
     - name: Build
       run: go build -v ./...
 
-    - name: Test-coverage
-      run: make test-coverage
-
-    - name: Coveralls
-      uses: coverallsapp/github-action@v2
-
   test:
     runs-on: ubuntu-latest
     environment: ci
@@ -44,3 +38,5 @@ jobs:
         uses: codecov/codecov-action@v4-beta
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Coveralls
+        uses: coverallsapp/github-action@v2
